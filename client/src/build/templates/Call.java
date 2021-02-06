@@ -1,10 +1,11 @@
 package parspice.functions.###UPPER_NAME###;
 
+import parspice.Call;
 import java.util.ArrayList;
 import spice.basic.GFSearchUtils;
 import spice.basic.GFScalarQuantity;
 
-public class ###UPPER_NAME###Call {
+public class ###UPPER_NAME###Call extends Call {
 ###FIELDS###
     public String error;
 

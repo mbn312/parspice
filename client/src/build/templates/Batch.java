@@ -5,7 +5,7 @@ import parspice.Batch;
 import spice.basic.GFSearchUtils;
 import spice.basic.GFScalarQuantity;
 
-public class ###UPPER_NAME###Batch extends Batch {
+public class ###UPPER_NAME###Batch extends Batch<###UPPER_NAME###Call> {
 
     private ArrayList<###UPPER_NAME###Call> calls = new ArrayList<###UPPER_NAME###Call>();
 
@@ -14,11 +14,11 @@ public class ###UPPER_NAME###Batch extends Batch {
         registerCall();
     }
 
-    public ###UPPER_NAME###Call get(int index) {
+    protected ###UPPER_NAME###Call getUnchecked(int index) {
         return calls.get(index);
     }
 
-    public ArrayList<###UPPER_NAME###Call> getAll() {
+    protected ArrayList<###UPPER_NAME###Call> getAllUnchecked() {
         return calls;
     }
 
