@@ -31,12 +31,12 @@ def main(argv):
 
     for func in functions:
         try:
-            generate_files(func, ['Call.java', 'Batch.java'], out, template_dir)
+            generate_java(func, ['Call.java', 'Batch.java'], out, template_dir)
         except ValueError:
             print('not yet working: %s' % func.name)
 
 
-def generate_files(func, templates, out, template_dir):
+def generate_java(func, templates, out, template_dir):
 
     upper_name = func.name.capitalize()
     lower_name = func.name
@@ -48,10 +48,9 @@ def generate_files(func, templates, out, template_dir):
 
     for i, arg in enumerate(func.args):
 
-        ty = wrap_array(arg.data_type)
-        fields += 'public %s %s;\n' % (ty, arg.name)
+        fields += 'public %s %s;\n' % (arg.data_type, arg.name)
 
-        args += '%s %s, ' % (ty, arg.name)
+        args += '%s %s, ' % (arg.data_type, arg.name)
         args_no_types += '%s, ' % arg.name
         assign_fields += 'this.%s = %s;\n' % (arg.name, arg.name)
     
@@ -60,10 +59,7 @@ def generate_files(func, templates, out, template_dir):
     args_no_types = args_no_types[:-2]
 
     if func.return_type.base_type != parse_tree.DataType.VOID:
-        if func.name == 'spkpos':
-            print(func.return_type)
-        ty = wrap_array(func.return_type)
-        fields += 'public %s ret;\n' % ty
+        fields += 'public %s ret;\n' % func.return_type
 
     for template in templates:
         with open(os.path.join(template_dir, template), 'r') as in_file:
@@ -76,19 +72,6 @@ def generate_files(func, templates, out, template_dir):
                 .replace('###ASSIGN_FIELDS###', assign_fields)
             with open('%s/%s%s' % (out, upper_name, template), 'w') as out_file:
                 out_file.write(output)
-
-
-def wrap_array(data):
-    ty = data.base_to_str()
-    if data.array_depth != 0:
-        ty = ty.capitalize()
-        if ty == 'Int':
-            ty = 'Integer'
-        elif ty == 'Boolean':
-            ty = 'Boolean'
-        for _ in range(data.array_depth):
-            ty = 'ArrayList<%s>' % ty
-    return ty
 
 
 if __name__ == '__main__':
