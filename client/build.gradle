@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'build/generated/sources/automation/main/java'
+        }
+    }
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task genFromCSPICE(type: Exec) {
+    commandLine 'src/build/gen.py', '/Users/joel/Downloads/JNISpice/src/JNISpice/spice/basic/CSPICE.java'
+}
+
+tasks.compileJava.dependsOn(genFromCSPICE)
