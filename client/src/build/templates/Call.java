@@ -1,5 +1,8 @@
 package parspice.functions.###UPPER_NAME###;
+
 import java.util.ArrayList;
+import spice.basic.GFSearchUtils;
+import spice.basic.GFScalarQuantity;
 
 public class ###UPPER_NAME###Call {
 ###FIELDS###

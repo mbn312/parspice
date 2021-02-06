@@ -2,6 +2,8 @@ package parspice.functions.###UPPER_NAME###;
 
 import java.util.ArrayList;
 import parspice.Batch;
+import spice.basic.GFSearchUtils;
+import spice.basic.GFScalarQuantity;
 
 public class ###UPPER_NAME###Batch extends Batch {
 
