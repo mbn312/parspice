@@ -12,6 +12,12 @@ JNISPICE_ROOT=/absolute/path/to/JNISpice
 
 You can set it with `export` in your shell rc file, or by prepending the above command to every `gradle build` command.
 
+You will need the python3 [antlr4](https://www.antlr.org/) runtime installed in order to build the client. You can install it with:
+
+```
+pip install antlr4-python3-runtime
+```
+
 You also need [gradle](https://gradle.org/) installed. Alternatively, you can use the `./gradlew` script instead of the `gradle` command.
 
 ## Building
