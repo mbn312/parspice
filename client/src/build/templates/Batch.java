@@ -1,39 +1,32 @@
-package parspiceTest;
+package parspice.functions.###UPPER_NAME###;
 
 import java.util.ArrayList;
 import parspice.Batch;
 
 public class ###UPPER_NAME###Batch extends Batch {
 
-    private ArrayList<###UPPER_NAME###Call> args = new ArrayList<###UPPER_NAME###Call>();
+    private ArrayList<###UPPER_NAME###Call> calls = new ArrayList<###UPPER_NAME###Call>();
 
-    private int totalCalls;
-    private int declaredCalls;
-    private int receivedCalls;
-
-    public ###UPPER_NAME###Batch(int totalCalls) {
-        super(totalCalls);
-    }
-
-    public void add(###ARGS###){
-        args.add(new ###UPPER_NAME###Call(###ARGS_NO_TYPES###));
+    public void call(###ARGS###) {
+        calls.add(new ###UPPER_NAME###Call(###ARGS_NO_TYPES###));
+        registerCall();
     }
 
     public ###UPPER_NAME###Call get(int index) {
-        return args.get(index);
+        return calls.get(index);
     }
 
-    public ArrayList getAll() {
-        return args;
+    public ArrayList<###UPPER_NAME###Call> getAll() {
+        return calls;
     }
 
-    public void execute() {
-        ###UPPER_NAME###Bundle.Builder bundleBuilder = ###UPPER_NAME###Bundle.newBuilder();
-        for (###UPPER_NAME###Call call : args) {
+    protected void run(int howMany) {
+//        ###UPPER_NAME###Bundle.Builder bundleBuilder = ###UPPER_NAME###Bundle.newBuilder();
+//        for (###UPPER_NAME###Call call : calls) {
             // all named after jnispice documentation
-            bundleBuilder.addRequests(###UPPER_NAME###Req.newBuilder()
+//            bundleBuilder.addRequests(###UPPER_NAME###Req.newBuilder()
 //                    ###BUILDERS###
-                    .build());
+//                    .build());
                     // .setTarget(o1.arg1)
                     // .setEt(o1.arg2)
                     // .setRef(o1.arg3)
@@ -41,8 +34,8 @@ public class ###UPPER_NAME###Batch extends Batch {
                     // .setObserver(o1.arg5)
                     // .addAllPos(o1.arg6)
                     // .addAllLt(o1.arg7)
-        }
-        ###UPPER_NAME###Bundle bundle = bundleBuilder.build();
+//        }
+//        ###UPPER_NAME###Bundle bundle = bundleBuilder.build();
 
         // SEND -> RECEIVE -> MODIFY SELF IN PLACE
 

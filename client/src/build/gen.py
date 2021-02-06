@@ -84,7 +84,7 @@ def wrap_array(data):
         ty = ty.capitalize()
         if ty == 'Int':
             ty = 'Integer'
-        elif ty == 'Bool':
+        elif ty == 'Boolean':
             ty = 'Boolean'
         for _ in range(data.array_depth):
             ty = 'ArrayList<%s>' % ty

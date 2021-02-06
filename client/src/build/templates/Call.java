@@ -1,4 +1,4 @@
-package parspiceTest;
+package parspice.functions.###UPPER_NAME###;
 import java.util.ArrayList;
 
 public class ###UPPER_NAME###Call {
