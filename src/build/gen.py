@@ -33,12 +33,44 @@ def main(argv):
             os.makedirs(o)
 
     generate_proto(functions, proto_out, template_dir)
+    generate_factory(functions, java_out, template_dir)
 
     for func in functions:
         try:
             generate_java(func, ['Call.java', 'Batch.java'], java_out, template_dir)
         except ValueError:
             print('not yet working: %s' % func.name)
+
+
+def generate_factory(funcs, out, template_dir):
+    factories = ''
+    imports = ''
+    for func in funcs:
+        bad_arg = False
+        for i,arg in enumerate(func.args):
+            ty = java_type_to_proto(arg.data_type)
+            if ty is None:
+                bad_arg = True
+                break
+        if bad_arg:
+            continue
+
+        upper_name = func.name[0].upper() + func.name[1:]
+        lower_name = func.name
+
+        factories += """
+        public %sBatch %s() {
+            return new %sBatch(stub);
+        }
+        """ % (upper_name, lower_name, upper_name)
+        imports += 'import parspice.functions.%s.%sBatch;\n' % (upper_name, upper_name)
+    with open(os.path.join(template_dir, 'ParSpice.java'), 'r') as template:
+        proto = template.read() \
+            .replace('###FACTORIES###', factories) \
+            .replace('###IMPORTS###', imports)
+        with open(os.path.join(out, 'ParSpice.java'), 'w') as out_file:
+            out_file.write(proto)
+
 
 
 def generate_proto(funcs, out, template_dir):
@@ -54,7 +86,7 @@ def generate_proto(funcs, out, template_dir):
         output_arg_counter = 1
         for i,arg in enumerate(func.args):
             ty = java_type_to_proto(arg.data_type)
-            if ty == None:
+            if ty is None:
                 bad_arg = True
                 break
             inputs += '%s %s = %i;\n' % (ty, arg.name, i+1)

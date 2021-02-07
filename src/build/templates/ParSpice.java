@@ -4,6 +4,8 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import parspice.rpc.ParSpiceGrpc;
 
+###IMPORTS###
+
 public class ParSpice {
     private ParSpiceGrpc.ParSpiceBlockingStub stub;
 
@@ -14,4 +16,6 @@ public class ParSpice {
                 .build();
         stub = ParSpiceGrpc.newBlockingStub(channel);
     }
+
+    ###FACTORIES###
 }
