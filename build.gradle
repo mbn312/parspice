@@ -61,7 +61,7 @@ test {
 }
 
 task genFromCSPICE(type: Exec) {
-    commandLine file("$rootDir/client/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
+    commandLine file("$rootDir/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
 }
 
 tasks.compileJava.dependsOn(genFromCSPICE)
