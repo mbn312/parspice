@@ -55,7 +55,7 @@ class DataType:
         elif self.base_type == DataType.DOUBLE:
             result = "double"
         elif self.base_type == DataType.BOOLEAN:
-            result = "bool"
+            result = "boolean"
         elif self.base_type == DataType.STRING:
             result = "String"
         elif self.base_type == DataType.GFSEARCHUTILS:
@@ -74,7 +74,7 @@ class DataType:
         elif self.base_type == DataType.DOUBLE:
             return "double"
         elif self.base_type == DataType.BOOLEAN:
-            return "bool"
+            return "boolean"
         elif self.base_type == DataType.STRING:
             return "String"
         elif self.base_type == DataType.GFSEARCHUTILS:
