@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option java_multiple_files = true;
+
+package parspice.rpc;
+
+service ParSpice {
+  ###SERVICES###
+}
+
+// Used for nested arrays of doubles.
+//
+// E.g. a `double[][]` value in Java is serialized as
+// a `repeated RepeatedDouble` in protobuf.
+message RepeatedDouble {
+  repeated double array = 1;
+}
+
+// Used for nested arrays of ints.
+//
+// E.g. a `int[][]` value in Java is serialized as
+// a `repeated RepeatedInt` in protobuf.
+message RepeatedInt {
+  repeated int32 array = 1;
+}
+
+###MESSAGES###

@@ -2,8 +2,9 @@ package parspice.functions.###UPPER_NAME###;
 
 import java.util.ArrayList;
 import parspice.Batch;
-import spice.basic.GFSearchUtils;
-import spice.basic.GFScalarQuantity;
+//import spice.basic.GFSearchUtils;
+//import spice.basic.GFScalarQuantity;
+import parspice.rpc.###UPPER_NAME###Request;
 
 public class ###UPPER_NAME###Batch extends Batch<###UPPER_NAME###Call> {
 
@@ -23,8 +24,8 @@ public class ###UPPER_NAME###Batch extends Batch<###UPPER_NAME###Call> {
     }
 
     protected void run(int howMany) {
-//        ###UPPER_NAME###Bundle.Builder bundleBuilder = ###UPPER_NAME###Bundle.newBuilder();
-//        for (###UPPER_NAME###Call call : calls) {
+        ###UPPER_NAME###Request.Builder requestBuilder = ###UPPER_NAME###Request.newBuilder();
+        for (###UPPER_NAME###Call call : calls) {
             // all named after jnispice documentation
 //            bundleBuilder.addRequests(###UPPER_NAME###Req.newBuilder()
 //                    ###BUILDERS###
@@ -36,7 +37,7 @@ public class ###UPPER_NAME###Batch extends Batch<###UPPER_NAME###Call> {
                     // .setObserver(o1.arg5)
                     // .addAllPos(o1.arg6)
                     // .addAllLt(o1.arg7)
-//        }
+        }
 //        ###UPPER_NAME###Bundle bundle = bundleBuilder.build();
 
         // SEND -> RECEIVE -> MODIFY SELF IN PLACE

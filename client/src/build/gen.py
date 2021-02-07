@@ -25,15 +25,102 @@ def main(argv):
     functions = parser.cspice().result
 
     template_dir = os.path.join('src', 'build', 'templates')
-    out = os.path.join('build', 'generated', 'sources', 'automation', 'main', 'java')
-    if not os.path.exists(out):
-        os.makedirs(out)
+    out = os.path.join('build', 'generated', 'sources', 'automation', 'main')
+    java_out = os.path.join(out, 'java')
+    proto_out = os.path.join(out, 'proto')
+    for o in [out, java_out, proto_out]:
+        if not os.path.exists(o):
+            os.makedirs(o)
+
+    generate_proto(functions, proto_out, template_dir)
 
     for func in functions:
         try:
-            generate_java(func, ['Call.java', 'Batch.java'], out, template_dir)
+            generate_java(func, ['Call.java', 'Batch.java'], java_out, template_dir)
         except ValueError:
             print('not yet working: %s' % func.name)
+
+
+def generate_proto(funcs, out, template_dir):
+    services = ''
+    messages = ''
+    for func in funcs:
+        upper_name = func.name.capitalize()
+        inputs = ''
+        outputs = ''
+
+        bad_arg = False
+
+        output_arg_counter = 1
+        for i,arg in enumerate(func.args):
+            ty = java_type_to_proto(arg.data_type)
+            if ty == None:
+                bad_arg = True
+                break
+            inputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
+            if 'repeated' in ty:
+                outputs += '%s %s = %i;\n' % (ty, arg.name, output_arg_counter)
+                output_arg_counter += 1
+        if bad_arg:
+            continue
+
+        if func.return_type.base_type != parse_tree.DataType.VOID:
+            ty = java_type_to_proto(func.return_type)
+            outputs += '%s ret = %i;\n' % (ty, output_arg_counter)
+
+
+        services += 'rpc ###UPPER_NAME###RPC (###UPPER_NAME###Request) returns (###UPPER_NAME###Response);\n' \
+            .replace('###UPPER_NAME###', upper_name)
+        messages += """
+        message ###UPPER_NAME###Request {
+            message ###UPPER_NAME###Input {
+                ###INPUTS###
+            }
+            repeated ###UPPER_NAME###Input inputs = 1;
+        }
+        
+        message ###UPPER_NAME###Response {
+            message ###UPPER_NAME###Output {
+                ###OUTPUTS###
+            }
+            repeated ###UPPER_NAME###Output outputs = 1;
+        }
+        """.replace('###UPPER_NAME###', upper_name) \
+            .replace('###INPUTS###', inputs) \
+            .replace('###OUTPUTS###', outputs)
+    with open(os.path.join(template_dir, 'parspice.proto'), 'r') as template:
+        proto = template.read() \
+            .replace('###SERVICES###', services) \
+            .replace('###MESSAGES###', messages)
+        with open(os.path.join(out, 'parspice.proto'), 'w') as out_file:
+            out_file.write(proto)
+
+def java_type_to_proto(java):
+    if java.array_depth in [0,1]:
+        ty = ''
+        if java.base_type == parse_tree.DataType.VOID:
+            return None
+        elif java.base_type == parse_tree.DataType.INT:
+            ty = 'int32'
+        elif java.base_type == parse_tree.DataType.BOOLEAN:
+            ty = 'bool'
+        elif java.base_type == parse_tree.DataType.GFSEARCHUTILS:
+            return None
+        elif java.base_type == parse_tree.DataType.GFSCALARQUANTITY:
+            return None
+        else:
+            ty = java.base_to_str().lower()
+        if java.array_depth == 1:
+            ty = "repeated " + ty
+        return ty
+    elif java.array_depth == 2:
+        if java.base_type == parse_tree.DataType.DOUBLE:
+            return 'repeated RepeatedDouble'
+        elif java.base_type == parse_tree.DataType.INT:
+            return 'repeated RepeatedInt'
+        else:
+            return None
+
 
 
 def generate_java(func, templates, out, template_dir):
@@ -46,7 +133,10 @@ def generate_java(func, templates, out, template_dir):
     args_no_types = ''
     assign_fields = ''
 
-    for i, arg in enumerate(func.args):
+    for arg in func.args:
+        if arg.data_type.base_type == parse_tree.DataType.GFSEARCHUTILS \
+            or arg.data_type.base_type == parse_tree.DataType.GFSCALARQUANTITY:
+            return
 
         fields += 'public %s %s;\n' % (arg.data_type, arg.name)
 
