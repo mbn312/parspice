@@ -45,7 +45,7 @@ def generate_proto(funcs, out, template_dir):
     services = ''
     messages = ''
     for func in funcs:
-        upper_name = func.name.capitalize()
+        upper_name = func.name[0].upper() + func.name[1:]
         inputs = ''
         outputs = ''
 
@@ -125,25 +125,51 @@ def java_type_to_proto(java):
 
 def generate_java(func, templates, out, template_dir):
 
-    upper_name = func.name.capitalize()
+    upper_name = func.name[0].upper() + func.name[1:]
     lower_name = func.name
 
     fields = ''
     args = ''
     args_no_types = ''
     assign_fields = ''
+    builders = ''
+    nested_builders = ''
 
-    for arg in func.args:
+    for i,arg in enumerate(func.args):
         if arg.data_type.base_type == parse_tree.DataType.GFSEARCHUTILS \
             or arg.data_type.base_type == parse_tree.DataType.GFSCALARQUANTITY:
             return
 
-        fields += 'public %s %s;\n' % (arg.data_type, arg.name)
+        cap_name = arg.name[0].upper() + arg.name[1:]
 
-        args += '%s %s, ' % (arg.data_type, arg.name)
+        object_type = str(arg.data_type).replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+        base_object_type = arg.data_type.base_to_str().replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+
+        fields += 'public %s %s;\n' % (object_type, arg.name)
+
+        args += '%s %s, ' % (object_type, arg.name)
         args_no_types += '%s, ' % arg.name
         assign_fields += 'this.%s = %s;\n' % (arg.name, arg.name)
-    
+
+        if arg.data_type.array_depth == 0:
+            builders += '.set%s(call.%s)\n' % (cap_name, arg.name)
+        elif arg.data_type.array_depth == 1:
+            builders += '.addAll%s(Arrays.asList(call.%s))\n' % (cap_name, arg.name)
+        elif arg.data_type.array_depth == 2:
+            base = arg.data_type.base_to_str().capitalize()
+            nested_builders += """
+            ArrayList<Repeated%s> nested%i = new ArrayList<Repeated%s>();
+            for (%s[] row : call.%s) {
+                nested%i.add(
+                    Repeated%s.newBuilder()
+                        .addAllArray(Arrays.asList(row))
+                        .build()
+                );
+            }
+            """ % (base, i, base, base_object_type, arg.name, i, base)
+            builders += ".addAll%s(nested%i)\n" % (cap_name, i)
+        else:
+            return
 
     args = args[:-2]
     args_no_types = args_no_types[:-2]
@@ -159,8 +185,10 @@ def generate_java(func, templates, out, template_dir):
                 .replace('###FIELDS###', fields) \
                 .replace('###ARGS###', args) \
                 .replace('###ARGS_NO_TYPES###', args_no_types) \
-                .replace('###ASSIGN_FIELDS###', assign_fields)
-            with open('%s/%s%s' % (out, upper_name, template), 'w') as out_file:
+                .replace('###ASSIGN_FIELDS###', assign_fields) \
+                .replace('###BUILDERS###', builders) \
+                .replace('###NESTED_BUILDERS###', nested_builders)
+            with open(os.path.join(out, '%s%s' % (upper_name, template)), 'w') as out_file:
                 out_file.write(output)
 
 

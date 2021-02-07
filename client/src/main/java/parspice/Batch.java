@@ -1,6 +1,7 @@
 package parspice;
 
 import jdk.jshell.spi.ExecutionControl;
+import parspice.rpc.ParSpiceGrpc;
 
 import java.util.ArrayList;
 
@@ -9,7 +10,13 @@ public abstract class Batch<T extends Call> {
     private int sentCalls = 0;
     private int receivedCalls = 0;
 
+    protected ParSpiceGrpc.ParSpiceBlockingStub stub;
+
     private static final int BATCH_SIZE = 1000;
+
+    public Batch(ParSpiceGrpc.ParSpiceBlockingStub stub) {
+        this.stub = stub;
+    }
 
     protected void registerCall() {
         declaredCalls++;
