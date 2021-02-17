@@ -6,6 +6,9 @@ import sys
 
 
 from parse_tree import *
+import manual_info
+
+manual_info.load_info()
 
 
 

@@ -3,6 +3,7 @@ package parspice;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import parspice.rpc.ParSpiceGrpc;
+import spice.basic.CSPICE;
 
 ###IMPORTS###
 
