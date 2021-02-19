@@ -208,7 +208,6 @@ def generate_java(func, templates, out, template_dir):
             elif arg.data_type.array_depth == 1:
                 builders += '.addAll%s(Arrays.asList(call.%s))\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
-                base = arg.data_type.base_to_str().capitalize()
                 nested_builders += """
                 ArrayList<Repeated%s> nested%i = new ArrayList<Repeated%s>();
                 for (%s[] row : call.%s) {
@@ -217,8 +216,8 @@ def generate_java(func, templates, out, template_dir):
                             .addAllArray(Arrays.asList(row))
                             .build()
                     );
-                }
-                """ % (base, i, base, base_object_type, arg.name, i, base)
+                }\n
+                """ % (base_object_type, i, base_object_type, base_object_type, arg.name, i, base_object_type)
                 builders += ".addAll%s(nested%i)\n" % (cap_name, i)
             else:
                 return
@@ -229,6 +228,14 @@ def generate_java(func, templates, out, template_dir):
                 getters += 'call.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
                 getters += 'output.get%sList().toArray(call.%s);\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
+                getters += 'call.%s = new %s[output.get%sCount()][output.get%s(0).getArrayCount()];\n' \
+                           % (arg.name, base_object_type, cap_name, cap_name)
+                getters += """
+                List<Repeated%s> full%i = output.get%sList();
+                for (int j = 0; j < full%i.size(); j++) {
+                    full%i.get(j).getArrayList().toArray(call.%s[j]);
+                }\n
+                """ % (base_object_type, i, cap_name, i, i, arg.name)
                 pass
 
     args = args[:-2]

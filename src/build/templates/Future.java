@@ -8,6 +8,8 @@ import java.util.concurrent.ExecutionException;
 import parspice.rpc.###UPPER_NAME###Response;
 import parspice.rpc.###UPPER_NAME###Response.###UPPER_NAME###Output;
 import parspice.rpc.###UPPER_NAME###Response.###UPPER_NAME###Output;
+import parspice.rpc.RepeatedDouble;
+import parspice.rpc.RepeatedInteger;
 
 public class ###UPPER_NAME###Future {
     private ArrayList<###UPPER_NAME###Call> calls;

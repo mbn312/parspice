@@ -10,7 +10,7 @@ import parspice.rpc.###UPPER_NAME###Request.###UPPER_NAME###Input;
 import parspice.rpc.###UPPER_NAME###Response;
 import parspice.rpc.###UPPER_NAME###Response.###UPPER_NAME###Output;
 import parspice.rpc.RepeatedDouble;
-import parspice.rpc.RepeatedInt;
+import parspice.rpc.RepeatedInteger;
 import parspice.rpc.ParSpiceGrpc;
 import java.util.concurrent.Future;
 

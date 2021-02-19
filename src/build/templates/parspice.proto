@@ -22,7 +22,7 @@ message RepeatedDouble {
 //
 // E.g. a `int[][]` value in Java is serialized as
 // a `repeated RepeatedInt` in protobuf.
-message RepeatedInt {
+message RepeatedInteger {
   repeated int32 array = 1;
 }
 
