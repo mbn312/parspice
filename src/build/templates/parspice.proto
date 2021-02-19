@@ -28,9 +28,9 @@ message RepeatedDouble {
 Used for nested arrays of ints.
 
 E.g. an `int[][]` value in Java is serialized as
-a `repeated RepeatedInt` in protobuf.
+a `repeated RepeatedInteger` in protobuf.
  */
-message RepeatedInt {
+message RepeatedInteger {
   repeated int32 array = 1;
 }
 

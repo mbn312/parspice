@@ -22,3 +22,7 @@ gradle-app.setting
 # ANTLR
 *.interp
 *.tokens
+
+# Vim
+*.swp
+*.swo
