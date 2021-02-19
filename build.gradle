@@ -65,3 +65,7 @@ task genFromCSPICE(type: Exec) {
 }
 
 tasks.compileJava.dependsOn(genFromCSPICE)
+
+compileJava {
+    options.compilerArgs << '-Xlint:unchecked'
+}

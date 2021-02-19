@@ -39,7 +39,7 @@ def main(argv):
     for func in functions:
         if func.classification == parse_tree.Classification.NORMAL:
             try:
-                generate_java(func, ['Call.java', 'Batch.java'], java_out, template_dir)
+                generate_java(func, ['Call.java', 'Batch.java', 'Future.java'], java_out, template_dir)
             except ValueError:
                 print('not yet working: %s' % func.name)
 
@@ -124,14 +124,16 @@ def generate_proto(funcs, out, template_dir):
                 message ###UPPER_NAME###Input {
                     ###INPUTS###
                 }
-                repeated ###UPPER_NAME###Input inputs = 1;
+                int32 batchID = 1;
+                repeated ###UPPER_NAME###Input inputs = 2;
             }
             
             message ###UPPER_NAME###Response {
                 message ###UPPER_NAME###Output {
                     ###OUTPUTS###
                 }
-                repeated ###UPPER_NAME###Output outputs = 1;
+                int32 batchID = 1;
+                repeated ###UPPER_NAME###Output outputs = 2;
             }
             """.replace('###UPPER_NAME###', upper_name) \
                 .replace('###INPUTS###', inputs) \
@@ -181,6 +183,7 @@ def generate_java(func, templates, out, template_dir):
     args_no_types = ''
     assign_fields = ''
     builders = ''
+    getters = ''
     nested_builders = ''
 
     for i,arg in enumerate(func.args):
@@ -219,6 +222,14 @@ def generate_java(func, templates, out, template_dir):
                 builders += ".addAll%s(nested%i)\n" % (cap_name, i)
             else:
                 return
+        if arg.io == parse_tree.IO.OUTPUT or arg.io == parse_tree.IO.BOTH:
+            if arg.data_type.array_depth == 0:
+                getters += 'call.%s = output.get%s();\n' % (arg.name, cap_name)
+            elif arg.data_type.array_depth == 1:
+                getters += 'call.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
+                getters += 'output.get%sList().toArray(call.%s);\n' % (cap_name, arg.name)
+            elif arg.data_type.array_depth == 2:
+                pass
 
     args = args[:-2]
     args_no_types = args_no_types[:-2]
@@ -236,6 +247,7 @@ def generate_java(func, templates, out, template_dir):
                 .replace('###ARGS_NO_TYPES###', args_no_types) \
                 .replace('###ASSIGN_FIELDS###', assign_fields) \
                 .replace('###BUILDERS###', builders) \
+                .replace('###GETTERS###', getters) \
                 .replace('###NESTED_BUILDERS###', nested_builders)
             with open(os.path.join(out, '%s%s' % (upper_name, template)), 'w') as out_file:
                 out_file.write(output)
