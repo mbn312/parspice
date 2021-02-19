@@ -7,8 +7,9 @@ class FunctionDecl:
     """
     Represents a function declaration in CSPICE.java
     """
-    def __init__(self, name, return_type, args, throws):
+    def __init__(self, name, classification, return_type, args, throws):
         self.name = name
+        self.classification = classification
         self.return_type = return_type
         self.args = args
         self.throws = throws
@@ -27,6 +28,9 @@ class Argument:
 
     def __str__(self):
         return str(self.data_type) + " " + self.name
+
+    def set_io(self, io):
+        self.io = io
 
 
 class DataType:
@@ -83,4 +87,29 @@ class DataType:
             return "GFScalarQuantity"
         else:
             raise ValueError("Base type not recognized: " + str(self.base_type))
-        
+
+
+class Classification:
+    NORMAL = 0
+    CONSTANT = 1
+    GLOBAL_STATE_MODIFIER = 2
+    TASK_STATEFUL = 3
+
+    @staticmethod
+    def from_str(s):
+        if s == 'NORMAL': return Classification.NORMAL
+        elif s == 'CONSTANT': return Classification.CONSTANT
+        elif s == 'GLOBAL_STATE_MODIFIER': return Classification.GLOBAL_STATE_MODIFIER
+        elif s == 'TASK_STATEFUL': return Classification.TASK_STATEFUL
+        else: return None
+
+
+class IO:
+    INPUT = 0
+    OUTPUT = 1
+    BOTH = 2
+
+    @staticmethod
+    def from_str(s):
+        map = {'i': IO.INPUT, 'o': IO.OUTPUT, 'io': IO.BOTH}
+        return [map[v] for v in s.split(',') if len(v) != 0]

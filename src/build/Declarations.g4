@@ -2,6 +2,9 @@ grammar Declarations;
 
 @header {
 from parse_tree import *
+import manual_info
+
+manual_info.load_info()
 }
 
 cspice returns [result]
@@ -29,7 +32,8 @@ function_decl returns [result]
 	((arg ',' {args.append($arg.result)})* arg {args.append($arg.result)})? ')'
 	{throws = []}
 	('throws' n=NAME {throws.append($n.text)} (',' n=NAME {throws.append($n.text)})*)? ';'
-	{$result = FunctionDecl($name.text, $ret.result, args, throws)};
+	{for (arg,io) in zip(args, manual_info.io($name.text)): arg.set_io(io)}
+	{$result = FunctionDecl($name.text, manual_info.classification($name.text), $ret.result, args, throws)};
 
 arg returns [result]
 	: t=data_type n=NAME {$result = Argument($n.text, $t.result)};

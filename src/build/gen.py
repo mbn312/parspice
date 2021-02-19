@@ -32,38 +32,53 @@ def main(argv):
         if not os.path.exists(o):
             os.makedirs(o)
 
+
     generate_proto(functions, proto_out, template_dir)
     generate_factory(functions, java_out, template_dir)
 
     for func in functions:
-        try:
-            generate_java(func, ['Call.java', 'Batch.java'], java_out, template_dir)
-        except ValueError:
-            print('not yet working: %s' % func.name)
+        if func.classification == parse_tree.Classification.NORMAL:
+            try:
+                generate_java(func, ['Call.java', 'Batch.java'], java_out, template_dir)
+            except ValueError:
+                print('not yet working: %s' % func.name)
 
 
 def generate_factory(funcs, out, template_dir):
     factories = ''
     imports = ''
     for func in funcs:
-        bad_arg = False
-        for i,arg in enumerate(func.args):
-            ty = java_type_to_proto(arg.data_type)
-            if ty is None:
-                bad_arg = True
-                break
-        if bad_arg:
-            continue
+        if func.classification == parse_tree.Classification.NORMAL:
+            bad_arg = False
+            for i,arg in enumerate(func.args):
+                ty = java_type_to_proto(arg.data_type)
+                if ty is None:
+                    bad_arg = True
+                    break
+            if bad_arg:
+                continue
 
-        upper_name = func.name[0].upper() + func.name[1:]
-        lower_name = func.name
+            upper_name = func.name[0].upper() + func.name[1:]
+            lower_name = func.name
 
-        factories += """
-        public %sBatch %s() {
-            return new %sBatch(stub);
-        }
-        """ % (upper_name, lower_name, upper_name)
-        imports += 'import parspice.functions.%s.%sBatch;\n' % (upper_name, upper_name)
+            factories += """
+            public %sBatch %s() {
+                return new %sBatch(stub);
+            }
+            """ % (upper_name, lower_name, upper_name)
+            imports += 'import parspice.functions.%s.%sBatch;\n' % (upper_name, upper_name)
+        elif func.classification == parse_tree.Classification.CONSTANT:
+            factories += """
+            public %s %s() {
+                return CSPICE.%s();
+            }
+            """ % (str(func.return_type), func.name, func.name)
+        else:
+            factories += """
+            public void %s() {
+                // throw new NotImplementedException("aaaa");
+            }
+            """ % (func.name)
     with open(os.path.join(template_dir, 'ParSpice.java'), 'r') as template:
         proto = template.read() \
             .replace('###FACTORIES###', factories) \
@@ -77,49 +92,50 @@ def generate_proto(funcs, out, template_dir):
     services = ''
     messages = ''
     for func in funcs:
-        upper_name = func.name[0].upper() + func.name[1:]
-        inputs = ''
-        outputs = ''
+        if func.classification == parse_tree.Classification.NORMAL:
+            upper_name = func.name[0].upper() + func.name[1:]
+            inputs = ''
+            outputs = ''
 
-        bad_arg = False
+            bad_arg = False
 
-        output_arg_counter = 1
-        for i,arg in enumerate(func.args):
-            ty = java_type_to_proto(arg.data_type)
-            if ty is None:
-                bad_arg = True
-                break
-            inputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
-            if 'repeated' in ty:
-                outputs += '%s %s = %i;\n' % (ty, arg.name, output_arg_counter)
-                output_arg_counter += 1
-        if bad_arg:
-            continue
+            output_arg_counter = 1
+            for i,arg in enumerate(func.args):
+                ty = java_type_to_proto(arg.data_type)
+                if ty is None:
+                    bad_arg = True
+                    break
+                if arg.io == parse_tree.IO.INPUT or arg.io == parse_tree.IO.BOTH:
+                    inputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
+                if arg.io == parse_tree.IO.OUTPUT or arg.io == parse_tree.IO.BOTH:
+                    outputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
+            if bad_arg:
+                continue
 
-        if func.return_type.base_type != parse_tree.DataType.VOID:
-            ty = java_type_to_proto(func.return_type)
-            outputs += '%s ret = %i;\n' % (ty, output_arg_counter)
+            if func.return_type.base_type != parse_tree.DataType.VOID:
+                ty = java_type_to_proto(func.return_type)
+                outputs += '%s ret = %i;\n' % (ty, len(func.args) + 1)
 
 
-        services += 'rpc ###UPPER_NAME###RPC (###UPPER_NAME###Request) returns (###UPPER_NAME###Response);\n' \
-            .replace('###UPPER_NAME###', upper_name)
-        messages += """
-        message ###UPPER_NAME###Request {
-            message ###UPPER_NAME###Input {
-                ###INPUTS###
+            services += 'rpc ###UPPER_NAME###RPC (###UPPER_NAME###Request) returns (###UPPER_NAME###Response);\n' \
+                .replace('###UPPER_NAME###', upper_name)
+            messages += """
+            message ###UPPER_NAME###Request {
+                message ###UPPER_NAME###Input {
+                    ###INPUTS###
+                }
+                repeated ###UPPER_NAME###Input inputs = 1;
             }
-            repeated ###UPPER_NAME###Input inputs = 1;
-        }
-        
-        message ###UPPER_NAME###Response {
-            message ###UPPER_NAME###Output {
-                ###OUTPUTS###
+            
+            message ###UPPER_NAME###Response {
+                message ###UPPER_NAME###Output {
+                    ###OUTPUTS###
+                }
+                repeated ###UPPER_NAME###Output outputs = 1;
             }
-            repeated ###UPPER_NAME###Output outputs = 1;
-        }
-        """.replace('###UPPER_NAME###', upper_name) \
-            .replace('###INPUTS###', inputs) \
-            .replace('###OUTPUTS###', outputs)
+            """.replace('###UPPER_NAME###', upper_name) \
+                .replace('###INPUTS###', inputs) \
+                .replace('###OUTPUTS###', outputs)
     with open(os.path.join(template_dir, 'parspice.proto'), 'r') as template:
         proto = template.read() \
             .replace('###SERVICES###', services) \
@@ -179,29 +195,30 @@ def generate_java(func, templates, out, template_dir):
 
         fields += 'public %s %s;\n' % (object_type, arg.name)
 
-        args += '%s %s, ' % (object_type, arg.name)
-        args_no_types += '%s, ' % arg.name
-        assign_fields += 'this.%s = %s;\n' % (arg.name, arg.name)
+        if arg.io == parse_tree.IO.INPUT or arg.io == parse_tree.IO.BOTH:
+            args += '%s %s, ' % (object_type, arg.name)
+            args_no_types += '%s, ' % arg.name
+            assign_fields += 'this.%s = %s;\n' % (arg.name, arg.name)
 
-        if arg.data_type.array_depth == 0:
-            builders += '.set%s(call.%s)\n' % (cap_name, arg.name)
-        elif arg.data_type.array_depth == 1:
-            builders += '.addAll%s(Arrays.asList(call.%s))\n' % (cap_name, arg.name)
-        elif arg.data_type.array_depth == 2:
-            base = arg.data_type.base_to_str().capitalize()
-            nested_builders += """
-            ArrayList<Repeated%s> nested%i = new ArrayList<Repeated%s>();
-            for (%s[] row : call.%s) {
-                nested%i.add(
-                    Repeated%s.newBuilder()
-                        .addAllArray(Arrays.asList(row))
-                        .build()
-                );
-            }
-            """ % (base, i, base, base_object_type, arg.name, i, base)
-            builders += ".addAll%s(nested%i)\n" % (cap_name, i)
-        else:
-            return
+            if arg.data_type.array_depth == 0:
+                builders += '.set%s(call.%s)\n' % (cap_name, arg.name)
+            elif arg.data_type.array_depth == 1:
+                builders += '.addAll%s(Arrays.asList(call.%s))\n' % (cap_name, arg.name)
+            elif arg.data_type.array_depth == 2:
+                base = arg.data_type.base_to_str().capitalize()
+                nested_builders += """
+                ArrayList<Repeated%s> nested%i = new ArrayList<Repeated%s>();
+                for (%s[] row : call.%s) {
+                    nested%i.add(
+                        Repeated%s.newBuilder()
+                            .addAllArray(Arrays.asList(row))
+                            .build()
+                    );
+                }
+                """ % (base, i, base, base_object_type, arg.name, i, base)
+                builders += ".addAll%s(nested%i)\n" % (cap_name, i)
+            else:
+                return
 
     args = args[:-2]
     args_no_types = args_no_types[:-2]
