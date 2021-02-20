@@ -99,7 +99,6 @@ def generate_proto(funcs, out, template_dir):
 
             bad_arg = False
 
-            output_arg_counter = 1
             for i,arg in enumerate(func.args):
                 ty = java_type_to_proto(arg.data_type)
                 if ty is None:
@@ -116,6 +115,7 @@ def generate_proto(funcs, out, template_dir):
                 ty = java_type_to_proto(func.return_type)
                 outputs += '%s ret = %i;\n' % (ty, len(func.args) + 1)
 
+            outputs += 'string error = %i;\n' % (len(func.args) + 2)
 
             services += 'rpc ###UPPER_NAME###RPC (###UPPER_NAME###Request) returns (###UPPER_NAME###Response);\n' \
                 .replace('###UPPER_NAME###', upper_name)
@@ -236,13 +236,30 @@ def generate_java(func, templates, out, template_dir):
                     full%i.get(j).getArrayList().toArray(call.%s[j]);
                 }\n
                 """ % (base_object_type, i, cap_name, i, i, arg.name)
-                pass
 
     args = args[:-2]
     args_no_types = args_no_types[:-2]
 
     if func.return_type.base_type != parse_tree.DataType.VOID:
-        fields += 'public %s ret;\n' % func.return_type
+        object_type = str(func.return_type).replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+        base_object_type = func.return_type.base_to_str().replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+        fields += 'public %s ret;\n' % object_type
+        if func.return_type.array_depth == 0:
+            getters += 'call.ret = output.getRet();\n'
+        elif func.return_type.array_depth == 1:
+            getters += 'call.ret = new %s[output.getRetCount()];\n' % base_object_type
+            getters += 'output.getRetList().toArray(call.ret);\n'
+        elif func.return_type.array_depth == 2:
+            getters += 'call.ret = new %s[output.getRetCount()][output.getRet(0).getArrayCount()];\n' % base_object_type
+            getters += """
+                List<Repeated%s> fullRet = output.getRetList();
+                for (int j = 0; j < fullRet.size(); j++) {
+                    fullRet.get(j).getArrayList().toArray(call.ret[j]);
+                }\n
+                """ % base_object_type
+
+
+    getters += 'call.error = output.getError();\n'
 
     for template in templates:
         with open(os.path.join(template_dir, template), 'r') as in_file:
