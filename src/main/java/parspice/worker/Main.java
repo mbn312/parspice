@@ -8,7 +8,6 @@ public class Main {
 
         int serverPort = Integer.parseInt(args[0]);
 
-
         // create sever
         Server server = ServerBuilder.forPort(serverPort)
                 .addService(new SpiceService())

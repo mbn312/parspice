@@ -1,12 +1,15 @@
 package parspice.worker;
 
-import io.grpc.stub.StreamObserver;
-import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.common.primitives.Doubles;
 import parspice.rpc.*;
+
+import io.grpc.stub.StreamObserver;
+
 import spice.basic.CSPICE;
+import spice.basic.IDCodeNotFoundException;
 import spice.basic.SpiceErrorException;
 
-import java.util.Arrays;
+
 import java.util.List;
 
 public class SpiceService extends ParSpiceGrpc.ParSpiceImplBase {
@@ -14,9 +17,24 @@ public class SpiceService extends ParSpiceGrpc.ParSpiceImplBase {
     // one arg simple return
     @Override
     public void bodn2cRPC(Bodn2cRequest request, StreamObserver<Bodn2cResponse> responseObserver) {
-        super.bodn2cRPC(request, responseObserver);
-    }
+        // get args
+        List<Bodn2cRequest.Bodn2cInput> args = request.getInputsList();
 
+        // make request to spice and build responses
+        Bodn2cResponse.Builder replyBuilder = Bodn2cResponse.newBuilder();
+        for (int i = 0; i< request.getInputsCount(); i++) {
+            try {
+                int response = CSPICE.bodn2c(args.get(i).getName());
+                Bodn2cResponse.Bodn2cOutput output = Bodn2cResponse.Bodn2cOutput.newBuilder().setRet(response).build();
+                replyBuilder.setOutputs(i ,output).build();
+            } catch (SpiceErrorException | IDCodeNotFoundException err) {
+                System.out.println(err);
+            }
+        }
+        Bodn2cResponse reply = replyBuilder.build();
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
+    }
 
 
     // multiple arguments double array return
@@ -26,8 +44,8 @@ public class SpiceService extends ParSpiceGrpc.ParSpiceImplBase {
         // get args
         List<DpgrdrRequest.DpgrdrInput> args = request.getInputsList();
 
-        // take request and build output
-        DpgrdrResponse.DpgrdrOutput.Builder outputBuilder = DpgrdrResponse.DpgrdrOutput.newBuilder();
+        // make requests to spice and build responses
+        DpgrdrResponse.Builder replyBuilder = DpgrdrResponse.newBuilder();
 
         for (int i = 0; i< request.getInputsCount(); i++) {
             try {
@@ -40,26 +58,28 @@ public class SpiceService extends ParSpiceGrpc.ParSpiceImplBase {
                         args.get(i).getF()
                 );
 
-
+                // build repeated double to return.
                 RepeatedDouble.Builder repDoubleBuilder = RepeatedDouble.newBuilder();
-                for (int j = 0; j < response.length; j++) {
-                    Iterable<Double> res = Arrays.asList(response[j]);
-                    repDoubleBuilder.addArray(res);
+                for (int j = 0; j< response.length; j++) {
+                    List<Double> list = Doubles.asList(response[j]);
+                    repDoubleBuilder.addAllArray(list);
                 }
 
-                // add output
+                // build reply and return
                 RepeatedDouble ret = repDoubleBuilder.build();
-                outputBuilder.addRet(ret);
+                DpgrdrResponse.DpgrdrOutput output = DpgrdrResponse.DpgrdrOutput.newBuilder().setRet(i, ret).build();
+                replyBuilder.addOutputs(i, output);
             } catch (SpiceErrorException err) {
                 System.out.println(err);
             }
         }
 
-        DpgrdrResponse.Builder replyBuilder = DpgrdrResponse.newBuilder();
-        DpgrdrResponse reply = replyBuilder.addOutputs(outputBuilder.build()).build();
+        DpgrdrResponse reply = replyBuilder.build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
     }
+
+    // double array input simple output example
 
 
 }
