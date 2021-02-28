@@ -1,6 +1,6 @@
 package parspice;
 
-import jdk.jshell.spi.ExecutionControl;
+// import jdk.jshell.spi.ExecutionControl;
 import parspice.rpc.ParSpiceGrpc;
 
 import java.util.ArrayList;
@@ -34,20 +34,22 @@ public abstract class Batch<T extends Call> {
         sentCalls = declaredCalls;
     }
 
-    public T get(int index) throws ExecutionControl.NotImplementedException {
+    public T get(int index) {
         T result = getUnchecked(index);
         if (result.received) {
             return result;
         } else {
-            throw new ExecutionControl.NotImplementedException("fill in when we get there");
+//            throw new ExecutionControl.NotImplementedException("fill in when we get there");
+            return result;
         }
     }
 
-    public ArrayList<T> getAll() throws ExecutionControl.NotImplementedException {
+    public ArrayList<T> getAll()  {
         if (receivedCalls == declaredCalls) {
             return getAllUnchecked();
         } else {
-            throw new ExecutionControl.NotImplementedException("fill in when we get there");
+//            throw new ExecutionControl.NotImplementedException("fill in when we get there");
+            return getAllUnchecked();
         }
     }
 
