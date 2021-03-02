@@ -4,11 +4,17 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import parspice.rpc.ParSpiceGrpc;
 import spice.basic.CSPICE;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Arrays;
+import parspice.rpc.RepeatedDouble;
+import parspice.rpc.RepeatedInteger;
 
 ###IMPORTS###
 
 public class ParSpice {
     private ParSpiceGrpc.ParSpiceFutureStub stub;
+    private ParSpiceGrpc.ParSpiceBlockingStub blockingStub;
 
     public ParSpice() {
         String target = "localhost:50051";
@@ -16,6 +22,7 @@ public class ParSpice {
                 .usePlaintext()
                 .build();
         stub = ParSpiceGrpc.newFutureStub(channel);
+        blockingStub = ParSpiceGrpc.newBlockingStub(channel);
     }
 
     /**
