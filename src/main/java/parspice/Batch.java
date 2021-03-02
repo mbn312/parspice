@@ -2,7 +2,7 @@ package parspice;
 
 import java.util.concurrent.Future;
 import jdk.jshell.spi.ExecutionControl;
-import parspice.rpc.ParSpiceGrpc;
+import parspice.rpc.ParSPICEGrpc;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
@@ -11,11 +11,11 @@ public abstract class Batch<T extends Call> {
     protected ArrayList<T> unsentCalls;
     protected ArrayList<Future<ArrayList<T>>> futures;
 
-    protected ParSpiceGrpc.ParSpiceFutureStub stub;
+    protected ParSPICEGrpc.ParSPICEFutureStub stub;
 
     private static final int BATCH_SIZE = 1000;
 
-    public Batch(ParSpiceGrpc.ParSpiceFutureStub stub) {
+    public Batch(ParSPICEGrpc.ParSPICEFutureStub stub) {
         this.stub = stub;
         this.unsentCalls = new ArrayList<T>();
     }

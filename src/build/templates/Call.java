@@ -6,11 +6,9 @@ import java.util.ArrayList;
 //import spice.basic.GFScalarQuantity;
 
 public class ###UPPER_NAME###Call extends Call {
-###FIELDS###
-    public String error;
+    ###FIELDS###
 
     public ###UPPER_NAME###Call(###ARGS###){
-###ASSIGN_FIELDS###
-        error = "";
+        ###ASSIGN_FIELDS###
     }
 }

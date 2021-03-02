@@ -28,6 +28,7 @@ public class ###UPPER_NAME###Future {
                 ###UPPER_NAME###Call call = calls.get(i);
                 ###UPPER_NAME###Output output = outputs.get(i);
                 ###GETTERS###
+                call.error = output.getError();
             }
             received = true;
         }

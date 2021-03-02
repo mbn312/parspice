@@ -11,12 +11,12 @@ import parspice.rpc.###UPPER_NAME###Response;
 import parspice.rpc.###UPPER_NAME###Response.###UPPER_NAME###Output;
 import parspice.rpc.RepeatedDouble;
 import parspice.rpc.RepeatedInteger;
-import parspice.rpc.ParSpiceGrpc;
+import parspice.rpc.ParSPICEGrpc;
 import java.util.concurrent.Future;
 
 public class ###UPPER_NAME###Batch extends Batch<###UPPER_NAME###Call> {
 
-    public ###UPPER_NAME###Batch(ParSpiceGrpc.ParSpiceFutureStub stub) {
+    public ###UPPER_NAME###Batch(ParSPICEGrpc.ParSPICEFutureStub stub) {
         super(stub);
     }
 

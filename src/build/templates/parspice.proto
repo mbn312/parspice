@@ -10,7 +10,7 @@ package parspice.rpc;
 One rpc for each CSPICE function.
 Each takes ###Response and returns ###Request
  */
-service ParSpice {
+service ParSPICE {
   ###SERVICES###
 }
 

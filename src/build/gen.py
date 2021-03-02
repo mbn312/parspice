@@ -32,6 +32,7 @@ def main(argv):
         if not os.path.exists(o):
             os.makedirs(o)
 
+    functions = [func for func in functions if valid_function(func)]
 
     generate_proto(functions, proto_out, template_dir)
     generate_factory(functions, java_out, template_dir)
@@ -45,20 +46,17 @@ def main(argv):
 
 
 def generate_factory(funcs, out, template_dir):
+    """
+    Generate the ParSPICE.java file from template.
+
+    :param funcs: list of functions to generate.
+    :param out: where to output the resulting file.
+    :param template_dir: directory of ParSPICE.java template file.
+    :return: void
+    """
     factories = ''
     imports = ''
     for func in funcs:
-        if func.classification == None:
-            continue
-        bad_arg = False
-        for i,arg in enumerate(func.args):
-            ty = java_type_to_proto(arg.data_type)
-            if ty is None:
-                bad_arg = True
-                break
-        if bad_arg:
-            continue
-
         upper_name = func.name[0].upper() + func.name[1:]
         lower_name = func.name
 
@@ -84,8 +82,8 @@ def generate_factory(funcs, out, template_dir):
             getters = ''
             for i,arg in enumerate(func.args):
                 cap_name = arg.name[0].upper() + arg.name[1:]
-                object_type = str(arg.data_type).replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
-                base_object_type = arg.data_type.base_to_str().replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+                object_type = arg.data_type.object_str()
+                base_object_type = arg.data_type.base_object_str()
                 args += '%s %s, ' % (object_type, arg.name)
                 if arg.io == parse_tree.IO.INPUT or arg.io == parse_tree.IO.BOTH:
                     if arg.data_type.array_depth == 0:
@@ -121,8 +119,8 @@ def generate_factory(funcs, out, template_dir):
             return_line = ''
             return_type = 'void'
             if func.return_type.base_type != parse_tree.DataType.VOID:
-                return_type = str(func.return_type).replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
-                base_object_type = func.return_type.base_to_str().replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+                return_type = func.return_type.object_str()
+                base_return_type = func.return_type.base_object_str()
                 if func.return_type.array_depth == 0:
                     return_line = 'return response.getRet();'
                 elif func.return_type.array_depth == 1:
@@ -130,7 +128,7 @@ def generate_factory(funcs, out, template_dir):
                     %s ret = new %s[response.getRetCount()];
                     response.getRetList().toArray(ret);
                     return ret;
-                    """ % (return_type, base_object_type)
+                    """ % (return_type, base_return_type)
                 elif func.return_type.array_depth == 2:
                     return_line = """
                     List<Repeated%s> fullRet = response.getRetList();
@@ -139,7 +137,7 @@ def generate_factory(funcs, out, template_dir):
                         fullRet.get(j).getArrayList().toArray(ret[j]);
                     }
                     return ret;
-                    """ % (base_object_type, return_type, base_object_type)
+                    """ % (base_return_type, return_type, base_return_type)
             args = args[:-2]
             factories += ("""
             public %s ###LOWER_NAME###(###ARGS###) {
@@ -158,16 +156,24 @@ def generate_factory(funcs, out, template_dir):
                 .replace('###BUILDERS###', builders) \
                 .replace('###ARGS###', args) \
                 .replace('###NESTED_BUILDERS###', nested_builders)
-    with open(os.path.join(template_dir, 'ParSpice.java'), 'r') as template:
-        proto = template.read() \
+    with open(os.path.join(template_dir, 'ParSPICE.java'), 'r') as template:
+        parspice = template.read() \
             .replace('###FACTORIES###', factories) \
             .replace('###IMPORTS###', imports)
-        with open(os.path.join(out, 'ParSpice.java'), 'w') as out_file:
-            out_file.write(proto)
+        with open(os.path.join(out, 'ParSPICE.java'), 'w') as out_file:
+            out_file.write(parspice)
 
 
 
 def generate_proto(funcs, out, template_dir):
+    """
+    Generate parspice.proto messages from template.
+
+    :param funcs: list of functions to generate from
+    :param out: output dir to place the file
+    :param template_dir: where to find the template
+    :return: void
+    """
     services = ''
     messages = ''
     for func in funcs:
@@ -176,25 +182,15 @@ def generate_proto(funcs, out, template_dir):
         inputs = ''
         outputs = ''
 
-        if func.classification == None:
-            continue
-
-        bad_arg = False
-
         for i,arg in enumerate(func.args):
-            ty = java_type_to_proto(arg.data_type)
-            if ty is None:
-                bad_arg = True
-                break
+            ty = arg.data_type.proto_str()
             if arg.io == parse_tree.IO.INPUT or arg.io == parse_tree.IO.BOTH:
                 inputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
             if arg.io == parse_tree.IO.OUTPUT or arg.io == parse_tree.IO.BOTH:
                 outputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
-        if bad_arg:
-            continue
 
         if func.return_type.base_type != parse_tree.DataType.VOID:
-            ty = java_type_to_proto(func.return_type)
+            ty = func.return_type.proto_str()
             outputs += '%s ret = %i;\n' % (ty, len(func.args) + 1)
 
         outputs += 'string error = %i;\n' % (len(func.args) + 2)
@@ -244,35 +240,17 @@ def generate_proto(funcs, out, template_dir):
         with open(os.path.join(out, 'parspice.proto'), 'w') as out_file:
             out_file.write(proto)
 
-def java_type_to_proto(java):
-    if java.array_depth in [0,1]:
-        ty = ''
-        if java.base_type == parse_tree.DataType.VOID:
-            return None
-        elif java.base_type == parse_tree.DataType.INT:
-            ty = 'int32'
-        elif java.base_type == parse_tree.DataType.BOOLEAN:
-            ty = 'bool'
-        elif java.base_type == parse_tree.DataType.GFSEARCHUTILS:
-            return None
-        elif java.base_type == parse_tree.DataType.GFSCALARQUANTITY:
-            return None
-        else:
-            ty = java.base_to_str().lower()
-        if java.array_depth == 1:
-            ty = "repeated " + ty
-        return ty
-    elif java.array_depth == 2:
-        if java.base_type == parse_tree.DataType.DOUBLE:
-            return 'repeated RepeatedDouble'
-        elif java.base_type == parse_tree.DataType.INT:
-            return 'repeated RepeatedInt'
-        else:
-            return None
-
-
 
 def generate_java(func, templates, out, template_dir):
+    """
+    Generate java files for a particular SPICE function.
+
+    :param func: function to generate from
+    :param templates: List of template Java files to generate from
+    :param out: where to put the generated output files
+    :param template_dir: directory of the template files
+    :return: void
+    """
 
     upper_name = func.name[0].upper() + func.name[1:]
     lower_name = func.name
@@ -292,8 +270,8 @@ def generate_java(func, templates, out, template_dir):
 
         cap_name = arg.name[0].upper() + arg.name[1:]
 
-        object_type = str(arg.data_type).replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
-        base_object_type = arg.data_type.base_to_str().replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+        object_type = arg.data_type.object_str()
+        base_object_type = arg.data_type.base_object_str()
 
         fields += 'public %s %s;\n' % (object_type, arg.name)
 
@@ -342,8 +320,8 @@ def generate_java(func, templates, out, template_dir):
     args_no_types = args_no_types[:-2]
 
     if func.return_type.base_type != parse_tree.DataType.VOID:
-        object_type = str(func.return_type).replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
-        base_object_type = func.return_type.base_to_str().replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+        object_type = func.return_type.object_str()
+        base_object_type = func.return_type.base_object_str()
         fields += 'public %s ret;\n' % object_type
         if func.return_type.array_depth == 0:
             getters += 'call.ret = output.getRet();\n'
@@ -360,8 +338,6 @@ def generate_java(func, templates, out, template_dir):
                 """ % base_object_type
 
 
-    getters += 'call.error = output.getError();\n'
-
     for template in templates:
         with open(os.path.join(template_dir, template), 'r') as in_file:
             output = in_file.read() \
@@ -377,6 +353,23 @@ def generate_java(func, templates, out, template_dir):
             with open(os.path.join(out, '%s%s' % (upper_name, template)), 'w') as out_file:
                 out_file.write(output)
 
+
+def valid_function(func):
+    """
+    Determines if the function can be automatically generated.
+
+    This function should be removed and unnecessary in the final product.
+
+    :param func: function to validate
+    :return: whether generation should proceed.
+    """
+    if func.classification is None:
+        return False
+    for i,arg in enumerate(func.args):
+        ty = arg.data_type.proto_str()
+        if ty is None:
+            return False
+    return True
 
 if __name__ == '__main__':
     main(sys.argv)
