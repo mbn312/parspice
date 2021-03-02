@@ -63,7 +63,7 @@ def generate_factory(funcs, out, template_dir):
         if func.classification == parse_tree.Classification.NORMAL:
             factories += """
             public %sBatch %s() {
-                return new %sBatch(stub);
+                return new %sBatch(futureStub);
             }
             """ % (upper_name, lower_name, upper_name)
             imports += 'import parspice.functions.%s.%sBatch;\n' % (upper_name, upper_name)

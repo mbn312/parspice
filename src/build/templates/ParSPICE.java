@@ -2,27 +2,29 @@ package parspice;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import parspice.rpc.ParSPICEGrpc;
+import parspice.rpc.ParSPICEGrpc.ParSPICEFutureStub;
+import parspice.rpc.ParSPICEGrpc.ParSPICEBlockingStub;
 import spice.basic.CSPICE;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 import parspice.rpc.RepeatedDouble;
 import parspice.rpc.RepeatedInteger;
+import parspice.ParSPICEBuilder;
 
 ###IMPORTS###
 
 public class ParSPICE {
-    private ParSPICEGrpc.ParSPICEFutureStub stub;
-    private ParSPICEGrpc.ParSPICEBlockingStub blockingStub;
+    private ParSPICEFutureStub futureStub;
+    private ParSPICEBlockingStub blockingStub;
 
-    public ParSPICE() {
-        String target = "localhost:50051";
-        ManagedChannel channel = ManagedChannelBuilder.forTarget(target)
-                .usePlaintext()
-                .build();
-        stub = ParSPICEGrpc.newFutureStub(channel);
-        blockingStub = ParSPICEGrpc.newBlockingStub(channel);
+    public static ParSPICEBuilder builder() {
+        return new ParSPICEBuilder();
+    }
+
+    public ParSPICE(ParSPICEFutureStub fs, ParSPICEBlockingStub bs /*heh*/) {
+        this.futureStub = fs;
+        this.blockingStub = bs;
     }
 
     /**
