@@ -173,7 +173,7 @@ m2eul	NORMAL	i,i
 m2q	NORMAL	i						
 mxm	NORMAL	i,i						
 mxv	NORMAL	i,i						
-namfrm								
+namfrm			not sure					
 npedln	NORMAL	i,i,i,i,i,o,o						
 npelpt	NORMAL	i,i,o,o						
 nplnpt	NORMAL	i,i,i,o,o						
@@ -184,18 +184,18 @@ occult	NORMAL	i,i,i,i,i,i,i,i,i
 oscelt	NORMAL	i,i,i						
 oscltx	NORMAL	i,i,i						
 pckcls	TASK_STATEFUL	i	PCK, close file					
-pckopn								
-pckuof								
-pckw02								
-pcpool								
-pdpool								
-pgrrec								
-pi								
-pipool								
-pjelpl								
-pl2nvc								
-pl2nvp								
-pl2psv								
+pckopn	TASK_STATEFUL	i,i,i	Create a new PCK file, returning the handle of the opened file.					
+pckuof	TASK_STATEFUL	i	Unload a binary PCK file so that it will no longer be searched by the readers.					
+pckw02	TASK_STATEFUL	i,i,i,i,i,i,i,i,i,i,i	Write a type 2 segment to a PCK binary file given the file handle, frame class ID, base frame, time range covered by the segment, and the Chebyshev polynomial coefficients.					
+pcpool	GLOBAL_STATE_MODIFIER	i,i	This entry point provides toolkit programmers a method for programmatically inserting character data into the kernel pool. 					
+pdpool	GLOBAL_STATE_MODIFIER	i,i	This entry point provides toolkit programmers a method for programmatically inserting double precision data into the kernel pool. 					
+pgrrec	NORMAL	i,i,i,i,i,i						
+pi	CONSTANT							
+pipool	GLOBAL_STATE_MODIFIER	i,i	This entry point provides toolkit programmers a method for programmatically inserting integer data into the kernel pool. 					
+pjelpl	NORMAL	i,i						
+pl2nvc	NORMAL	i,o,o						
+pl2nvp	NORMAL	i,o,o						
+pl2psv	NORMAL	i,o,o,o						
 pltar	NORMAL	i,i,i,i						
 pltexp	NORMAL	i,i						
 pltnp	NORMAL	i,i,i,i,o,o						
@@ -237,7 +237,7 @@ spd	CONSTANT
 sphcyl	NORMAL	i,i,i						
 sphlat	NORMAL	i,i,i						
 sphrec	NORMAL	i,i,i						
-spkcls	TASK_STATEFUL		closing a file?					
+spkcls	TASK_STATEFUL	i	closing a file?					
 spkcov	NORMAL	i,i,i,i						
 spkcpo	NORMAL	i,i,i,i,i,i,i,i,o,o						
 spkcpt	NORMAL	i,i,i,i,i,i,i,i,o,o						
@@ -285,7 +285,7 @@ unload
 unorm								
 vcrss								
 vdist								
-vhat								
+vhat	NORMAL	i						
 vnorm								
 vperp								
 vproj								

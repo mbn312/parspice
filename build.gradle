@@ -60,8 +60,19 @@ test {
     useJUnitPlatform()
 }
 
+import org.apache.tools.ant.taskdefs.condition.Os
 task genFromCSPICE(type: Exec) {
-    commandLine file("$rootDir/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        commandLine 'cmd', '/c', file("$rootDir/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
+    } else if (Os.isFamily(Os.FAMILY_UNIX)) {
+        commandLine file("$rootDir/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
+    } else {
+        println('OS not supported: ' + Os.toString())
+    }
 }
 
 tasks.compileJava.dependsOn(genFromCSPICE)
+
+compileJava {
+    options.compilerArgs << '-Xlint:unchecked'
+}

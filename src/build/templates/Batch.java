@@ -10,47 +10,41 @@ import parspice.rpc.###UPPER_NAME###Request.###UPPER_NAME###Input;
 import parspice.rpc.###UPPER_NAME###Response;
 import parspice.rpc.###UPPER_NAME###Response.###UPPER_NAME###Output;
 import parspice.rpc.RepeatedDouble;
-import parspice.rpc.RepeatedInt;
-import parspice.rpc.ParSpiceGrpc;
+import parspice.rpc.RepeatedInteger;
+import parspice.rpc.ParSPICEGrpc;
+import java.util.concurrent.Future;
 
 public class ###UPPER_NAME###Batch extends Batch<###UPPER_NAME###Call> {
 
-    private ArrayList<###UPPER_NAME###Call> calls = new ArrayList<###UPPER_NAME###Call>();
-
-    public ###UPPER_NAME###Batch(ParSpiceGrpc.ParSpiceBlockingStub stub) {
+    public ###UPPER_NAME###Batch(ParSPICEGrpc.ParSPICEFutureStub stub) {
         super(stub);
     }
 
     public void call(###ARGS###) {
-        calls.add(new ###UPPER_NAME###Call(###ARGS_NO_TYPES###));
+        unsentCalls.add(new ###UPPER_NAME###Call(###ARGS_NO_TYPES###));
         registerCall();
     }
 
-    protected ###UPPER_NAME###Call getUnchecked(int index) {
-        return calls.get(index);
-    }
-
-    protected ArrayList<###UPPER_NAME###Call> getAllUnchecked() {
-        return calls;
-    }
-
-    protected void run(int howMany) {
+    public void run() {
         ###UPPER_NAME###Request.Builder requestBuilder = ###UPPER_NAME###Request.newBuilder();
-        for (###UPPER_NAME###Call call : calls) {
+        for (###UPPER_NAME###Call call : unsentCalls) {
             ###NESTED_BUILDERS###
             requestBuilder.addInputs(###UPPER_NAME###Input.newBuilder()
                     ###BUILDERS###
                     .build());
         }
+        requestBuilder.setBatchID(0);
         ###UPPER_NAME###Request request = requestBuilder.build();
 
-        ###UPPER_NAME###Response response;
+        ###UPPER_NAME###Future ###LOWER_NAME###Future;
         try{
-            response = stub.###LOWER_NAME###RPC(request);
+            Future<###UPPER_NAME###Response> responseFuture = stub.###LOWER_NAME###RPC(request);
+            ###LOWER_NAME###Future = new ###UPPER_NAME###Future(unsentCalls, responseFuture);
+            unsentCalls = new ArrayList<###UPPER_NAME###Call>();
         }
         catch (io.grpc.StatusRuntimeException e) {
             System.out.println(e.getStatus());
-            response = null;
+            ###LOWER_NAME###Future = null;
         }
     }
 }

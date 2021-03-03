@@ -17,6 +17,11 @@ class FunctionDecl:
     def __str__(self):
         return str(self.return_type) + " " + self.name
 
+    def upper_name(self):
+        return self.name[0].upper() + self.name[1:]
+    def lower_name(self):
+        return self.name.lower()
+
 
 class Argument:
     """
@@ -87,6 +92,37 @@ class DataType:
             return "GFScalarQuantity"
         else:
             raise ValueError("Base type not recognized: " + str(self.base_type))
+
+    def object_str(self):
+        return str(self).replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+    def base_object_str(self):
+        return self.base_to_str().replace('int', 'Integer').replace('double', 'Double').replace('boolean', 'Boolean')
+
+    def proto_str(self):
+        if self.array_depth in [0,1]:
+            ty = ''
+            if self.base_type == DataType.VOID:
+                return None
+            elif self.base_type == DataType.INT:
+                ty = 'int32'
+            elif self.base_type == DataType.BOOLEAN:
+                ty = 'bool'
+            elif self.base_type == DataType.GFSEARCHUTILS:
+                return None
+            elif self.base_type == DataType.GFSCALARQUANTITY:
+                return None
+            else:
+                ty = self.base_to_str().lower()
+            if self.array_depth == 1:
+                ty = "repeated " + ty
+            return ty
+        elif self.array_depth == 2:
+            if self.base_type == DataType.DOUBLE:
+                return 'repeated RepeatedDouble'
+            elif self.base_type == DataType.INT:
+                return 'repeated RepeatedInt'
+            else:
+                return None
 
 
 class Classification:
