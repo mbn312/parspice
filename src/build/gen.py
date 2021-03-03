@@ -329,9 +329,9 @@ def generate_java(func, templates, out, template_dir):
                 return
         if arg.io == parse_tree.IO.OUTPUT:
             if arg.data_type.array_depth == 1:
-                builders += '.addAll%sSize(Arrays.asList(call.%s.length))\n' % (cap_name, arg.name)
+                builders += '.addAll%sSize(Arrays.asList(this.%s.length))\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
-                builders += '.addAll%sSize(Arrays.asList(call.%s.length, call.%s[0].length))\n' % (cap_name, arg.name, arg.name)
+                builders += '.addAll%sSize(Arrays.asList(this.%s.length, this.%s[0].length))\n' % (cap_name, arg.name, arg.name)
 
     args = args[:-2]
     args_no_types = args_no_types[:-2]
