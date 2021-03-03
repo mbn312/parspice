@@ -18,18 +18,19 @@ public class ReflectionTest {
         long startTime;
         long stopTime;
 
-
         startTime = System.currentTimeMillis();
-        try {
-            CSPICE.mxm(m1, m2);
-        } catch (SpiceErrorException e) {
-            System.out.println("error");
+        for (int i = 0; i < 1000; i++) {
+            try {
+                CSPICE.mxm(m1, m2);
+            } catch (SpiceErrorException e) {
+                System.out.println("error");
+            }
         }
         stopTime = System.currentTimeMillis();
         System.out.println(stopTime-startTime);
     }
 
-    @Test // test reflection speed
+    @Test // test reflection on every iteration speed
     void reflectionTestEveryTime() {
         // init
         double[][] m1 = {{0,0,0},{0,0,0}, {0,0,0}};
@@ -38,17 +39,19 @@ public class ReflectionTest {
         long stopTime;
 
         startTime = System.currentTimeMillis();
-        try {
-            Method method = CSPICE.class.getDeclaredMethod("mxm");
-            method.invoke(null, m1, m2);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            System.out.println("error");
+        for (int i = 0; i < 1000; i++) {
+            try {
+                Method method = CSPICE.class.getDeclaredMethod("mxm");
+                method.invoke(null, m1, m2);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                System.out.println("error");
+            }
         }
         stopTime = System.currentTimeMillis();
         System.out.println(stopTime-startTime);
     }
 
-    @Test
+    @Test // test only one reflexive call speed
     void reflectionTestOnce() {
         double[][] m1 = {{0,0,0},{0,0,0}, {0,0,0}};
         double[][] m2 = {{0,0,0},{0,0,0}, {0,0,0}};
@@ -58,8 +61,14 @@ public class ReflectionTest {
         startTime = System.currentTimeMillis();
         try {
             Method method = CSPICE.class.getDeclaredMethod("mxm");
-            method.invoke(null, m1, m2);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            for (int i = 0; i < 1000; i++) {
+                try {
+                    method.invoke(null, m1, m2);
+                } catch ( IllegalAccessException | InvocationTargetException e) {
+                    System.out.println("error");
+                }
+            }
+        } catch (NoSuchMethodException e ) {
             System.out.println("error");
         }
         stopTime = System.currentTimeMillis();
