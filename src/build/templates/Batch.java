@@ -25,17 +25,17 @@ public class ###UPPER_NAME###Batch extends Batch<###UPPER_NAME###Call> {
         registerCall();
     }
 
-    public void run() {
+    private ###UPPER_NAME###Request pack() {
         ###UPPER_NAME###Request.Builder requestBuilder = ###UPPER_NAME###Request.newBuilder();
         for (###UPPER_NAME###Call call : unsentCalls) {
-            ###NESTED_BUILDERS###
-            requestBuilder.addInputs(###UPPER_NAME###Input.newBuilder()
-                    ###BUILDERS###
-                    .build());
+            requestBuilder.addInputs(call.pack());
         }
         requestBuilder.setBatchID(0);
-        ###UPPER_NAME###Request request = requestBuilder.build();
+        return requestBuilder.build();
+    }
 
+    public void run() {
+        ###UPPER_NAME###Request request = pack();
         ###UPPER_NAME###Future ###LOWER_NAME###Future;
         try{
             Future<###UPPER_NAME###Response> responseFuture = stub.###LOWER_NAME###RPC(request);

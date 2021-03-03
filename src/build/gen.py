@@ -284,13 +284,13 @@ def generate_java(func, templates, out, template_dir):
             assign_fields += 'this.%s = %s;\n' % (arg.name, arg.name)
 
             if arg.data_type.array_depth == 0:
-                builders += '.set%s(call.%s)\n' % (cap_name, arg.name)
+                builders += '.set%s(this.%s)\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 1:
-                builders += '.addAll%s(Arrays.asList(call.%s))\n' % (cap_name, arg.name)
+                builders += '.addAll%s(Arrays.asList(this.%s))\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
                 nested_builders += """
                 ArrayList<Repeated%s> nested%i = new ArrayList<Repeated%s>();
-                for (%s[] row : call.%s) {
+                for (%s[] row : this.%s) {
                     nested%i.add(
                         Repeated%s.newBuilder()
                             .addAllArray(Arrays.asList(row))
@@ -303,17 +303,17 @@ def generate_java(func, templates, out, template_dir):
                 return
         if arg.io == parse_tree.IO.OUTPUT or arg.io == parse_tree.IO.BOTH:
             if arg.data_type.array_depth == 0:
-                getters += 'call.%s = output.get%s();\n' % (arg.name, cap_name)
+                getters += 'this.%s = output.get%s();\n' % (arg.name, cap_name)
             elif arg.data_type.array_depth == 1:
-                getters += 'call.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
-                getters += 'output.get%sList().toArray(call.%s);\n' % (cap_name, arg.name)
+                getters += 'this.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
+                getters += 'output.get%sList().toArray(this.%s);\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
-                getters += 'call.%s = new %s[output.get%sCount()][output.get%s(0).getArrayCount()];\n' \
+                getters += 'this.%s = new %s[output.get%sCount()][output.get%s(0).getArrayCount()];\n' \
                            % (arg.name, base_object_type, cap_name, cap_name)
                 getters += """
                 List<Repeated%s> full%i = output.get%sList();
                 for (int j = 0; j < full%i.size(); j++) {
-                    full%i.get(j).getArrayList().toArray(call.%s[j]);
+                    full%i.get(j).getArrayList().toArray(this.%s[j]);
                 }\n
                 """ % (base_object_type, i, cap_name, i, i, arg.name)
             else:
@@ -327,16 +327,16 @@ def generate_java(func, templates, out, template_dir):
         base_object_type = func.return_type.base_object_str()
         fields += 'public %s ret;\n' % object_type
         if func.return_type.array_depth == 0:
-            getters += 'call.ret = output.getRet();\n'
+            getters += 'this.ret = output.getRet();\n'
         elif func.return_type.array_depth == 1:
-            getters += 'call.ret = new %s[output.getRetCount()];\n' % base_object_type
-            getters += 'output.getRetList().toArray(call.ret);\n'
+            getters += 'this.ret = new %s[output.getRetCount()];\n' % base_object_type
+            getters += 'output.getRetList().toArray(this.ret);\n'
         elif func.return_type.array_depth == 2:
-            getters += 'call.ret = new %s[output.getRetCount()][output.getRet(0).getArrayCount()];\n' % base_object_type
+            getters += 'this.ret = new %s[output.getRetCount()][output.getRet(0).getArrayCount()];\n' % base_object_type
             getters += """
                 List<Repeated%s> fullRet = output.getRetList();
                 for (int j = 0; j < fullRet.size(); j++) {
-                    fullRet.get(j).getArrayList().toArray(call.ret[j]);
+                    fullRet.get(j).getArrayList().toArray(this.ret[j]);
                 }\n
                 """ % base_object_type
 

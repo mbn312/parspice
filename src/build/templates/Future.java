@@ -27,8 +27,7 @@ public class ###UPPER_NAME###Future {
             for (int i = 0; i < outputs.size(); i++) {
                 ###UPPER_NAME###Call call = calls.get(i);
                 ###UPPER_NAME###Output output = outputs.get(i);
-                ###GETTERS###
-                call.error = output.getError();
+                call.unpack(output);
             }
             received = true;
         }
