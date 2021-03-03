@@ -314,11 +314,11 @@ def generate_java(func, templates, out, template_dir):
             if arg.data_type.array_depth == 0:
                 getters += 'this.%s = output.get%s();\n' % (arg.name, cap_name)
             elif arg.data_type.array_depth == 1:
-                getters += 'this.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
+                # getters += 'this.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
                 getters += 'output.get%sList().toArray(this.%s);\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
-                getters += 'this.%s = new %s[output.get%sCount()][output.get%s(0).getArrayCount()];\n' \
-                           % (arg.name, base_object_type, cap_name, cap_name)
+                # getters += 'this.%s = new %s[output.get%sCount()][output.get%s(0).getArrayCount()];\n' \
+                #            % (arg.name, base_object_type, cap_name, cap_name)
                 getters += """
                 List<Repeated%s> full%i = output.get%sList();
                 for (int j = 0; j < full%i.size(); j++) {

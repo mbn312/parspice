@@ -7,7 +7,6 @@ import java.lang.InterruptedException;
 import java.util.concurrent.ExecutionException;
 import parspice.rpc.###UPPER_NAME###Response;
 import parspice.rpc.###UPPER_NAME###Response.###UPPER_NAME###Output;
-import parspice.rpc.###UPPER_NAME###Response.###UPPER_NAME###Output;
 import parspice.rpc.RepeatedDouble;
 import parspice.rpc.RepeatedInteger;
 
