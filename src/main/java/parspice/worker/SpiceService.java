@@ -13,7 +13,7 @@ import spice.basic.SpiceErrorException;
 
 import java.util.List;
 
-public class SpiceService extends ParSpiceGrpc.ParSpiceImplBase {
+public class SpiceService extends ParSPICEGrpc.ParSPICEImplBase {
 
     private RepeatedDouble arrayToRepDouble(double[] response) {
         RepeatedDouble.Builder repDoubleBuilder = RepeatedDouble.newBuilder();
@@ -22,8 +22,8 @@ public class SpiceService extends ParSpiceGrpc.ParSpiceImplBase {
         return repDoubleBuilder.build();
     }
 
-    private RepeatedInt intArrayToRepInt(int[] response) {
-        RepeatedInt.Builder repIntegerBuilder = RepeatedInt.newBuilder();
+    private RepeatedInteger intArrayToRepInt(int[] response) {
+        RepeatedInteger.Builder repIntegerBuilder = RepeatedInteger.newBuilder();
         List<Integer> list = Ints.asList(response);
         repIntegerBuilder.addAllArray(list);
         return repIntegerBuilder.build();
