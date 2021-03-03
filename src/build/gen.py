@@ -140,12 +140,15 @@ def generate_factory(funcs, out, template_dir):
                     """ % (base_return_type, return_type, base_return_type)
             args = args[:-2]
             factories += ("""
-            public %s ###LOWER_NAME###(###ARGS###) {
+            public %s ###LOWER_NAME###(###ARGS###) throws RuntimeException {
                 ###NESTED_BUILDERS###
                 ###UPPER_NAME###Request request = ###UPPER_NAME###Request.newBuilder()
                     ###BUILDERS###
                     .build();
                 ###UPPER_NAME###Response response = blockingStub.###LOWER_NAME###RPC(request);
+                if (response.getError() != "") {
+                    throw new RuntimeException(response.getError());
+                }
                 ###GETTERS###
                 %s
             }
