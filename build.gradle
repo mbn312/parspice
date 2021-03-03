@@ -39,7 +39,7 @@ dependencies {
 
     runtimeOnly "io.grpc:grpc-netty-shaded:${grpcVersion}"
 
-    compile files('libs/JNISpice.jar')
+    // compile files('libs/JNISpice.jar')
 }
 
 protobuf {
@@ -60,6 +60,7 @@ protobuf {
 
 test {
     useJUnitPlatform()
+    systemProperty "java.library.path", file("/${System.env.JNISPICE_ROOT}/lib")
 }
 
 import org.apache.tools.ant.taskdefs.condition.Os
