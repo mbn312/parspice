@@ -104,6 +104,7 @@ def generate_endpoints(funcs, templates, out, template_dir):
                         cspice_args += 'pre%i, ' % i
                         output_builders += '.addAll%s(%sArrayToRep(pre%i))\n' % (arg.upper_name(), arg.data_type.base_to_str(), i)
             cspice_args = cspice_args[:-2]
+            throws = ' | '.join(func.throws)
             workers += """
             @Override
             public void ###LOWER_NAME###RPC(###UPPER_NAME###Request request, StreamObserver<###UPPER_NAME###Response> responseObserver) {
@@ -117,7 +118,7 @@ def generate_endpoints(funcs, templates, out, template_dir):
                             ###OUTPUT_BUILDERS###
                             .build();
                         responseBuilder.addOutputs(output);
-                    } catch (SpiceErrorException | IDCodeNotFoundException err) {
+                    } catch (###THROWS### err) {
                         System.out.println(err);
                     }
                 }
@@ -130,6 +131,7 @@ def generate_endpoints(funcs, templates, out, template_dir):
                 .replace('###RETURN###', ret) \
                 .replace('###PRE_CSPICE_ARGS###', pre_cspice_args) \
                 .replace('###CSPICE_ARGS###', cspice_args) \
+                .replace('###THROWS###', throws) \
                 .replace('###OUTPUT_BUILDERS###', output_builders)
         elif func.classification == parse_tree.Classification.CONSTANT:
             factories += """

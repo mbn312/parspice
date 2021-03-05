@@ -9,7 +9,9 @@ import io.grpc.stub.StreamObserver;
 import spice.basic.CSPICE;
 import spice.basic.IDCodeNotFoundException;
 import spice.basic.SpiceErrorException;
-
+import spice.basic.SpiceException;
+import spice.basic.NameNotFoundException;
+import spice.basic.KernelVarNotFoundException;
 
 import java.util.List;
 import java.util.ArrayList;
