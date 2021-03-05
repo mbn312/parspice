@@ -40,7 +40,7 @@ def main(argv):
     for func in functions:
         if func.classification == parse_tree.Classification.NORMAL:
             try:
-                generate_java(func, ['Call.java', 'Batch.java', 'Future.java'], java_out, template_dir)
+                generate_java(func, ['Call.java', 'Batch.java'], java_out, template_dir)
             except ValueError:
                 print('not yet working: %s' % func.name)
 
@@ -63,7 +63,7 @@ def generate_factory(funcs, out, template_dir):
         if func.classification == parse_tree.Classification.NORMAL:
             factories += """
             public %sBatch %s() {
-                return new %sBatch(futureStub);
+                return new %sBatch();
             }
             """ % (upper_name, lower_name, upper_name)
             imports += 'import parspice.functions.%s.%sBatch;\n' % (upper_name, upper_name)
