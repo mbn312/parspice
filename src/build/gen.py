@@ -180,6 +180,11 @@ def generate_endpoints(funcs, templates, out, template_dir):
                         """ % (base_object_type, i, cap_name, i, i, arg.name)
                     else:
                         return
+                if arg.io == parse_tree.IO.OUTPUT:
+                    if arg.data_type.array_depth == 1:
+                        builders += '.addAll%sSize(Arrays.asList(%s.length))\n' % (cap_name, arg.name)
+                    elif arg.data_type.array_depth == 2:
+                        builders += '.addAll%sSize(Arrays.asList(%s.length, %s[0].length))\n' % (cap_name, arg.name, arg.name)
             return_line = ''
             return_type = 'void'
             if func.return_type.base_type != parse_tree.DataType.VOID:
@@ -253,10 +258,15 @@ def generate_proto(funcs, out, template_dir):
 
         for i,arg in enumerate(func.args):
             ty = arg.data_type.proto_str()
-            if arg.io == parse_tree.IO.INPUT or arg.io == parse_tree.IO.BOTH:
+            if arg.io == parse_tree.IO.INPUT:
                 inputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
-            if arg.io == parse_tree.IO.OUTPUT or arg.io == parse_tree.IO.BOTH:
+            elif arg.io == parse_tree.IO.OUTPUT:
+                inputs += 'repeated int32 %sSize = %i\n;' % (arg.name, i+1)
                 outputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
+            elif arg.io == parse_tree.IO.BOTH:
+                inputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
+                outputs += '%s %s = %i;\n' % (ty, arg.name, i+1)
+
 
         if func.return_type.base_type != parse_tree.DataType.VOID:
             ty = func.return_type.proto_str()
@@ -343,12 +353,11 @@ def generate_java(func, templates, out, template_dir):
         base_object_type = arg.data_type.base_object_str()
 
         fields += 'public %s %s;\n' % (object_type, arg.name)
+        args += '%s %s, ' % (object_type, arg.name)
+        args_no_types += '%s, ' % arg.name
+        assign_fields += 'this.%s = %s;\n' % (arg.name, arg.name)
 
         if arg.io == parse_tree.IO.INPUT or arg.io == parse_tree.IO.BOTH:
-            args += '%s %s, ' % (object_type, arg.name)
-            args_no_types += '%s, ' % arg.name
-            assign_fields += 'this.%s = %s;\n' % (arg.name, arg.name)
-
             if arg.data_type.array_depth == 0:
                 builders += '.set%s(call.%s)\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 1:
@@ -384,6 +393,11 @@ def generate_java(func, templates, out, template_dir):
                 """ % (base_object_type, i, cap_name, i, i, arg.name)
             else:
                 return
+        if arg.io == parse_tree.IO.OUTPUT:
+            if arg.data_type.array_depth == 1:
+                builders += '.addAll%sSize(Arrays.asList(call.%s.length))\n' % (cap_name, arg.name)
+            elif arg.data_type.array_depth == 2:
+                builders += '.addAll%sSize(Arrays.asList(call.%s.length, call.%s[0].length))\n' % (cap_name, arg.name, arg.name)
 
     args = args[:-2]
     args_no_types = args_no_types[:-2]

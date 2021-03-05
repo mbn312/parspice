@@ -53,6 +53,9 @@ protobuf {
         all()*.plugins {
             grpc {}
         }
+        all().each { task ->
+            task.dependsOn 'genFromCSPICE'
+        }
     }
 }
 
