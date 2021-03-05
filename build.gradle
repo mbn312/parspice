@@ -61,6 +61,7 @@ protobuf {
 
 test {
     useJUnitPlatform()
+    systemProperty "java.library.path", file("/${System.env.JNISPICE_ROOT}/lib")
 }
 
 import org.apache.tools.ant.taskdefs.condition.Os
