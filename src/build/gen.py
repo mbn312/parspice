@@ -68,37 +68,44 @@ def generate_endpoints(funcs, templates, out, template_dir):
             imports += 'import parspice.functions.%s.%sBatch;\n' % (func.upper_name(), func.upper_name())
 
             ret = ''
-            if str(func.return_type) != 'void':
-                ret = '%s ret = ' % func.return_type
             pre_cspice_args = ''
             cspice_args = ''
             output_builders = ''
+
+            if str(func.return_type) != 'void':
+                ret = '%s ret = ' % func.return_type
+                if func.return_type.array_depth == 0:
+                    output_builders += '.setRet(ret)\n'
+                elif func.return_type.array_depth == 1:
+                    output_builders += '.addAllRet(Arrays.asList(primToObj(ret)))\n'
+                elif func.return_type.array_depth == 2:
+                    output_builders += '.addAllRet(%sArrayToRep(ret))\n' % func.return_type.base_to_str()
             for i,arg in enumerate(func.args):
                 if arg.io == parse_tree.IO.INPUT:
                     if arg.data_type.array_depth == 0:
                         cspice_args += 'input.get%s(), ' % arg.upper_name()
-                    if arg.data_type.array_depth == 1:
+                    elif arg.data_type.array_depth == 1:
                         cspice_args += 'objToPrim(input.get%sList().toArray(%s[]::new)), ' % (arg.upper_name(), arg.data_type.base_object_str())
-                    if arg.data_type.array_depth == 2:
+                    elif arg.data_type.array_depth == 2:
                         cspice_args += 'input.get%sList().stream().map(SpiceService::rep%sToArray).toArray(%s[][]::new), ' \
                                        % (arg.upper_name(), arg.data_type.base_object_str(), arg.data_type.base_to_str())
-                if arg.io == parse_tree.IO.OUTPUT:
+                elif arg.io == parse_tree.IO.OUTPUT:
                     if arg.data_type.array_depth == 1:
                         pre_cspice_args += '%s pre%i = new %s[input.get%sSize(0)];\n' % (arg.data_type, i, arg.data_type.base_to_str(), arg.upper_name())
                         cspice_args += 'pre%i, ' % i
                         output_builders += '.addAll%s(Arrays.asList(primToObj(pre%i)))\n' % (arg.upper_name(), i)
-                    if arg.data_type.array_depth == 2:
+                    elif arg.data_type.array_depth == 2:
                         pre_cspice_args += '%s pre%i = new %s[input.get%sSize(0)][input.get%sSize(1)];\n' \
                                            % (arg.data_type, i, arg.data_type.base_to_str(), arg.upper_name(), arg.upper_name())
                         cspice_args += 'pre%i, ' % i
                         output_builders += '.addAll%s(%sArrayToRep(pre%i))\n' % (arg.upper_name(), arg.data_type.base_to_str(), i)
-                if arg.io == parse_tree.IO.BOTH:
+                elif arg.io == parse_tree.IO.BOTH:
                     if arg.data_type.array_depth == 1:
                         pre_cspice_args += '%s pre%i = objToPrim(input.get%sList().toArray(%s[]::new));\n' \
                                            % (arg.data_type, i, arg.upper_name(), arg.data_type.base_object_str())
                         cspice_args += 'pre%i, ' % i
                         output_builders += '.addAll%s(Arrays.asList(primToObj(pre%i)))\n' % (arg.upper_name(), i)
-                    if arg.data_type.array_depth == 2:
+                    elif arg.data_type.array_depth == 2:
                         pre_cspice_args += '%s pre%i = input.get%sList().stream().map(SpiceService::rep%sToArray).toArray(%s[][]::new);' \
                                             % (arg.data_type, i, arg.upper_name(), arg.data_type.base_object_str(), arg.data_type.base_to_str())
                         cspice_args += 'pre%i, ' % i
@@ -111,16 +118,16 @@ def generate_endpoints(funcs, templates, out, template_dir):
                 ###UPPER_NAME###Response.Builder responseBuilder = ###UPPER_NAME###Response.newBuilder();
                 for (int i = 0; i < request.getInputsCount(); i++) {
                     ###UPPER_NAME###Request.###UPPER_NAME###Input input = request.getInputs(i);
+                    ###UPPER_NAME###Response.###UPPER_NAME###Output.Builder outputBuilder = ###UPPER_NAME###Response.###UPPER_NAME###Output.newBuilder();
+                    ###UPPER_NAME###Response.###UPPER_NAME###Output output;
                     try {
                         ###PRE_CSPICE_ARGS###
                         ###RETURN###CSPICE.###LOWER_NAME###(###CSPICE_ARGS###);
-                        ###UPPER_NAME###Response.###UPPER_NAME###Output output = ###UPPER_NAME###Response.###UPPER_NAME###Output.newBuilder()
-                            ###OUTPUT_BUILDERS###
-                            .build();
-                        responseBuilder.addOutputs(output);
+                        output = outputBuilder###OUTPUT_BUILDERS###.build();
                     } catch (###THROWS### err) {
-                        System.out.println(err);
+                        output = outputBuilder.setError(err.toString()).build();
                     }
+                    responseBuilder.addOutputs(output);
                 }
                 ###UPPER_NAME###Response response = responseBuilder.build();
                 responseObserver.onNext(response);
