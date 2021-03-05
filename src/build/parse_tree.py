@@ -20,7 +20,7 @@ class FunctionDecl:
     def upper_name(self):
         return self.name[0].upper() + self.name[1:]
     def lower_name(self):
-        return self.name.lower()
+        return self.name
 
 
 class Argument:
@@ -36,6 +36,11 @@ class Argument:
 
     def set_io(self, io):
         self.io = io
+
+    def upper_name(self):
+        return self.name[0].upper() + self.name[1:]
+    def lower_name(self):
+        return self.name.lower()
 
 
 class DataType:
