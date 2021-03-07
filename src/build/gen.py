@@ -35,7 +35,7 @@ def main(argv):
     functions = [func for func in functions if valid_function(func)]
 
     generate_proto(functions, proto_out, template_dir)
-    generate_factory(functions, java_out, template_dir)
+    generate_endpoints(functions, ['ParSPICE.java', 'SpiceService.java'], java_out, template_dir)
 
     for func in functions:
         if func.classification == parse_tree.Classification.NORMAL:
@@ -45,28 +45,101 @@ def main(argv):
                 print('not yet working: %s' % func.name)
 
 
-def generate_factory(funcs, out, template_dir):
+def generate_endpoints(funcs, templates, out, template_dir):
     """
-    Generate the ParSPICE.java file from template.
+    Generate the endpoint files (like ParSPICE.java) from templates
 
     :param funcs: list of functions to generate.
-    :param out: where to output the resulting file.
+    :param templates: list of template files
+    :param out: where to output the resulting files.
     :param template_dir: directory of ParSPICE.java template file.
     :return: void
     """
     factories = ''
     imports = ''
+    workers = ''
     for func in funcs:
-        upper_name = func.name[0].upper() + func.name[1:]
-        lower_name = func.name
-
         if func.classification == parse_tree.Classification.NORMAL:
             factories += """
             public %sBatch %s() {
                 return new %sBatch();
             }
-            """ % (upper_name, lower_name, upper_name)
-            imports += 'import parspice.functions.%s.%sBatch;\n' % (upper_name, upper_name)
+            """ % (func.upper_name(), func.lower_name(), func.upper_name())
+            imports += 'import parspice.functions.%s.%sBatch;\n' % (func.upper_name(), func.upper_name())
+
+            ret = ''
+            pre_cspice_args = ''
+            cspice_args = ''
+            output_builders = ''
+
+            if str(func.return_type) != 'void':
+                ret = '%s ret = ' % func.return_type
+                if func.return_type.array_depth == 0:
+                    output_builders += '.setRet(ret)\n'
+                elif func.return_type.array_depth == 1:
+                    output_builders += '.addAllRet(Arrays.asList(primToObj(ret)))\n'
+                elif func.return_type.array_depth == 2:
+                    output_builders += '.addAllRet(%sArrayToRep(ret))\n' % func.return_type.base_to_str()
+            for i,arg in enumerate(func.args):
+                if arg.io == parse_tree.IO.INPUT:
+                    if arg.data_type.array_depth == 0:
+                        cspice_args += 'input.get%s(), ' % arg.upper_name()
+                    elif arg.data_type.array_depth == 1:
+                        cspice_args += 'objToPrim(input.get%sList().toArray(%s[]::new)), ' % (arg.upper_name(), arg.data_type.base_object_str())
+                    elif arg.data_type.array_depth == 2:
+                        cspice_args += 'input.get%sList().stream().map(SpiceService::rep%sToArray).toArray(%s[][]::new), ' \
+                                       % (arg.upper_name(), arg.data_type.base_object_str(), arg.data_type.base_to_str())
+                elif arg.io == parse_tree.IO.OUTPUT:
+                    if arg.data_type.array_depth == 1:
+                        pre_cspice_args += '%s pre%i = new %s[input.get%sSize(0)];\n' % (arg.data_type, i, arg.data_type.base_to_str(), arg.upper_name())
+                        cspice_args += 'pre%i, ' % i
+                        output_builders += '.addAll%s(Arrays.asList(primToObj(pre%i)))\n' % (arg.upper_name(), i)
+                    elif arg.data_type.array_depth == 2:
+                        pre_cspice_args += '%s pre%i = new %s[input.get%sSize(0)][input.get%sSize(1)];\n' \
+                                           % (arg.data_type, i, arg.data_type.base_to_str(), arg.upper_name(), arg.upper_name())
+                        cspice_args += 'pre%i, ' % i
+                        output_builders += '.addAll%s(%sArrayToRep(pre%i))\n' % (arg.upper_name(), arg.data_type.base_to_str(), i)
+                elif arg.io == parse_tree.IO.BOTH:
+                    if arg.data_type.array_depth == 1:
+                        pre_cspice_args += '%s pre%i = objToPrim(input.get%sList().toArray(%s[]::new));\n' \
+                                           % (arg.data_type, i, arg.upper_name(), arg.data_type.base_object_str())
+                        cspice_args += 'pre%i, ' % i
+                        output_builders += '.addAll%s(Arrays.asList(primToObj(pre%i)))\n' % (arg.upper_name(), i)
+                    elif arg.data_type.array_depth == 2:
+                        pre_cspice_args += '%s pre%i = input.get%sList().stream().map(SpiceService::rep%sToArray).toArray(%s[][]::new);' \
+                                            % (arg.data_type, i, arg.upper_name(), arg.data_type.base_object_str(), arg.data_type.base_to_str())
+                        cspice_args += 'pre%i, ' % i
+                        output_builders += '.addAll%s(%sArrayToRep(pre%i))\n' % (arg.upper_name(), arg.data_type.base_to_str(), i)
+            cspice_args = cspice_args[:-2]
+            throws = ' | '.join(func.throws)
+            workers += """
+            @Override
+            public void ###LOWER_NAME###RPC(###UPPER_NAME###Request request, StreamObserver<###UPPER_NAME###Response> responseObserver) {
+                ###UPPER_NAME###Response.Builder responseBuilder = ###UPPER_NAME###Response.newBuilder();
+                for (int i = 0; i < request.getInputsCount(); i++) {
+                    ###UPPER_NAME###Request.###UPPER_NAME###Input input = request.getInputs(i);
+                    ###UPPER_NAME###Response.###UPPER_NAME###Output.Builder outputBuilder = ###UPPER_NAME###Response.###UPPER_NAME###Output.newBuilder();
+                    ###UPPER_NAME###Response.###UPPER_NAME###Output output;
+                    try {
+                        ###PRE_CSPICE_ARGS###
+                        ###RETURN###CSPICE.###LOWER_NAME###(###CSPICE_ARGS###);
+                        output = outputBuilder###OUTPUT_BUILDERS###.build();
+                    } catch (###THROWS### err) {
+                        output = outputBuilder.setError(err.toString()).build();
+                    }
+                    responseBuilder.addOutputs(output);
+                }
+                ###UPPER_NAME###Response response = responseBuilder.build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
+            """.replace('###UPPER_NAME###', func.upper_name()) \
+                .replace('###LOWER_NAME###', func.lower_name()) \
+                .replace('###RETURN###', ret) \
+                .replace('###PRE_CSPICE_ARGS###', pre_cspice_args) \
+                .replace('###CSPICE_ARGS###', cspice_args) \
+                .replace('###THROWS###', throws) \
+                .replace('###OUTPUT_BUILDERS###', output_builders)
         elif func.classification == parse_tree.Classification.CONSTANT:
             factories += """
             public %s %s() {
@@ -74,8 +147,8 @@ def generate_factory(funcs, out, template_dir):
             }
             """ % (str(func.return_type), func.name, func.name)
         else:
-            imports += 'import parspice.rpc.%sRequest;\n' % upper_name
-            imports += 'import parspice.rpc.%sResponse;\n' % upper_name
+            imports += 'import parspice.rpc.%sRequest;\n' % func.upper_name()
+            imports += 'import parspice.rpc.%sResponse;\n' % func.upper_name()
             args = ''
             builders = ''
             nested_builders = ''
@@ -159,17 +232,19 @@ def generate_factory(funcs, out, template_dir):
             }
             """ % (return_type, return_line)) \
                 .replace('###LOWER_NAME###', func.name) \
-                .replace('###UPPER_NAME###', upper_name) \
+                .replace('###UPPER_NAME###', func.upper_name()) \
                 .replace('###GETTERS###', getters) \
                 .replace('###BUILDERS###', builders) \
                 .replace('###ARGS###', args) \
                 .replace('###NESTED_BUILDERS###', nested_builders)
-    with open(os.path.join(template_dir, 'ParSPICE.java'), 'r') as template:
-        parspice = template.read() \
-            .replace('###FACTORIES###', factories) \
-            .replace('###IMPORTS###', imports)
-        with open(os.path.join(out, 'ParSPICE.java'), 'w') as out_file:
-            out_file.write(parspice)
+    for template in templates:
+        with open(os.path.join(template_dir, template), 'r') as in_file:
+            output = in_file.read() \
+                .replace('###FACTORIES###', factories) \
+                .replace('###IMPORTS###', imports) \
+                .replace('###WORKERS###', workers)
+            with open(os.path.join(out, template), 'w') as out_file:
+                out_file.write(output)
 
 
 
@@ -266,7 +341,7 @@ def generate_java(func, templates, out, template_dir):
     """
 
     upper_name = func.name[0].upper() + func.name[1:]
-    lower_name = func.name
+    lower_name = func.lower_name()
 
     fields = ''
     args = ''
