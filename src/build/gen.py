@@ -40,7 +40,7 @@ def main(argv):
     for func in functions:
         if func.classification == parse_tree.Classification.NORMAL:
             try:
-                generate_java(func, ['Call.java', 'Batch.java', 'Future.java'], java_out, template_dir)
+                generate_java(func, ['Call.java', 'Batch.java'], java_out, template_dir)
             except ValueError:
                 print('not yet working: %s' % func.name)
 
@@ -62,7 +62,7 @@ def generate_endpoints(funcs, templates, out, template_dir):
         if func.classification == parse_tree.Classification.NORMAL:
             factories += """
             public %sBatch %s() {
-                return new %sBatch(futureStub);
+                return new %sBatch();
             }
             """ % (func.upper_name(), func.lower_name(), func.upper_name())
             imports += 'import parspice.functions.%s.%sBatch;\n' % (func.upper_name(), func.upper_name())
@@ -368,13 +368,13 @@ def generate_java(func, templates, out, template_dir):
 
         if arg.io == parse_tree.IO.INPUT or arg.io == parse_tree.IO.BOTH:
             if arg.data_type.array_depth == 0:
-                builders += '.set%s(call.%s)\n' % (cap_name, arg.name)
+                builders += '.set%s(this.%s)\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 1:
-                builders += '.addAll%s(Arrays.asList(call.%s))\n' % (cap_name, arg.name)
+                builders += '.addAll%s(Arrays.asList(this.%s))\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
                 nested_builders += """
                 ArrayList<Repeated%s> nested%i = new ArrayList<Repeated%s>();
-                for (%s[] row : call.%s) {
+                for (%s[] row : this.%s) {
                     nested%i.add(
                         Repeated%s.newBuilder()
                             .addAllArray(Arrays.asList(row))
@@ -387,26 +387,26 @@ def generate_java(func, templates, out, template_dir):
                 return
         if arg.io == parse_tree.IO.OUTPUT or arg.io == parse_tree.IO.BOTH:
             if arg.data_type.array_depth == 0:
-                getters += 'call.%s = output.get%s();\n' % (arg.name, cap_name)
+                getters += 'this.%s = output.get%s();\n' % (arg.name, cap_name)
             elif arg.data_type.array_depth == 1:
-                getters += 'call.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
-                getters += 'output.get%sList().toArray(call.%s);\n' % (cap_name, arg.name)
+                # getters += 'this.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
+                getters += 'output.get%sList().toArray(this.%s);\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
-                getters += 'call.%s = new %s[output.get%sCount()][output.get%s(0).getArrayCount()];\n' \
-                           % (arg.name, base_object_type, cap_name, cap_name)
+                # getters += 'this.%s = new %s[output.get%sCount()][output.get%s(0).getArrayCount()];\n' \
+                #            % (arg.name, base_object_type, cap_name, cap_name)
                 getters += """
                 List<Repeated%s> full%i = output.get%sList();
                 for (int j = 0; j < full%i.size(); j++) {
-                    full%i.get(j).getArrayList().toArray(call.%s[j]);
+                    full%i.get(j).getArrayList().toArray(this.%s[j]);
                 }\n
                 """ % (base_object_type, i, cap_name, i, i, arg.name)
             else:
                 return
         if arg.io == parse_tree.IO.OUTPUT:
             if arg.data_type.array_depth == 1:
-                builders += '.addAll%sSize(Arrays.asList(call.%s.length))\n' % (cap_name, arg.name)
+                builders += '.addAll%sSize(Arrays.asList(this.%s.length))\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
-                builders += '.addAll%sSize(Arrays.asList(call.%s.length, call.%s[0].length))\n' % (cap_name, arg.name, arg.name)
+                builders += '.addAll%sSize(Arrays.asList(this.%s.length, this.%s[0].length))\n' % (cap_name, arg.name, arg.name)
 
     args = args[:-2]
     args_no_types = args_no_types[:-2]
@@ -416,16 +416,16 @@ def generate_java(func, templates, out, template_dir):
         base_object_type = func.return_type.base_object_str()
         fields += 'public %s ret;\n' % object_type
         if func.return_type.array_depth == 0:
-            getters += 'call.ret = output.getRet();\n'
+            getters += 'this.ret = output.getRet();\n'
         elif func.return_type.array_depth == 1:
-            getters += 'call.ret = new %s[output.getRetCount()];\n' % base_object_type
-            getters += 'output.getRetList().toArray(call.ret);\n'
+            getters += 'this.ret = new %s[output.getRetCount()];\n' % base_object_type
+            getters += 'output.getRetList().toArray(this.ret);\n'
         elif func.return_type.array_depth == 2:
-            getters += 'call.ret = new %s[output.getRetCount()][output.getRet(0).getArrayCount()];\n' % base_object_type
+            getters += 'this.ret = new %s[output.getRetCount()][output.getRet(0).getArrayCount()];\n' % base_object_type
             getters += """
                 List<Repeated%s> fullRet = output.getRetList();
                 for (int j = 0; j < fullRet.size(); j++) {
-                    fullRet.get(j).getArrayList().toArray(call.ret[j]);
+                    fullRet.get(j).getArrayList().toArray(this.ret[j]);
                 }\n
                 """ % base_object_type
 

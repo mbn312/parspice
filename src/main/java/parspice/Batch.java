@@ -1,33 +1,27 @@
 package parspice;
 
-import java.util.concurrent.Future;
+import io.grpc.stub.StreamObserver;
 import parspice.rpc.ParSPICEGrpc;
 
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 
-public abstract class Batch<T extends Call> {
-    protected ArrayList<T> unsentCalls;
-    protected ArrayList<Future<ArrayList<T>>> futures;
+public abstract class Batch<C extends Call, R extends com.google.protobuf.GeneratedMessageV3> {
+    protected ArrayList<C> calls = new ArrayList<C>();
+    protected int unsentIndex = 0;
 
-    protected ParSPICEGrpc.ParSPICEFutureStub stub;
+    public abstract void sendRequest(ParSPICEGrpc.ParSPICEStub stub, int howMany, StreamObserver<R> awaiterTask);
 
-    private static final int BATCH_SIZE = 1000;
+    public abstract void receiveResponse(R response);
 
-    public Batch(ParSPICEGrpc.ParSPICEFutureStub stub) {
-        this.stub = stub;
-        this.unsentCalls = new ArrayList<T>();
+    public void run() {
+        // dispatcher.performDistributedTask(this);
+
+        // OR maybe
+        /* dispatcher.performDistributedTask(
+                this::sendRequest,
+                this::receiveResponse
+           );
+         */
+        // doesn't matter to me
     }
-
-    protected void registerCall() {
-        if (unsentCalls.size() >= BATCH_SIZE) {
-            run();
-        }
-    }
-
-    public T get(int index) throws ExecutionException, InterruptedException {
-        return futures.get(index % BATCH_SIZE).get().get(index - (index % BATCH_SIZE));
-    }
-
-    public abstract void run();
 }

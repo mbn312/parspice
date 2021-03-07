@@ -10,22 +10,12 @@ import java.util.List;
 import java.util.Arrays;
 import parspice.rpc.RepeatedDouble;
 import parspice.rpc.RepeatedInteger;
-import parspice.ParSPICEBuilder;
 
 ###IMPORTS###
 
 public class ParSPICE {
-    private ParSPICEFutureStub futureStub;
+    // Still here for GLOBAL/TASK stateful functions. Will remove later.
     private ParSPICEBlockingStub blockingStub;
-
-    public static ParSPICEBuilder builder() {
-        return new ParSPICEBuilder();
-    }
-
-    public ParSPICE(ParSPICEFutureStub fs, ParSPICEBlockingStub bs /*heh*/) {
-        this.futureStub = fs;
-        this.blockingStub = bs;
-    }
 
     /**
      * Generates factory (or wrapper) methods, one for each CSPICE function.
