@@ -12,23 +12,34 @@ import parspice.rpc.###UPPER_NAME###Response;
 import parspice.rpc.###UPPER_NAME###Response.###UPPER_NAME###Output;
 import parspice.rpc.ParSPICEGrpc.ParSPICEStub;
 import io.grpc.stub.StreamObserver;
+import parspice.dispatcher.Distributable;
 
-public class ###UPPER_NAME###Batch extends Batch<###UPPER_NAME###Call, ###UPPER_NAME###Response> {
+public class ###UPPER_NAME###Batch
+        extends Batch<###UPPER_NAME###Call, ###UPPER_NAME###Response>
+        implements Distributable<###UPPER_NAME###Request, ###UPPER_NAME###Response> {
+
     public void call(###ARGS###) {
         calls.add(new ###UPPER_NAME###Call(###ARGS_NO_TYPES###));
     }
 
-    public void sendRequest(ParSPICEStub stub, int howMany, StreamObserver<###UPPER_NAME###Response> awaiterTask) {
+    @Override
+    public ###UPPER_NAME###Request nextRequest(int size) {
         ###UPPER_NAME###Request.Builder requestBuilder = ###UPPER_NAME###Request.newBuilder();
-        int endIndex = unsentIndex + howMany;
+        int endIndex = unsentIndex + size;
         for (int i = unsentIndex; i < endIndex; i++) {
             requestBuilder.addInputs(calls.get(i).pack());
         }
         requestBuilder.setBatchID(unsentIndex);
         unsentIndex = endIndex;
-        stub.###LOWER_NAME###RPC(requestBuilder.build(), awaiterTask);
+        return requestBuilder.build();
     }
 
+    @Override
+    public void sendRequest(###UPPER_NAME###Request request, ParSPICEStub stub, StreamObserver<###UPPER_NAME###Response> awaiterTask) {
+        stub.###LOWER_NAME###RPC(request, awaiterTask);
+    }
+
+    @Override
     public void receiveResponse(###UPPER_NAME###Response response) {
         List<###UPPER_NAME###Response.###UPPER_NAME###Output> outputs = response.getOutputsList();
         int startIndex = response.getBatchID();

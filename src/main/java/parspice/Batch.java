@@ -58,10 +58,6 @@ public abstract class Batch<C extends Call, R extends com.google.protobuf.Genera
     //      dispatcher = d;
     // }
 
-    public abstract void sendRequest(ParSPICEGrpc.ParSPICEStub stub, int howMany, StreamObserver<R> awaiterTask);
-
-    public abstract void receiveResponse(R response);
-
     public void run() {
         // dispatcher.performDistributedTask(this);
 
