@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import parspice.Batch;
-//import spice.basic.GFSearchUtils;
-//import spice.basic.GFScalarQuantity;
 import parspice.rpc.###UPPER_NAME###Request;
 import parspice.rpc.###UPPER_NAME###Request.###UPPER_NAME###Input;
 import parspice.rpc.###UPPER_NAME###Response;

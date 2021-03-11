@@ -179,10 +179,10 @@ def generate_endpoints(funcs, templates, out, template_dir):
                         return
                 if arg.io == parse_tree.IO.OUTPUT or arg.io == parse_tree.IO.BOTH:
                     if arg.data_type.array_depth == 1:
-                        getters += 'response.get%sList().toArray(%s);\n' % (cap_name, arg.name)
+                        getters += 'output.get%sList().toArray(%s);\n' % (cap_name, arg.name)
                     elif arg.data_type.array_depth == 2:
                         getters += """
-                        List<Repeated%s> full%i = response.get%sList();
+                        List<Repeated%s> full%i = output.get%sList();
                         for (int j = 0; j < full%i.size(); j++) {
                             full%i.get(j).getArrayList().toArray(%s[j]);
                         }\n
@@ -200,16 +200,16 @@ def generate_endpoints(funcs, templates, out, template_dir):
                 return_type = func.return_type.object_str()
                 base_return_type = func.return_type.base_object_str()
                 if func.return_type.array_depth == 0:
-                    return_line = 'return response.getRet();'
+                    return_line = 'return output.getRet();'
                 elif func.return_type.array_depth == 1:
                     return_line = """
-                    %s ret = new %s[response.getRetCount()];
-                    response.getRetList().toArray(ret);
+                    %s ret = new %s[output.getRetCount()];
+                    output.getRetList().toArray(ret);
                     return ret;
                     """ % (return_type, base_return_type)
                 elif func.return_type.array_depth == 2:
                     return_line = """
-                    List<Repeated%s> fullRet = response.getRetList();
+                    List<Repeated%s> fullRet = output.getRetList();
                     %s ret = new %s[fullRet.size()][fullRet.get(0).getArrayCount()];
                     for (int j = 0; j < fullRet.size(); j++) {
                         fullRet.get(j).getArrayList().toArray(ret[j]);
@@ -221,12 +221,18 @@ def generate_endpoints(funcs, templates, out, template_dir):
             public %s ###LOWER_NAME###(###ARGS###) throws RuntimeException {
                 ###NESTED_BUILDERS###
                 ###UPPER_NAME###Request request = ###UPPER_NAME###Request.newBuilder()
-                    ###BUILDERS###
-                    .build();
+                    .addInputs(
+                        ###UPPER_NAME###Request.###UPPER_NAME###Input.newBuilder()
+                        ###BUILDERS###
+                        .build()
+                    ).build();
                 ###UPPER_NAME###Response response = blockingStub.###LOWER_NAME###RPC(request);
-                if (response.getError() != "") {
-                    throw new RuntimeException(response.getError());
+                for (###UPPER_NAME###Response.###UPPER_NAME###Output output : response.getOutputsList()) {
+                    if (output.getError() != "") {
+                        throw new RuntimeException(output.getError());
+                    }
                 }
+                ###UPPER_NAME###Response.###UPPER_NAME###Output output = response.getOutputs(0);
                 ###GETTERS###
                 %s
             }
@@ -283,7 +289,7 @@ def generate_proto(funcs, out, template_dir):
 
         outputs += 'string error = %i;\n' % (len(func.args) + 2)
 
-        if func.classification == parse_tree.Classification.NORMAL:
+        if func.classification != parse_tree.Classification.CONSTANT:
             services += 'rpc ###UPPER_NAME###RPC (###UPPER_NAME###Request) returns (###UPPER_NAME###Response);\n' \
                 .replace('###UPPER_NAME###', upper_name)
             messages += """
@@ -301,21 +307,6 @@ def generate_proto(funcs, out, template_dir):
                 }
                 int32 batchID = 1;
                 repeated ###UPPER_NAME###Output outputs = 2;
-            }
-            """.replace('###UPPER_NAME###', upper_name) \
-                .replace('###INPUTS###', inputs) \
-                .replace('###OUTPUTS###', outputs)
-        elif func.classification == parse_tree.Classification.GLOBAL_STATE_MODIFIER \
-                or func.classification == parse_tree.Classification.TASK_STATEFUL:
-            services += 'rpc ###UPPER_NAME###RPC (###UPPER_NAME###Request) returns (###UPPER_NAME###Response);\n' \
-                .replace('###UPPER_NAME###', upper_name)
-            messages += """
-            message ###UPPER_NAME###Request {
-                ###INPUTS###
-            }
-            
-            message ###UPPER_NAME###Response {
-                ###OUTPUTS###
             }
             """.replace('###UPPER_NAME###', upper_name) \
                 .replace('###INPUTS###', inputs) \
@@ -389,11 +380,8 @@ def generate_java(func, templates, out, template_dir):
             if arg.data_type.array_depth == 0:
                 getters += 'this.%s = output.get%s();\n' % (arg.name, cap_name)
             elif arg.data_type.array_depth == 1:
-                # getters += 'this.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
                 getters += 'output.get%sList().toArray(this.%s);\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
-                # getters += 'this.%s = new %s[output.get%sCount()][output.get%s(0).getArrayCount()];\n' \
-                #            % (arg.name, base_object_type, cap_name, cap_name)
                 getters += """
                 List<Repeated%s> full%i = output.get%sList();
                 for (int j = 0; j < full%i.size(); j++) {
