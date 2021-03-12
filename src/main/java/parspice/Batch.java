@@ -48,7 +48,7 @@ import java.util.ArrayList;
  * @param <C> The auto-generated Call subclass that this aggregates a list of.
  * @param <R> The Response gRPC struct that this receives from the workers.
  */
-public abstract class Batch<C extends Call, R extends com.google.protobuf.GeneratedMessageV3> {
+public abstract class Batch<C extends Call> {
     protected ArrayList<C> calls = new ArrayList<C>();
     protected int unsentIndex = 0;
 

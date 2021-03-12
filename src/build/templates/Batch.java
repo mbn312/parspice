@@ -9,19 +9,20 @@ import parspice.rpc.###UPPER_NAME###Request.###UPPER_NAME###Input;
 import parspice.rpc.###UPPER_NAME###Response;
 import parspice.rpc.###UPPER_NAME###Response.###UPPER_NAME###Output;
 import parspice.rpc.ParSPICEGrpc.ParSPICEStub;
-import io.grpc.stub.StreamObserver;
-import parspice.dispatcher.Distributable;
+import parspice.dispatcher.DistributedTaskStateDistributable;
+import parspice.dispatcher.AwaitableStreamObserver;
+import parspice.dispatcher.DispatchRequest;
 
 public class ###UPPER_NAME###Batch
-        extends Batch<###UPPER_NAME###Call, ###UPPER_NAME###Response>
-        implements Distributable<###UPPER_NAME###Request, ###UPPER_NAME###Response> {
+        extends Batch<###UPPER_NAME###Call>
+        implements DistributedTaskStateDistributable<###UPPER_NAME###Request, ###UPPER_NAME###Response> {
 
     public void call(###ARGS###) {
         calls.add(new ###UPPER_NAME###Call(###ARGS_NO_TYPES###));
     }
 
     @Override
-    public ###UPPER_NAME###Request nextRequest(int size) {
+    public DispatchRequest<###UPPER_NAME###Request> getNextRequest(int size) {
         ###UPPER_NAME###Request.Builder requestBuilder = ###UPPER_NAME###Request.newBuilder();
         int endIndex = unsentIndex + size;
         for (int i = unsentIndex; i < endIndex; i++) {
@@ -29,16 +30,16 @@ public class ###UPPER_NAME###Batch
         }
         requestBuilder.setBatchID(unsentIndex);
         unsentIndex = endIndex;
-        return requestBuilder.build();
+        return new DispatchRequest<###UPPER_NAME###Request>(requestBuilder.build(), size, true);
     }
 
     @Override
-    public void sendRequest(###UPPER_NAME###Request request, ParSPICEStub stub, StreamObserver<###UPPER_NAME###Response> awaiterTask) {
+    public void sendRequest(ParSPICEStub stub, ###UPPER_NAME###Request request, AwaitableStreamObserver<###UPPER_NAME###Response> awaiterTask) {
         stub.###LOWER_NAME###RPC(request, awaiterTask);
     }
 
     @Override
-    public void receiveResponse(###UPPER_NAME###Response response) {
+    public void responseCallback(###UPPER_NAME###Response response) {
         List<###UPPER_NAME###Response.###UPPER_NAME###Output> outputs = response.getOutputsList();
         int startIndex = response.getBatchID();
         int endIndex = startIndex + outputs.size();
