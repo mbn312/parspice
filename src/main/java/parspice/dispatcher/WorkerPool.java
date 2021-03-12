@@ -55,7 +55,7 @@ public class WorkerPool {
      */
     public <T_Request extends com.google.protobuf.MessageOrBuilder,
             T_Response extends com.google.protobuf.MessageOrBuilder>
-    void PerformThreadedDistributedTask(DistributedTaskStateDistributable<T_Request, T_Response> Distributable) throws InterruptedException {
+    void performThreadedDistributedTask(DistributedTaskStateDistributable<T_Request, T_Response> Distributable) throws InterruptedException {
 
         DistributedTaskState<T_Request, T_Response> state = new DistributedTaskState<>(
                 _poolState,
@@ -82,7 +82,7 @@ public class WorkerPool {
      */
     public <T_Request extends com.google.protobuf.MessageOrBuilder,
             T_Response extends com.google.protobuf.MessageOrBuilder>
-    void PerformDistributedTask(DistributedTaskStateDistributable<T_Request, T_Response> Distributable) throws Throwable {
+    void performDistributedTask(DistributedTaskStateDistributable<T_Request, T_Response> Distributable) throws Throwable {
 
         DistributedTaskState<T_Request, T_Response> state = new DistributedTaskState<>(
                 _poolState,
@@ -146,7 +146,7 @@ public class WorkerPool {
      */
     public <T_Request extends com.google.protobuf.MessageOrBuilder,
             T_Response extends com.google.protobuf.MessageOrBuilder>
-    void PerformBroadcastTask(
+    void performBroadcastTask(
             DistributedTaskStateDistributable<T_Request, T_Response> Distributable) throws Throwable {
 
         DistributedTaskState<T_Request, T_Response> state = new DistributedTaskState<>(

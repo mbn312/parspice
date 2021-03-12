@@ -12,13 +12,23 @@ import parspice.rpc.ParSPICEGrpc.ParSPICEStub;
 import parspice.dispatcher.DistributedTaskStateDistributable;
 import parspice.dispatcher.AwaitableStreamObserver;
 import parspice.dispatcher.DispatchRequest;
+import parspice.dispatcher.WorkerPool;
 
 public class ###UPPER_NAME###Batch
         extends Batch<###UPPER_NAME###Call>
         implements DistributedTaskStateDistributable<###UPPER_NAME###Request, ###UPPER_NAME###Response> {
 
+    public ###UPPER_NAME###Batch(WorkerPool pool) {
+        super(pool);
+    }
+
     public void call(###ARGS###) {
         calls.add(new ###UPPER_NAME###Call(###ARGS_NO_TYPES###));
+    }
+
+    @Override
+    public void run() throws Throwable {
+        pool.performDistributedTask(this);
     }
 
     @Override

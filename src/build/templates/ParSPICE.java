@@ -10,12 +10,36 @@ import java.util.List;
 import java.util.Arrays;
 import parspice.rpc.RepeatedDouble;
 import parspice.rpc.RepeatedInteger;
+import parspice.dispatcher.WorkerPool;
 
 ###IMPORTS###
 
 public class ParSPICE {
     // Still here for GLOBAL/TASK stateful functions. Will remove later.
     private ParSPICEBlockingStub blockingStub;
+
+    private WorkerPool pool;
+
+    /**
+     * New ParSPICE object with pre-made {@link WorkerPool}.
+     *
+     * @param pool A pre-made {@list WorkerPool}
+     */
+    public ParSPICE(WorkerPool pool) {
+        this.pool = pool;
+    }
+
+    /**
+     * New ParSPICE object with worker pool arguments.
+     *
+     * @param serverPath location of the SpiceWorker.jar file
+     * @param startPort lowest port number to be used by the workers
+     * @param workerCount number of workers to use
+     * @param maxBatchSize max number of CSPICE function calls to give to a worker at a time
+     */
+    public ParSPICE(String serverPath, int startPort, int workerCount, int maxBatchSize) throws java.io.IOException {
+        this.pool = new WorkerPool(serverPath, startPort, workerCount, maxBatchSize);
+    }
 
     /**
      * Generates factory (or wrapper) methods, one for each CSPICE function.

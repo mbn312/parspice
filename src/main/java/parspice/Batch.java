@@ -1,7 +1,6 @@
 package parspice;
 
-import io.grpc.stub.StreamObserver;
-import parspice.rpc.ParSPICEGrpc;
+import parspice.dispatcher.WorkerPool;
 
 import java.util.ArrayList;
 
@@ -51,24 +50,13 @@ import java.util.ArrayList;
 public abstract class Batch<C extends Call> {
     protected ArrayList<C> calls = new ArrayList<C>();
     protected int unsentIndex = 0;
+    protected WorkerPool pool;
 
-    // private Dispatcher dispatcher;
-
-    // public Batch(Dispatcher d) {
-    //      dispatcher = d;
-    // }
-
-    public void run() {
-        // dispatcher.performDistributedTask(this);
-
-        // OR maybe
-        /* dispatcher.performDistributedTask(
-                this::sendRequest,
-                this::receiveResponse
-           );
-         */
-        // doesn't matter to me
+    public Batch(WorkerPool pool) {
+        this.pool = pool;
     }
+
+    public abstract void run() throws Throwable;
 
     public C get(int index) {
         return calls.get(index);

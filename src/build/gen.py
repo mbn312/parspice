@@ -62,7 +62,7 @@ def generate_endpoints(funcs, templates, out, template_dir):
         if func.classification == parse_tree.Classification.NORMAL:
             factories += """
             public %sBatch %s() {
-                return new %sBatch();
+                return new %sBatch(this.pool);
             }
             """ % (func.upper_name(), func.lower_name(), func.upper_name())
             imports += 'import parspice.functions.%s.%sBatch;\n' % (func.upper_name(), func.upper_name())
