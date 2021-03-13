@@ -80,3 +80,25 @@ tasks.compileJava.dependsOn(genFromCSPICE)
 compileJava {
     options.compilerArgs << '-Xlint:unchecked'
 }
+
+ext.workerClasses = ['parspice/worker/Main.class', 'parspice/worker/SpiceService.class']
+
+task libJar(type: Jar, dependsOn: classes) {
+    from(sourceSets.main.output) {
+        exclude project.ext.workerClasses
+    }
+    archiveBaseName.set('parspice-lib');
+}
+
+task workerJar(type: Jar, dependsOn: classes) {
+    from(sourceSets.main.output) {
+        include "parspice/worker/**"
+        project.ext.workerClasses.addAll(includes)
+    }
+    archiveBaseName.set('parspice-worker');
+}
+
+artifacts {
+    archives libJar
+    archives workerJar
+}
