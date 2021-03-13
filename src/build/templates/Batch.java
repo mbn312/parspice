@@ -18,6 +18,18 @@ public class ###UPPER_NAME###Batch
         extends Batch<###UPPER_NAME###Call>
         implements DistributedTaskStateDistributable<###UPPER_NAME###Request, ###UPPER_NAME###Response> {
 
+    private long totalTime = 0;
+    private long start = 0;
+
+    private void startTiming() {
+        start = System.currentTimeMillis();
+    }
+
+    private void stopTiming() {
+        long end = System.currentTimeMillis();
+        totalTime += end - start;
+    }
+
     public ###UPPER_NAME###Batch(WorkerPool pool) {
         super(pool);
     }
@@ -29,6 +41,7 @@ public class ###UPPER_NAME###Batch
     @Override
     public void run() throws Throwable {
         pool.performDistributedTask(this);
+        System.out.println("packing time: " + totalTime);
     }
 
     @Override
@@ -41,7 +54,9 @@ public class ###UPPER_NAME###Batch
             lastRequest = true;
         }
         for (int i = packIndex; i < endIndex; i++) {
+            startTiming();
             requestBuilder.addInputs(calls.get(i).pack());
+            stopTiming();
         }
         packIndex = endIndex;
         ###UPPER_NAME###Request request = requestBuilder.build();
