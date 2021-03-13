@@ -297,16 +297,14 @@ def generate_proto(funcs, out, template_dir):
                 message ###UPPER_NAME###Input {
                     ###INPUTS###
                 }
-                int32 batchID = 1;
-                repeated ###UPPER_NAME###Input inputs = 2;
+                repeated ###UPPER_NAME###Input inputs = 1;
             }
             
             message ###UPPER_NAME###Response {
                 message ###UPPER_NAME###Output {
                     ###OUTPUTS###
                 }
-                int32 batchID = 1;
-                repeated ###UPPER_NAME###Output outputs = 2;
+                repeated ###UPPER_NAME###Output outputs = 1;
             }
             """.replace('###UPPER_NAME###', upper_name) \
                 .replace('###INPUTS###', inputs) \

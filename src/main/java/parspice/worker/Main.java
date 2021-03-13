@@ -6,6 +6,8 @@ import io.grpc.ServerBuilder;
 public class Main {
     public static void main(String[] args) throws Exception {
 
+        System.loadLibrary("JNISpice");
+
         int serverPort = Integer.parseInt(args[0]);
 
         // create sever

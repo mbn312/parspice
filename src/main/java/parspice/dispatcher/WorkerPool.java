@@ -16,6 +16,8 @@ public class WorkerPool {
     private static final Logger logger = Logger.getLogger(WorkerPool.class.getName());
 
     public WorkerPool(String ServerPath, int StartPort, int WorkerCount, int MaxBatchSize) throws IOException {
+        System.loadLibrary("JNISpice");
+
         int currentPort = StartPort;
 
         _poolState = new WorkerPoolState(
@@ -29,15 +31,20 @@ public class WorkerPool {
         for (int i = 0; i < WorkerCount; ++i)
         {
             int port = currentPort++;
-            String args = "-p " + port;
-            Process proc = Runtime.getRuntime().exec( ServerPath + args); // throws io exception
+            Process proc = Runtime.getRuntime().exec( "java -jar " + ServerPath + " " + port); // throws io exception
             _poolState.getProcessCollection()[i] = proc;
 
-            channelBuilder = getChannelBuilder("127.0.0.1:", port);
+            channelBuilder = getChannelBuilder("127.0.0.1", port);
 
             _poolState.getChannelCollection()[i] = channelBuilder.build();
             Channel channelI = _poolState.getChannelCollection()[i];
             _poolState.getParClients()[i] = ParSPICEGrpc.newStub(channelI);
+        }
+    }
+
+    public void destroy() {
+        for (Process p : _poolState.getProcessCollection()) {
+            p.destroy();
         }
     }
 

@@ -49,7 +49,8 @@ import java.util.ArrayList;
  */
 public abstract class Batch<C extends Call> {
     protected ArrayList<C> calls = new ArrayList<C>();
-    protected int unsentIndex = 0;
+    protected int packIndex = 0;
+    protected int unpackIndex = 0;
     protected WorkerPool pool;
 
     public Batch(WorkerPool pool) {

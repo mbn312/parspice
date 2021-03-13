@@ -16,6 +16,8 @@ import spice.basic.KernelVarNotFoundException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.nio.file.*;
+import java.io.IOException;
 
 public class SpiceService extends ParSPICEGrpc.ParSPICEImplBase {
 

@@ -1,4 +1,5 @@
 plugins {
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
     id 'java'
     id 'com.google.protobuf' version '0.8.13'
 }
@@ -83,19 +84,25 @@ compileJava {
 
 ext.workerClasses = ['parspice/worker/Main.class', 'parspice/worker/SpiceService.class']
 
-task libJar(type: Jar, dependsOn: classes) {
-    from(sourceSets.main.output) {
-        exclude project.ext.workerClasses
-    }
-    archiveBaseName.set('parspice-lib');
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+task libJar(type: ShadowJar, dependsOn: classes) {
+    classifier = 'lib'
+    from sourceSets.main.output
+    configurations = [project.configurations.runtimeClasspath]
+    exclude "parspice/worker/**"
 }
 
-task workerJar(type: Jar, dependsOn: classes) {
+task workerJar(type: ShadowJar, dependsOn: classes) {
+    classifier = 'worker'
     from(sourceSets.main.output) {
         include "parspice/worker/**"
-        project.ext.workerClasses.addAll(includes)
+        include "parspice/rpc/**"
     }
-    archiveBaseName.set('parspice-worker');
+    manifest {
+        attributes 'Main-Class': 'parspice/worker/Main'
+    }
+    configurations = [project.configurations.runtimeClasspath]
 }
 
 artifacts {

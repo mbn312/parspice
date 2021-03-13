@@ -11,6 +11,7 @@ import java.util.Arrays;
 import parspice.rpc.RepeatedDouble;
 import parspice.rpc.RepeatedInteger;
 import parspice.dispatcher.WorkerPool;
+import java.io.IOException;
 
 ###IMPORTS###
 
@@ -20,14 +21,10 @@ public class ParSPICE {
 
     private WorkerPool pool;
 
-    /**
-     * New ParSPICE object with pre-made {@link WorkerPool}.
-     *
-     * @param pool A pre-made {@list WorkerPool}
-     */
-    public ParSPICE(WorkerPool pool) {
-        this.pool = pool;
-    }
+    String serverPath;
+    int startPort;
+    int workerCount;
+    int maxBatchSize;
 
     /**
      * New ParSPICE object with worker pool arguments.
@@ -37,8 +34,20 @@ public class ParSPICE {
      * @param workerCount number of workers to use
      * @param maxBatchSize max number of CSPICE function calls to give to a worker at a time
      */
-    public ParSPICE(String serverPath, int startPort, int workerCount, int maxBatchSize) throws java.io.IOException {
+    public ParSPICE(String serverPath, int startPort, int workerCount, int maxBatchSize) {
+        this.serverPath = serverPath;
+        this.startPort = startPort;
+        this.workerCount = workerCount;
+        this.maxBatchSize = maxBatchSize;
+    }
+
+    public void start() throws IOException {
+        stop();
         this.pool = new WorkerPool(serverPath, startPort, workerCount, maxBatchSize);
+    }
+
+    public void stop() {
+        if (this.pool != null) this.pool.destroy();
     }
 
     /**

@@ -34,13 +34,18 @@ public class ###UPPER_NAME###Batch
     @Override
     public DispatchRequest<###UPPER_NAME###Request> getNextRequest(int size) {
         ###UPPER_NAME###Request.Builder requestBuilder = ###UPPER_NAME###Request.newBuilder();
-        int endIndex = unsentIndex + size;
-        for (int i = unsentIndex; i < endIndex; i++) {
+        int endIndex = packIndex + size;
+        boolean lastRequest = false;
+        if (endIndex >= calls.size()) {
+            endIndex = calls.size();
+            lastRequest = true;
+        }
+        for (int i = packIndex; i < endIndex; i++) {
             requestBuilder.addInputs(calls.get(i).pack());
         }
-        requestBuilder.setBatchID(unsentIndex);
-        unsentIndex = endIndex;
-        return new DispatchRequest<###UPPER_NAME###Request>(requestBuilder.build(), size, true);
+        packIndex = endIndex;
+        ###UPPER_NAME###Request request = requestBuilder.build();
+        return new DispatchRequest<###UPPER_NAME###Request>(request, size, lastRequest);
     }
 
     @Override
@@ -51,10 +56,11 @@ public class ###UPPER_NAME###Batch
     @Override
     public void responseCallback(###UPPER_NAME###Response response) {
         List<###UPPER_NAME###Response.###UPPER_NAME###Output> outputs = response.getOutputsList();
-        int startIndex = response.getBatchID();
-        int endIndex = startIndex + outputs.size();
-        for (int i = startIndex; i < endIndex; i++) {
-            calls.get(i).unpack(outputs.get(i));
+        int size = outputs.size();
+        int endIndex = unpackIndex + outputs.size();
+        for (int i = 0; i < size; i++) {
+            calls.get(i + unpackIndex).unpack(outputs.get(i));
         }
+        unpackIndex = endIndex;
     }
 }
