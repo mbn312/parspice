@@ -62,7 +62,7 @@ def generate_endpoints(funcs, templates, out, template_dir):
         if func.classification == parse_tree.Classification.NORMAL:
             factories += """
             public %sBatch %s() {
-                return new %sBatch();
+                return new %sBatch(this.pool);
             }
             """ % (func.upper_name(), func.lower_name(), func.upper_name())
             imports += 'import parspice.functions.%s.%sBatch;\n' % (func.upper_name(), func.upper_name())
@@ -77,15 +77,20 @@ def generate_endpoints(funcs, templates, out, template_dir):
                 if func.return_type.array_depth == 0:
                     output_builders += '.setRet(ret)\n'
                 elif func.return_type.array_depth == 1:
-                    output_builders += '.addAllRet(Arrays.asList(primToObj(ret)))\n'
+                    if func.return_type.base_type in [parse_tree.DataType.INT, parse_tree.DataType.DOUBLE, parse_tree.DataType.BOOLEAN]:
+                        output_builders += '.addAllRet(Arrays.asList(ArrayUtils.toObject(ret)))\n'
+                    else:
+                        output_builders += '.addAllRet(Arrays.asList(ret))\n'
                 elif func.return_type.array_depth == 2:
                     output_builders += '.addAllRet(%sArrayToRep(ret))\n' % func.return_type.base_to_str()
             for i,arg in enumerate(func.args):
+                objToPrim = 'ArrayUtils.toPrimitive' if arg.data_type.base_type in [parse_tree.DataType.INT, parse_tree.DataType.DOUBLE, parse_tree.DataType.BOOLEAN] else ''
+                primToObj = 'ArrayUtils.toObject' if arg.data_type.base_type in [parse_tree.DataType.INT, parse_tree.DataType.DOUBLE, parse_tree.DataType.BOOLEAN] else ''
                 if arg.io == parse_tree.IO.INPUT:
                     if arg.data_type.array_depth == 0:
                         cspice_args += 'input.get%s(), ' % arg.upper_name()
                     elif arg.data_type.array_depth == 1:
-                        cspice_args += 'objToPrim(input.get%sList().toArray(%s[]::new)), ' % (arg.upper_name(), arg.data_type.base_object_str())
+                        cspice_args += '%s(input.get%sList().toArray(%s[]::new)), ' % (objToPrim, arg.upper_name(), arg.data_type.base_object_str())
                     elif arg.data_type.array_depth == 2:
                         cspice_args += 'input.get%sList().stream().map(SpiceService::rep%sToArray).toArray(%s[][]::new), ' \
                                        % (arg.upper_name(), arg.data_type.base_object_str(), arg.data_type.base_to_str())
@@ -93,7 +98,7 @@ def generate_endpoints(funcs, templates, out, template_dir):
                     if arg.data_type.array_depth == 1:
                         pre_cspice_args += '%s pre%i = new %s[input.get%sSize(0)];\n' % (arg.data_type, i, arg.data_type.base_to_str(), arg.upper_name())
                         cspice_args += 'pre%i, ' % i
-                        output_builders += '.addAll%s(Arrays.asList(primToObj(pre%i)))\n' % (arg.upper_name(), i)
+                        output_builders += '.addAll%s(Arrays.asList(%s(pre%i)))\n' % (arg.upper_name(), primToObj, i)
                     elif arg.data_type.array_depth == 2:
                         pre_cspice_args += '%s pre%i = new %s[input.get%sSize(0)][input.get%sSize(1)];\n' \
                                            % (arg.data_type, i, arg.data_type.base_to_str(), arg.upper_name(), arg.upper_name())
@@ -101,10 +106,10 @@ def generate_endpoints(funcs, templates, out, template_dir):
                         output_builders += '.addAll%s(%sArrayToRep(pre%i))\n' % (arg.upper_name(), arg.data_type.base_to_str(), i)
                 elif arg.io == parse_tree.IO.BOTH:
                     if arg.data_type.array_depth == 1:
-                        pre_cspice_args += '%s pre%i = objToPrim(input.get%sList().toArray(%s[]::new));\n' \
-                                           % (arg.data_type, i, arg.upper_name(), arg.data_type.base_object_str())
+                        pre_cspice_args += '%s pre%i = %s(input.get%sList().toArray(%s[]::new));\n' \
+                                           % (arg.data_type, i, objToPrim, arg.upper_name(), arg.data_type.base_object_str())
                         cspice_args += 'pre%i, ' % i
-                        output_builders += '.addAll%s(Arrays.asList(primToObj(pre%i)))\n' % (arg.upper_name(), i)
+                        output_builders += '.addAll%s(Arrays.asList(%s(pre%i)))\n' % (arg.upper_name(), primToObj, i)
                     elif arg.data_type.array_depth == 2:
                         pre_cspice_args += '%s pre%i = input.get%sList().stream().map(SpiceService::rep%sToArray).toArray(%s[][]::new);' \
                                             % (arg.data_type, i, arg.upper_name(), arg.data_type.base_object_str(), arg.data_type.base_to_str())
@@ -116,8 +121,9 @@ def generate_endpoints(funcs, templates, out, template_dir):
             @Override
             public void ###LOWER_NAME###RPC(###UPPER_NAME###Request request, StreamObserver<###UPPER_NAME###Response> responseObserver) {
                 ###UPPER_NAME###Response.Builder responseBuilder = ###UPPER_NAME###Response.newBuilder();
-                for (int i = 0; i < request.getInputsCount(); i++) {
-                    ###UPPER_NAME###Request.###UPPER_NAME###Input input = request.getInputs(i);
+                List<###UPPER_NAME###Request.###UPPER_NAME###Input> inputs = request.getInputsList();
+                for (int i = 0; i < inputs.size(); i++) {
+                    ###UPPER_NAME###Request.###UPPER_NAME###Input input = inputs.get(i);
                     ###UPPER_NAME###Response.###UPPER_NAME###Output.Builder outputBuilder = ###UPPER_NAME###Response.###UPPER_NAME###Output.newBuilder();
                     ###UPPER_NAME###Response.###UPPER_NAME###Output output;
                     try {
@@ -179,10 +185,10 @@ def generate_endpoints(funcs, templates, out, template_dir):
                         return
                 if arg.io == parse_tree.IO.OUTPUT or arg.io == parse_tree.IO.BOTH:
                     if arg.data_type.array_depth == 1:
-                        getters += 'response.get%sList().toArray(%s);\n' % (cap_name, arg.name)
+                        getters += 'output.get%sList().toArray(%s);\n' % (cap_name, arg.name)
                     elif arg.data_type.array_depth == 2:
                         getters += """
-                        List<Repeated%s> full%i = response.get%sList();
+                        List<Repeated%s> full%i = output.get%sList();
                         for (int j = 0; j < full%i.size(); j++) {
                             full%i.get(j).getArrayList().toArray(%s[j]);
                         }\n
@@ -200,16 +206,16 @@ def generate_endpoints(funcs, templates, out, template_dir):
                 return_type = func.return_type.object_str()
                 base_return_type = func.return_type.base_object_str()
                 if func.return_type.array_depth == 0:
-                    return_line = 'return response.getRet();'
+                    return_line = 'return output.getRet();'
                 elif func.return_type.array_depth == 1:
                     return_line = """
-                    %s ret = new %s[response.getRetCount()];
-                    response.getRetList().toArray(ret);
+                    %s ret = new %s[output.getRetCount()];
+                    output.getRetList().toArray(ret);
                     return ret;
                     """ % (return_type, base_return_type)
                 elif func.return_type.array_depth == 2:
                     return_line = """
-                    List<Repeated%s> fullRet = response.getRetList();
+                    List<Repeated%s> fullRet = output.getRetList();
                     %s ret = new %s[fullRet.size()][fullRet.get(0).getArrayCount()];
                     for (int j = 0; j < fullRet.size(); j++) {
                         fullRet.get(j).getArrayList().toArray(ret[j]);
@@ -221,12 +227,18 @@ def generate_endpoints(funcs, templates, out, template_dir):
             public %s ###LOWER_NAME###(###ARGS###) throws RuntimeException {
                 ###NESTED_BUILDERS###
                 ###UPPER_NAME###Request request = ###UPPER_NAME###Request.newBuilder()
-                    ###BUILDERS###
-                    .build();
+                    .addInputs(
+                        ###UPPER_NAME###Request.###UPPER_NAME###Input.newBuilder()
+                        ###BUILDERS###
+                        .build()
+                    ).build();
                 ###UPPER_NAME###Response response = blockingStub.###LOWER_NAME###RPC(request);
-                if (response.getError() != "") {
-                    throw new RuntimeException(response.getError());
+                for (###UPPER_NAME###Response.###UPPER_NAME###Output output : response.getOutputsList()) {
+                    if (output.getError() != "") {
+                        throw new RuntimeException(output.getError());
+                    }
                 }
+                ###UPPER_NAME###Response.###UPPER_NAME###Output output = response.getOutputs(0);
                 ###GETTERS###
                 %s
             }
@@ -283,7 +295,7 @@ def generate_proto(funcs, out, template_dir):
 
         outputs += 'string error = %i;\n' % (len(func.args) + 2)
 
-        if func.classification == parse_tree.Classification.NORMAL:
+        if func.classification != parse_tree.Classification.CONSTANT:
             services += 'rpc ###UPPER_NAME###RPC (###UPPER_NAME###Request) returns (###UPPER_NAME###Response);\n' \
                 .replace('###UPPER_NAME###', upper_name)
             messages += """
@@ -291,31 +303,14 @@ def generate_proto(funcs, out, template_dir):
                 message ###UPPER_NAME###Input {
                     ###INPUTS###
                 }
-                int32 batchID = 1;
-                repeated ###UPPER_NAME###Input inputs = 2;
+                repeated ###UPPER_NAME###Input inputs = 1;
             }
             
             message ###UPPER_NAME###Response {
                 message ###UPPER_NAME###Output {
                     ###OUTPUTS###
                 }
-                int32 batchID = 1;
-                repeated ###UPPER_NAME###Output outputs = 2;
-            }
-            """.replace('###UPPER_NAME###', upper_name) \
-                .replace('###INPUTS###', inputs) \
-                .replace('###OUTPUTS###', outputs)
-        elif func.classification == parse_tree.Classification.GLOBAL_STATE_MODIFIER \
-                or func.classification == parse_tree.Classification.TASK_STATEFUL:
-            services += 'rpc ###UPPER_NAME###RPC (###UPPER_NAME###Request) returns (###UPPER_NAME###Response);\n' \
-                .replace('###UPPER_NAME###', upper_name)
-            messages += """
-            message ###UPPER_NAME###Request {
-                ###INPUTS###
-            }
-            
-            message ###UPPER_NAME###Response {
-                ###OUTPUTS###
+                repeated ###UPPER_NAME###Output outputs = 1;
             }
             """.replace('###UPPER_NAME###', upper_name) \
                 .replace('###INPUTS###', inputs) \
@@ -389,11 +384,8 @@ def generate_java(func, templates, out, template_dir):
             if arg.data_type.array_depth == 0:
                 getters += 'this.%s = output.get%s();\n' % (arg.name, cap_name)
             elif arg.data_type.array_depth == 1:
-                # getters += 'this.%s = new %s[output.get%sCount()];\n' % (arg.name, base_object_type, cap_name)
                 getters += 'output.get%sList().toArray(this.%s);\n' % (cap_name, arg.name)
             elif arg.data_type.array_depth == 2:
-                # getters += 'this.%s = new %s[output.get%sCount()][output.get%s(0).getArrayCount()];\n' \
-                #            % (arg.name, base_object_type, cap_name, cap_name)
                 getters += """
                 List<Repeated%s> full%i = output.get%sList();
                 for (int j = 0; j < full%i.size(); j++) {

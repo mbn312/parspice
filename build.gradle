@@ -1,4 +1,5 @@
 plugins {
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
     id 'java'
     id 'com.google.protobuf' version '0.8.13'
 }
@@ -36,6 +37,7 @@ dependencies {
     implementation "io.grpc:grpc-protobuf:${grpcVersion}"
     implementation "io.grpc:grpc-stub:${grpcVersion}"
     implementation "javax.annotation:javax.annotation-api:1.3.2"
+    implementation "org.apache.commons:commons-lang3:3.3.2"
 
     runtimeOnly "io.grpc:grpc-netty-shaded:${grpcVersion}"
 }
@@ -79,4 +81,32 @@ tasks.compileJava.dependsOn(genFromCSPICE)
 
 compileJava {
     options.compilerArgs << '-Xlint:unchecked'
+}
+
+ext.workerClasses = ['parspice/worker/Main.class', 'parspice/worker/SpiceService.class']
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+task libJar(type: ShadowJar, dependsOn: classes) {
+    classifier = 'lib'
+    from sourceSets.main.output
+    configurations = [project.configurations.runtimeClasspath]
+    exclude "parspice/worker/**"
+}
+
+task workerJar(type: ShadowJar, dependsOn: classes) {
+    classifier = 'worker'
+    from(sourceSets.main.output) {
+        include "parspice/worker/**"
+        include "parspice/rpc/**"
+    }
+    manifest {
+        attributes 'Main-Class': 'parspice/worker/Main'
+    }
+    configurations = [project.configurations.runtimeClasspath]
+}
+
+artifacts {
+    archives libJar
+    archives workerJar
 }
