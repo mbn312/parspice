@@ -69,7 +69,7 @@ test {
 import org.apache.tools.ant.taskdefs.condition.Os
 task genFromCSPICE(type: Exec) {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        commandLine 'cmd', '/c', file("$rootDir/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
+        commandLine 'cmd', '/c','python3', file("$rootDir/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
     } else if (Os.isFamily(Os.FAMILY_UNIX)) {
         commandLine file("$rootDir/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
     } else {
