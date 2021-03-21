@@ -11,7 +11,7 @@ spice call, but after that they write *identical* code to what they would do dir
 with JNISpice.
 
 The only network overhead is when returning the responses. The user can return
-any type they want from `iterate`, but they have to implement the `Returner`
+any type they want from `iterate`, but they have to implement the `Sender`
 interface to serialize and deserialize the object from the output stream. In
 most cases, this will be very easy, and maybe a little tedious.
 
@@ -21,4 +21,5 @@ most cases, this will be very easy, and maybe a little tedious.
 
 # GET REKT SPICE
 
-The important code is in implementation/. Currently, the user would have to write a client Main class, a Worker subclass, and a Returner implementer class.
+The important code is in implementation/. Currently, the user would have to write a client Main class, a Worker subclass, and (maybe) a Sender implementer class.
+They can use a pre-made Sender if they are only returning an int, double, bool, or String, or an array of those types.
