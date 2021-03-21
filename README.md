@@ -17,7 +17,7 @@ most cases, this will be very easy, and maybe a little tedious.
 
 ## Basic Performance
 
-10,000,000 `CSPICE.vhat` calls: ParSPICE takes 2100 ms, direct CSPICE takes 3450 ms
+10,000,000 `CSPICE.vhat` calls: ParSPICE takes 1600 ms, direct CSPICE takes 3450 ms
 
 # GET REKT SPICE
 
