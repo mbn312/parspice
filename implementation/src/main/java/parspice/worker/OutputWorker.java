@@ -22,11 +22,11 @@ import java.net.Socket;
  *
  * public class VhatOutputWorker extends OutputWorker<double[]> {
  *     public static void main(String[] args) throws Exception {
- *         new VhatOutputWorker().run(
- *                 new DoubleArraySender(3),
- *                 args
- *         );
+ *         new VhatOutputWorker().run(args);
  *     }
+ *
+ *     @Override
+ *     public Sender<double[]> getOutputSender() { return new DoubleArraySender(3); }
  *
  *     @Override
  *     public void setup() {
@@ -43,7 +43,7 @@ import java.net.Socket;
  *
  * @param <T> The type returned by the worker to the main process.
  */
-public abstract class OutputWorker<T> {
+public abstract class OutputWorker<O> {
 
     /**
      * Runs the worker.
@@ -52,15 +52,15 @@ public abstract class OutputWorker<T> {
      * It first calls {@code setup()}, and then repeatedly calls {@code task(i)}
      * and sends the returned values back to the main process.
      *
-     * @param outputSender The Sender responsible for sending the values returned by
-     *               {@code task(i)} back to the main process.
      * @param args The CLI arguments given to the main function.
      *             These should not be modified in any way.
      * @throws Exception
      */
-    public final void run(Sender<T> outputSender, String[] args) throws Exception {
+    public final void run(String[] args) throws Exception {
         try {
             setup();
+
+            Sender<O> outputSender = getOutputSender();
 
             Socket socket = new Socket("localhost", Integer.parseInt(args[0]));
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
@@ -80,6 +80,13 @@ public abstract class OutputWorker<T> {
     }
 
     /**
+     * Get an instance of the output sender.
+     *
+     * @return instance of the output sender.
+     */
+    public abstract Sender<O> getOutputSender();
+
+    /**
      * Called only once, before repeatedly calling {@code task(i)}.
      *
      * If you need to load a native library or perform any one-time preparation,
@@ -97,5 +104,5 @@ public abstract class OutputWorker<T> {
      * @return The value to be sent back to the main process.
      * @throws Exception
      */
-    protected abstract T task(int i) throws Exception;
+    protected abstract O task(int i) throws Exception;
 }

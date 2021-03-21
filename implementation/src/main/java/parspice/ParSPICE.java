@@ -4,6 +4,8 @@ import parspice.sender.Sender;
 import parspice.socketManager.InputOutputSocketManager;
 import parspice.socketManager.OutputSocketManager;
 import parspice.socketManager.SocketManager;
+import parspice.worker.InputOutputWorker;
+import parspice.worker.OutputWorker;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,11 +51,7 @@ public class ParSPICE {
      * receiving outputs is slightly more than double the overhead of just
      * receiving outputs. Prefer the output-only version if at all possible.
      *
-     * @param mainClass Entry point class in the jar file. Must be a subclass
-     *                  of InputOutputWorker, but this is not checked and does
-     *                  not throw an error.
-     * @param inputSender Sender for giving inputs to the task
-     * @param outputSender Sender for receiving outputs from the task
+     * @param inputOutputWorker An instance of the worker to parallelize
      * @param inputs List of inputs to be sent and processed in parallel
      * @param numWorkers Number of worker processes to distribute to
      * @param <I> Input argument type
@@ -62,12 +60,13 @@ public class ParSPICE {
      * @throws Exception
      */
     public <I,O> List<O> run(
-            String mainClass,
-            Sender<I> inputSender,
-            Sender<O> outputSender,
+            InputOutputWorker<I,O> inputOutputWorker,
             List<I> inputs,
             int numWorkers
     ) throws Exception {
+        String mainClass = inputOutputWorker.getClass().getName();
+        Sender<I> inputSender = inputOutputWorker.getInputSender();
+        Sender<O> outputSender = inputOutputWorker.getOutputSender();
         List<SocketManager<O>> socketManagers = new ArrayList<>(numWorkers);
         int numIterations = inputs.size();
         int iteration = 0;
@@ -89,10 +88,7 @@ public class ParSPICE {
      * Runs a custom task that takes a locally-generated integer as input
      * and returns outputs to the main process.
      *
-     * @param mainClass Entry point class in the jar file. Must be a subclass of
-     *                  OutputWorker, but this is not checked and does not throw
-     *                  a error.
-     * @param outputSender Sender for receiving outputs from the task.
+     * @param outputWorker An instance of the worker to parallelize.
      * @param numIterations Number of times to run the task. Each run will receive as
      *                      argument a unique index i in the range 0:(numIterations-1) (inclusive)
      * @param numWorkers Number of worker processes to distribute to
@@ -101,11 +97,12 @@ public class ParSPICE {
      * @throws Exception
      */
     public <O> List<O> run(
-            String mainClass,
-            Sender<O> outputSender,
+            OutputWorker<O> outputWorker,
             int numIterations,
             int numWorkers
     ) throws Exception {
+        String mainClass = outputWorker.getClass().getName();
+        Sender<O> outputSender = outputWorker.getOutputSender();
         List<SocketManager<O>> socketManagers = new ArrayList<>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);

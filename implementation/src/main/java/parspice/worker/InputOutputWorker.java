@@ -26,12 +26,14 @@ import java.util.List;
  *
  * public class VhatInputOutputWorker extends InputOutputWorker<double[]> {
  *     public static void main(String[] args) throws Exception {
- *         new VhatInputOutputWorker().run(
- *                 new DoubleArraySender(3),
- *                 new DoubleArraySender(3),
- *                 args
- *         );
+ *         new VhatInputOutputWorker().run(args);
  *     }
+ *
+ *     @Override
+ *     public Sender<double[]> getInputSender() { return new DoubleArraySender(3); }
+ *
+ *     @Override
+ *     public Sender<double[]> getOutputSender() { return new DoubleArraySender(3); }
  *
  *     @Override
  *     public void setup() {
@@ -46,7 +48,8 @@ import java.util.List;
  *     }
  * </pre>
  *
- * @param <T> The type returned by the worker to the main process.
+ * @param <I> The type input to the worker by the main process.
+ * @param <O> The type returned by the worker to the main process.
  */
 public abstract class InputOutputWorker<I, O> {
 
@@ -57,18 +60,17 @@ public abstract class InputOutputWorker<I, O> {
      * It first calls {@code setup()}, and then repeatedly calls {@code task(i)}
      * and sends the returned values back to the main process.
      *
-     * @param inputSender The sender responsible for sending the input arguments
-     *                    from the main process to the worker.
-     * @param outputSender The Sender responsible for sending the values returned by
-     *               {@code task(i)} back to the main process.
      * @param args The CLI arguments given to the main function.
      *             These should not be modified in any way.
      * @throws Exception
      */
-    public final void run(Sender<I> inputSender, Sender<O> outputSender, String[] args) throws Exception {
+    public final void run(String[] args) throws Exception {
         FileWriter writer = new FileWriter("/tmp/worker_log_" + args[0]);
         try {
             setup();
+
+            Sender<I> inputSender = getInputSender();
+            Sender<O> outputSender = getOutputSender();
 
             Socket socket = new Socket("localhost", Integer.parseInt(args[0]));
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
@@ -91,6 +93,20 @@ public abstract class InputOutputWorker<I, O> {
         }
         writer.close();
     }
+
+    /**
+     * Get an instance of the input sender.
+     *
+     * @return instance of the input sender.
+     */
+    public abstract Sender<I> getInputSender();
+
+    /**
+     * Get an instance of the output sender.
+     *
+     * @return instance of the output sender.
+     */
+    public abstract Sender<O> getOutputSender();
 
     /**
      * Called only once, before repeatedly calling {@code task(i)}.
