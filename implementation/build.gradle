@@ -1,9 +1,10 @@
 plugins {
-//    id 'com.github.johnrengelman.shadow' version '6.1.0'
     id 'java'
+    id 'java-library'
+    id 'maven-publish'
 }
 
-group 'org.example'
+group 'org.parspice'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -12,23 +13,13 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    implementation files("/usr/local/JNISpice/src/JNISpice");
 }
 
-jar {
-    manifest {
-        attributes 'Main-Class': 'MyWorker'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'parspice.implementation'
+            from components.java
+        }
     }
-    from {
-        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    archiveName = 'worker.jar'
-}
-
-//shadowJar {
-//    archivesBaseName = 'worker'
-//}
-
-artifacts {
-    archives jar
 }
