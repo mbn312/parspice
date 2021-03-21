@@ -1,4 +1,4 @@
-# ParSPICE
+# ParSPICE with Custom Workers
 
 The general idea is that the user writes their own worker code. Their worker
 gets compiled into its own jar file, and the ParSPICE api starts several of them
