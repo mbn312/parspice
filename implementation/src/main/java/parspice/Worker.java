@@ -1,10 +1,12 @@
 package parspice;
 
+import parspice.sender.Sender;
+
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public abstract class Worker<T> {
-    public final void run(Returner<T> sender, String[] args) throws Exception {
+    public final void run(Sender<T> sender, String[] args) throws Exception {
         setup();
 
         Socket socket = new Socket("localhost", Integer.parseInt(args[0]));

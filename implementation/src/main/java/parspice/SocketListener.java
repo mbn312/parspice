@@ -1,5 +1,7 @@
 package parspice;
 
+import parspice.sender.Sender;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -12,11 +14,11 @@ public class SocketListener<T> implements Runnable {
     private final int batchSize;
     private final int workerIndex;
     private final ServerSocket serverSocket;
-    private final Returner<T> sender;
+    private final Sender<T> sender;
 
     private final List<T> results;
 
-    public SocketListener(Returner<T> send, ServerSocket s, int wi, int bs) {
+    public SocketListener(Sender<T> send, ServerSocket s, int wi, int bs) {
         serverSocket = s;
         workerIndex = wi;
         batchSize = bs;
