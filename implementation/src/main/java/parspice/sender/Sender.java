@@ -8,8 +8,9 @@ import java.io.ObjectOutputStream;
  * A serializer/deserializer that reads/writes a data type to an ObjectStream.
  *
  * Implementers of Sender are used on to send and receive arguments and return values.
- * Implementers should avoid using writeObject and readObject, and instead should
- * use their knowledge of the data type's structure to generate compact messages.
+ * Implementers should avoid using writeObject or readObject, and instead should
+ * use their knowledge of the data type's structure to generate compact messages
+ * that can be processed without reflection.
  *
  * @param <T> The data type read and written by the Sender.
  */

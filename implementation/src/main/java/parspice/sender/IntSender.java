@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+/**
+ * Sender implementation for int.
+ */
 public class IntSender implements Sender<Integer> {
     @Override
     public Integer read(ObjectInputStream ois) throws IOException {

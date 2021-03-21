@@ -3,26 +3,31 @@ package parspice.worker;
 import parspice.sender.Sender;
 
 import java.io.FileWriter;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Superclass of all Worker tasks that don't take input arguments sent from
+ * Superclass of all Worker tasks that DO take input arguments sent from
  * the main process. All subclasses should include a main entry point that
  * calls {@code run(...)} on an instance of themselves.
  *
- * -- ex: A dumb vhat task --
+ * -- ex: A vhat task --
  *
  * <pre>
  *     {@code
  * import parspice.sender.DoubleArraySender;
  * import spice.basic.CSPICE;
  * import spice.basic.SpiceErrorException;
- * import parspice.worker.NoInputWorker;
+ * import parspice.worker.InputOutputWorker;
  *
- * public class MyWorker extends NoInputWorker<double[]> {
+ * public class VhatInputOutputWorker extends InputOutputWorker<double[]> {
  *     public static void main(String[] args) throws Exception {
- *         new MyWorker().run(
+ *         new VhatInputOutputWorker().run(
+ *                 new DoubleArraySender(3),
  *                 new DoubleArraySender(3),
  *                 args
  *         );
@@ -34,8 +39,8 @@ import java.net.Socket;
  *     }
  *
  *     @Override
- *     public double[] task(int i) throws SpiceErrorException {
- *         return CSPICE.vhat(new double[]{1, 2, i});
+ *     public double[] task(double[] in) throws SpiceErrorException {
+ *         return CSPICE.vhat(in);
  *     }
  * }
  *     }
@@ -43,7 +48,7 @@ import java.net.Socket;
  *
  * @param <T> The type returned by the worker to the main process.
  */
-public abstract class NoInputWorker<T> {
+public abstract class InputOutputWorker<I, O> {
 
     /**
      * Runs the worker.
@@ -52,31 +57,39 @@ public abstract class NoInputWorker<T> {
      * It first calls {@code setup()}, and then repeatedly calls {@code task(i)}
      * and sends the returned values back to the main process.
      *
-     * @param sender The Sender responsible for sending the values returned by
+     * @param inputSender The sender responsible for sending the input arguments
+     *                    from the main process to the worker.
+     * @param outputSender The Sender responsible for sending the values returned by
      *               {@code task(i)} back to the main process.
-     * @param args The CLI arguments giving to the main function.
+     * @param args The CLI arguments given to the main function.
      *             These should not be modified in any way.
      * @throws Exception
      */
-    public final void run(Sender<T> sender, String[] args) throws Exception {
+    public final void run(Sender<I> inputSender, Sender<O> outputSender, String[] args) throws Exception {
+        FileWriter writer = new FileWriter("/tmp/worker_log_" + args[0]);
         try {
             setup();
 
             Socket socket = new Socket("localhost", Integer.parseInt(args[0]));
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            int startI = Integer.parseInt(args[1]);
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
             int numIterations = Integer.parseInt(args[2]);
-            for (int i = startI; i < startI + numIterations; i++) {
-                sender.write(task(i), oos);
+            List<I> inputs = new ArrayList<>(numIterations);
+            for (int i = 0; i < numIterations; i++) {
+                inputs.add(inputSender.read(ois));
+            }
+            for (int i = 0; i < numIterations; i++) {
+                outputSender.write(task(inputs.get(i)), oos);
             }
             oos.close();
+            ois.close();
             socket.close();
         } catch (Exception e) {
-            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[0]);
             writer.write(e.toString());
+            writer.write(Arrays.toString(e.getStackTrace()));
             writer.flush();
-            writer.close();
         }
+        writer.close();
     }
 
     /**
@@ -91,11 +104,9 @@ public abstract class NoInputWorker<T> {
      * Called repeatedly, once for each integer {@code i} in the index range
      * given by the command line arguments.
      *
-     * @param i The integer index of the task. It should be used to calculate
-     *          the initial state or values needed by the task.
-     *          The task receives no other indication of which iteration it is.
+     * @param input The input given to the task by the main process.
      * @return The value to be sent back to the main process.
      * @throws Exception
      */
-    protected abstract T task(int i) throws Exception;
+    protected abstract O task(I input) throws Exception;
 }

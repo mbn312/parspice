@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+/**
+ * Sender implementation for boolean.
+ */
 public class BooleanSender implements Sender<Boolean> {
     @Override
     public Boolean read(ObjectInputStream ois) throws IOException {

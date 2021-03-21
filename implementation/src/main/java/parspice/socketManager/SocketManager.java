@@ -9,6 +9,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The common logic for OutputSocketManager and InputOutputSocketManager.
+ *
+ * @param <O> the output type returned by the task
+ */
 public abstract class SocketManager<O> implements Runnable {
     private Thread thread;
 
@@ -40,11 +45,16 @@ public abstract class SocketManager<O> implements Runnable {
 
     public void start() {
         if (thread == null) {
-            thread = new Thread(this, "socket_manager" + Integer.toString(workerIndex));
+            thread = new Thread(this, "socket_manager" + workerIndex);
             thread.start();
         }
     }
 
+    /**
+     * Release socket resources and join the thread.
+     *
+     * @throws Exception
+     */
     public void join() throws Exception {
         thread.join();
         socket.close();

@@ -18,20 +18,31 @@ import java.util.List;
  *
  * @param <O> The type deserialized by the given sender object.
  */
-public class NoInputSocketManager<O> extends SocketManager<O> {
-    private final Sender<O> sender;
+public class OutputSocketManager<O> extends SocketManager<O> {
+    private final Sender<O> outputSender;
 
-    public NoInputSocketManager(ServerSocket serverSocket, Sender<O> send, int workerIndex, int batchSize) {
+    /**
+     * Creates an instance of OutputSocketManager.
+     *
+     * @param serverSocket a pre-made socket to interact with
+     * @param outputSender a sender for deserializing responses
+     * @param workerIndex the unique index of the worker associated with the socket, for error reporting
+     * @param batchSize number of outputs to expect
+     */
+    public OutputSocketManager(ServerSocket serverSocket, Sender<O> outputSender, int workerIndex, int batchSize) {
         super(serverSocket, workerIndex, batchSize);
-        sender = send;
+        this.outputSender = outputSender;
     }
 
+    /**
+     * Listens for outputs and aggregates them.
+     */
     @Override
     public void sendAndReceive() {
         try {
             ObjectInputStream ois = getInputStream();
             for (int i = 0; i < batchSize; i++) {
-                outputs.add(sender.read(ois));
+                outputs.add(outputSender.read(ois));
             }
             ois.close();
         } catch (IOException e) {

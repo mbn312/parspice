@@ -4,9 +4,21 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+/**
+ * Sender implementation for String[].
+ *
+ * All arrays serialized and deserialized by StringArraySender must be the same length.
+ * Interacting with arrays of other lengths is undefined behavior, and may or may not
+ * cause a runtime error. Inputs are not sanitized.
+ */
 public class StringArraySender implements Sender<String[]> {
     private final int length;
 
+    /**
+     * Creates an instance of StringArraySender.
+     *
+     * @param len the length of all arrays to be serialized an deserialized
+     */
     public StringArraySender(int len) {
         length = len;
     }

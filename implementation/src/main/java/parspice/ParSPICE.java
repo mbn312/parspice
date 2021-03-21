@@ -1,9 +1,12 @@
 package parspice;
 
 import parspice.sender.Sender;
-import parspice.socketManager.InputSocketManager;
-import parspice.socketManager.NoInputSocketManager;
+import parspice.socketManager.InputOutputSocketManager;
+import parspice.socketManager.OutputSocketManager;
+import parspice.socketManager.SocketManager;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Enumeration;
@@ -20,95 +23,152 @@ import java.util.jar.JarFile;
  * avoided if at all possible. If inputs are not used, the task will receive an integer
  * indicating which run of the task it is, as if it was inside a for loop on a single process.
  */
-public class ParSPICE<I, O> {
+public class ParSPICE {
+
     private final String workerJar;
-    private final String mainClass;
-    private final Sender<I> inputSender;
-    private final Sender<O> outputSender;
+    private final int minPort;
 
-    public ParSPICE(String workerJar, String mainClass, Sender<I> inputSender, Sender<O> outputSender) throws IOException, ClassNotFoundException {
+    /**
+     * Creates a new ParSPICE object with for a given jar file.
+     *
+     * @param workerJar the jar for all tasks on this instance to be
+     *                  run from.
+     */
+    public ParSPICE(String workerJar, int minPort) throws IOException {
+        checkJar(workerJar);
+
         this.workerJar = workerJar;
-        this.mainClass = mainClass;
-        this.inputSender = inputSender;
-        this.outputSender = outputSender;
-
-        checkJar(workerJar, mainClass);
+        this.minPort = minPort;
     }
 
-    public ParSPICE(String workerJar, String mainClass, Sender<O> outputSender) throws IOException, ClassNotFoundException {
-        this.workerJar = workerJar;
-        this.mainClass = mainClass;
-        this.inputSender = null;
-        this.outputSender = outputSender;
-
-        checkJar(workerJar, mainClass);
-    }
-
-    public List<O> run(List<I> inputs, int numWorkers) throws Exception {
-        int iterations = inputs.size();
-        List<O> results = new ArrayList<>(iterations);
-        Process[] processes = new Process[numWorkers];
-        List<InputSocketManager<I,O>> sockets = new ArrayList<>(numWorkers);
+    /**
+     * Runs a custom task that takes remote inputs and returns outputs
+     * to the main process.
+     *
+     * Sending inputs is slow. The network overhead of both sending inputs and
+     * receiving outputs is slightly more than double the overhead of just
+     * receiving outputs. Prefer the output-only version if at all possible.
+     *
+     * @param mainClass Entry point class in the jar file. Must be a subclass
+     *                  of InputOutputWorker, but this is not checked and does
+     *                  not throw an error.
+     * @param inputSender Sender for giving inputs to the task
+     * @param outputSender Sender for receiving outputs from the task
+     * @param inputs List of inputs to be sent and processed in parallel
+     * @param numWorkers Number of worker processes to distribute to
+     * @param <I> Input argument type
+     * @param <O> Output return type
+     * @return The list of outputs, in the same order as the inputs
+     * @throws Exception
+     */
+    public <I,O> List<O> run(
+            String mainClass,
+            Sender<I> inputSender,
+            Sender<O> outputSender,
+            List<I> inputs,
+            int numWorkers
+    ) throws Exception {
+        List<SocketManager<O>> socketManagers = new ArrayList<>(numWorkers);
+        int numIterations = inputs.size();
         int iteration = 0;
         for (int i = 0; i < numWorkers; i++) {
-            int subset = subset(iterations, numWorkers, i);
-            String args = workerJar + " " + mainClass + " " + (50050 + i) + " " + subset;
-            sockets.add(new InputSocketManager<I, O>(
-                    new ServerSocket(50050 + i),
+            int subset = subset(numIterations, numWorkers, i);
+            socketManagers.add(new InputOutputSocketManager<I, O>(
+                    new ServerSocket(minPort + i),
                     inputs.subList(iteration, iteration + subset),
                     inputSender,
                     outputSender,
                     i
             ));
-            sockets.get(i).start();
-            processes[i] = Runtime.getRuntime().exec("java -cp " + args);
             iteration += subset;
         }
-        for (int i = 0; i < numWorkers; i++) {
-            sockets.get(i).join();
-            processes[i].waitFor();
-            results.addAll(sockets.get(i).getOutputs());
-        }
-        return results;
+        return run(workerJar, mainClass, minPort, numIterations, numWorkers, socketManagers);
     }
 
-    public List<O> run(int iterations, int numWorkers) throws Exception {
-        List<O> results = new ArrayList<>(iterations);
-        Process[] processes = new Process[numWorkers];
-        List<NoInputSocketManager<O>> sockets = new ArrayList<>(numWorkers);
-        int iteration = 0;
+    /**
+     * Runs a custom task that takes a locally-generated integer as input
+     * and returns outputs to the main process.
+     *
+     * @param mainClass Entry point class in the jar file. Must be a subclass of
+     *                  OutputWorker, but this is not checked and does not throw
+     *                  a error.
+     * @param outputSender Sender for receiving outputs from the task.
+     * @param numIterations Number of times to run the task. Each run will receive as
+     *                      argument a unique index i in the range 0:(numIterations-1) (inclusive)
+     * @param numWorkers Number of worker processes to distribute to
+     * @param <O> Output return type
+     * @return The list of outputs, sorted by index i. (see argument numIterations)
+     * @throws Exception
+     */
+    public <O> List<O> run(
+            String mainClass,
+            Sender<O> outputSender,
+            int numIterations,
+            int numWorkers
+    ) throws Exception {
+        List<SocketManager<O>> socketManagers = new ArrayList<>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
-            int subset = subset(iterations, numWorkers, i);
-            String args = workerJar + " " + mainClass + " " + (50050 + i) + " " + iteration + " " + subset;
-            sockets.add(new NoInputSocketManager<>(
-                    new ServerSocket(50050 + i),
+            int subset = subset(numIterations, numWorkers, i);
+            socketManagers.add(new OutputSocketManager<>(
+                    new ServerSocket(minPort + i),
                     outputSender,
                     i,
                     subset
             ));
-            sockets.get(i).start();
+        }
+        return run(workerJar, mainClass, minPort, numIterations, numWorkers, socketManagers);
+    }
+
+    /**
+     * Internal logic common to both of the two publicly facing run functions.
+     */
+    private static <O> List<O> run(String workerJar, String mainClass, int minPort, int numIterations, int numWorkers, List<SocketManager<O>> socketManagers) throws Exception {
+        checkMainClass(workerJar, mainClass);
+
+        List<O> results = new ArrayList<>(numIterations);
+        Process[] processes = new Process[numWorkers];
+        int iteration = 0;
+        for (int i = 0; i < numWorkers; i++) {
+            int subset = subset(numIterations, numWorkers, i);
+            String args = workerJar + " " + mainClass + " " + (minPort + i) + " " + iteration + " " + subset;
+            socketManagers.get(i).start();
             processes[i] = Runtime.getRuntime().exec("java -cp " + args);
             iteration += subset;
         }
         for (int i = 0; i < numWorkers; i++) {
-            sockets.get(i).join();
+            socketManagers.get(i).join();
             processes[i].waitFor();
-            results.addAll(sockets.get(i).getOutputs());
+            results.addAll(socketManagers.get(i).getOutputs());
         }
         return results;
     }
 
     /**
-     * Checks if the given jar file exists, and that the given main class is in that file.
+     * Checks that the given file exists, and that it is a .jar file. Throws an exception if not.
      *
-     * Throws an error if either condition fails.
+     * @param workerJar path (can be relative) to the jar file.
+     * @throws IOException
+     */
+    private static void checkJar(String workerJar) throws IOException {
+        String extension = workerJar.substring(workerJar.length()-4);
+        if (!extension.equals(".jar")) {
+            throw new IOException("workerJar must be a .jar file, not: " + extension);
+        }
+        File file = new File(workerJar);
+        if (!file.exists()) {
+            throw new FileNotFoundException(workerJar);
+        }
+    }
+
+    /**
+     * Checks that the given main class is in the the jar file. Throws an exception if not.
      *
-     * @param workerJar path (can be relative) of the jar file
+     * @param workerJar path (can be relative) to the jar file
      * @param mainClass main class to look for, in package notation as given as a jvm argument.
      * @throws ClassNotFoundException
      * @throws IOException
      */
-    private static void checkJar(String workerJar, String mainClass) throws ClassNotFoundException, IOException {
+    private static void checkMainClass(String workerJar, String mainClass) throws ClassNotFoundException, IOException {
         JarFile jarFile = new JarFile(workerJar);
         Enumeration<JarEntry> e = jarFile.entries();
         while (e.hasMoreElements()) {
@@ -125,7 +185,19 @@ public class ParSPICE<I, O> {
         throw new ClassNotFoundException(mainClass);
     }
 
-    private int subset(int iterations, int numWorkers, int i) {
-        return iterations/numWorkers + ((i < iterations%numWorkers)?1:0);
+    /**
+     * Calculate how many iterations should be given to a particular worker.
+     *
+     * Each worker is given an almost-equal subset. If numIterations is not
+     * an even multiple of numWorkers, the remainder is spread across the
+     * first numIterations % numWorkers workers.
+     *
+     * @param numIterations total number of iterations
+     * @param numWorkers number of workers
+     * @param i the index of a particular worker
+     * @return the number of iterations that worker should run
+     */
+    private static int subset(int numIterations, int numWorkers, int i) {
+        return numIterations/numWorkers + ((i < numIterations%numWorkers)?1:0);
     }
 }
