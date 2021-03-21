@@ -1,21 +1,24 @@
-# parspice
+# ParSPICE
 
-A concurrent wrapper for JNISpice.
+The general idea is that the user writes their own worker code. Their worker
+gets compiled into its own jar file, and the Dispatcher starts several of them
+up like before. The difference is, there are no requests, and only one round of
+responses.
 
-## Setup
+The custom worker code has an `iterate(int i)` function that is called repeatedly.
+The user must find a way to convert that integer into the arguments of their first
+spice call, but after that they write *identical* code to what they would do directly
+with JNISpice.
 
-You will need the unzipped JNISpice source somewhere on your system. Then, set the environment variable `JNISPICE_ROOT`:
+The only network overhead is when returning the responses. The user can return
+any type they want from `iterate`, but they have to implement the `Returner`
+interface to serialize and deserialize the object from the output stream. In
+most cases, this will be very easy, and maybe a little tedious.
 
-```
-JNISPICE_ROOT=/absolute/path/to/JNISpice
-```
+## Basic Performance
 
-You can set it with `export` in your shell rc file, or by prepending the above command to every `gradle build` command.
+10,000,000 `CSPICE.vhat` calls: ParSPICE takes 2100 ms, direct CSPICE takes 3450 ms
 
-You will need the antlr4-python3-runtime python library installed in order to build the library.
+# GET REKT SPICE
 
-You also need [gradle](https://gradle.org/) installed. Alternatively, you can use the `./gradlew` script instead of the `gradle` command.
-
-## Building
-
-Run `gradle build` in the root of the repo.
+The important code is in implementation/. Currently, the user would have to write a client Main class, a Worker subclass, and a Returner implementer class.
