@@ -2,28 +2,33 @@ package parspice.worker;
 
 import parspice.sender.Sender;
 
-import java.io.FileWriter;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Superclass of all Worker tasks that DON'T take input arguments sent from
+ * Superclass of all Worker tasks that DO take input arguments sent from
  * the main process. All subclasses should include a main entry point that
  * calls {@code run(...)} on an instance of themselves.
  *
- * -- ex: A dumb vhat task --
+ * -- ex: A vhat task --
  *
  * <pre>
  *     {@code
- * import parspice.outputSender.DoubleArraySender;
+ * import parspice.sender.DoubleArraySender;
  * import spice.basic.CSPICE;
  * import spice.basic.SpiceErrorException;
- * import parspice.worker.NoInputWorker;
+ * import parspice.worker.InputOutputWorker;
  *
- * public class VhatOutputWorker extends OutputWorker<double[]> {
+ * public class VhatInputOutputWorker extends InputOutputWorker<double[]> {
  *     public static void main(String[] args) throws Exception {
- *         new VhatOutputWorker().run(args);
+ *         new VhatInputOutputWorker().run(args);
  *     }
+ *
+ *     @Override
+ *     public Sender<double[]> getInputSender() { return new DoubleArraySender(3); }
  *
  *     @Override
  *     public Sender<double[]> getOutputSender() { return new DoubleArraySender(3); }
@@ -34,16 +39,17 @@ import java.net.Socket;
  *     }
  *
  *     @Override
- *     public double[] task(int i) throws SpiceErrorException {
- *         return CSPICE.vhat(new double[]{1, 2, i});
+ *     public double[] task(double[] in) throws SpiceErrorException {
+ *         return CSPICE.vhat(in);
  *     }
  * }
  *     }
  * </pre>
  *
- * @param <T> The type returned by the worker to the main process.
+ * @param <I> The type input to the worker by the main process.
+ * @param <O> The type returned by the worker to the main process.
  */
-public abstract class OutputWorker<O> {
+public interface IOWorker<I, O> {
 
     /**
      * Runs the worker.
@@ -52,39 +58,57 @@ public abstract class OutputWorker<O> {
      * It first calls {@code setup()}, and then repeatedly calls {@code task(i)}
      * and sends the returned values back to the main process.
      *
+     * Errors are printed to /tmp/worker_log_i where i is the worker's id.
+     *
      * @param args The CLI arguments given to the main function.
      *             These should not be modified in any way.
      * @throws Exception
      */
-    public final void run(String[] args) throws Exception {
+    static <I,O> void run(IOWorker<I,O> worker, String[] args) throws IOException {
         try {
-            setup();
+            worker.setup();
 
-            Sender<O> outputSender = getOutputSender();
+            Sender<I> inputSender = worker.getInputSender();
+            Sender<O> outputSender = worker.getOutputSender();
 
             Socket socket = new Socket("localhost", Integer.parseInt(args[0]));
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            int startI = Integer.parseInt(args[1]);
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
             int numIterations = Integer.parseInt(args[2]);
-            for (int i = startI; i < startI + numIterations; i++) {
-                outputSender.write(task(i), oos);
+            List<I> inputs = new ArrayList<>(numIterations);
+            for (int i = 0; i < numIterations; i++) {
+                inputs.add(inputSender.read(ois));
+            }
+            for (int i = 0; i < numIterations; i++) {
+                outputSender.write(worker.task(inputs.get(i)), oos);
             }
             oos.close();
+            ois.close();
             socket.close();
         } catch (Exception e) {
             FileWriter writer = new FileWriter("/tmp/worker_log_" + args[0]);
             writer.write(e.toString());
+            PrintWriter printer = new PrintWriter(writer);
+            e.printStackTrace(printer);
+            printer.close();
             writer.flush();
             writer.close();
         }
     }
 
     /**
+     * Get an instance of the input sender.
+     *
+     * @return instance of the input sender.
+     */
+    Sender<I> getInputSender();
+
+    /**
      * Get an instance of the output sender.
      *
      * @return instance of the output sender.
      */
-    public abstract Sender<O> getOutputSender();
+    Sender<O> getOutputSender();
 
     /**
      * Called only once, before repeatedly calling {@code task(i)}.
@@ -92,17 +116,15 @@ public abstract class OutputWorker<O> {
      * If you need to load a native library or perform any one-time preparation,
      * it should be done in this function. If not, you don't need to override it.
      */
-    protected void setup() {}
+    default void setup() {}
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range
      * given by the command line arguments.
      *
-     * @param i The integer index of the task. It should be used to calculate
-     *          the initial state or values needed by the task.
-     *          The task receives no other indication of which iteration it is.
+     * @param input The input given to the task by the main process.
      * @return The value to be sent back to the main process.
      * @throws Exception
      */
-    protected abstract O task(int i) throws Exception;
+    O task(I input) throws Exception;
 }

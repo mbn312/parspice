@@ -23,7 +23,7 @@ public interface Sender<T> {
      * @return the instance of the type read from the stream.
      * @throws IOException
      */
-    public T read(ObjectInputStream ois) throws IOException;
+    T read(ObjectInputStream ois) throws IOException;
 
     /**
      * Writes an instance of the type to an ObjectOutputStream.
@@ -32,5 +32,5 @@ public interface Sender<T> {
      * @param oos ObjectOutputStream to write to.
      * @throws IOException
      */
-    public void write(T out, ObjectOutputStream oos) throws IOException;
+    void write(T out, ObjectOutputStream oos) throws IOException;
 }

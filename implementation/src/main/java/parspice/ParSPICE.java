@@ -1,11 +1,11 @@
 package parspice;
 
 import parspice.sender.Sender;
-import parspice.socketManager.InputOutputSocketManager;
-import parspice.socketManager.OutputSocketManager;
+import parspice.socketManager.IOSocketManager;
+import parspice.socketManager.OSocketManager;
 import parspice.socketManager.SocketManager;
-import parspice.worker.InputOutputWorker;
-import parspice.worker.OutputWorker;
+import parspice.worker.IOWorker;
+import parspice.worker.OWorker;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -51,7 +51,7 @@ public class ParSPICE {
      * receiving outputs is slightly more than double the overhead of just
      * receiving outputs. Prefer the output-only version if at all possible.
      *
-     * @param inputOutputWorker An instance of the worker to parallelize
+     * @param ioWorker An instance of the worker to parallelize
      * @param inputs List of inputs to be sent and processed in parallel
      * @param numWorkers Number of worker processes to distribute to
      * @param <I> Input argument type
@@ -60,19 +60,19 @@ public class ParSPICE {
      * @throws Exception
      */
     public <I,O> List<O> run(
-            InputOutputWorker<I,O> inputOutputWorker,
+            IOWorker<I,O> ioWorker,
             List<I> inputs,
             int numWorkers
     ) throws Exception {
-        String mainClass = inputOutputWorker.getClass().getName();
-        Sender<I> inputSender = inputOutputWorker.getInputSender();
-        Sender<O> outputSender = inputOutputWorker.getOutputSender();
+        String mainClass = ioWorker.getClass().getName();
+        Sender<I> inputSender = ioWorker.getInputSender();
+        Sender<O> outputSender = ioWorker.getOutputSender();
         List<SocketManager<O>> socketManagers = new ArrayList<>(numWorkers);
         int numIterations = inputs.size();
         int iteration = 0;
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
-            socketManagers.add(new InputOutputSocketManager<I, O>(
+            socketManagers.add(new IOSocketManager<I, O>(
                     new ServerSocket(minPort + i),
                     inputs.subList(iteration, iteration + subset),
                     inputSender,
@@ -88,7 +88,7 @@ public class ParSPICE {
      * Runs a custom task that takes a locally-generated integer as input
      * and returns outputs to the main process.
      *
-     * @param outputWorker An instance of the worker to parallelize.
+     * @param oWorker An instance of the worker to parallelize.
      * @param numIterations Number of times to run the task. Each run will receive as
      *                      argument a unique index i in the range 0:(numIterations-1) (inclusive)
      * @param numWorkers Number of worker processes to distribute to
@@ -97,16 +97,16 @@ public class ParSPICE {
      * @throws Exception
      */
     public <O> List<O> run(
-            OutputWorker<O> outputWorker,
+            OWorker<O> oWorker,
             int numIterations,
             int numWorkers
     ) throws Exception {
-        String mainClass = outputWorker.getClass().getName();
-        Sender<O> outputSender = outputWorker.getOutputSender();
+        String mainClass = oWorker.getClass().getName();
+        Sender<O> outputSender = oWorker.getOutputSender();
         List<SocketManager<O>> socketManagers = new ArrayList<>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
-            socketManagers.add(new OutputSocketManager<>(
+            socketManagers.add(new OSocketManager<>(
                     new ServerSocket(minPort + i),
                     outputSender,
                     i,

@@ -18,7 +18,7 @@ import java.util.List;
  *
  * @param <O> The type deserialized by the given sender object.
  */
-public class OutputSocketManager<O> extends SocketManager<O> {
+public class OSocketManager<O> extends SocketManager<O> {
     private final Sender<O> outputSender;
 
     /**
@@ -29,7 +29,7 @@ public class OutputSocketManager<O> extends SocketManager<O> {
      * @param workerIndex the unique index of the worker associated with the socket, for error reporting
      * @param batchSize number of outputs to expect
      */
-    public OutputSocketManager(ServerSocket serverSocket, Sender<O> outputSender, int workerIndex, int batchSize) {
+    public OSocketManager(ServerSocket serverSocket, Sender<O> outputSender, int workerIndex, int batchSize) {
         super(serverSocket, workerIndex, batchSize);
         this.outputSender = outputSender;
     }

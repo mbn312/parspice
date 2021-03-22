@@ -38,10 +38,11 @@ See [this repo](https://github.com/JoelCourtney/parspice-playground) for an exam
 
 ## Basic Performance
 
-10,000,000 `CSPICE.vhat` calls with 6 workers on a 2019 MacBook Pro:
+10,000,000 task iterations with 6 workers on a 2019 MacBook Pro:
 
-Output Only ParSPICE | Input and Output ParSPICE | Direct CSPICE
-:---:|:---:|:---:
-1850 ms | 2700 ms | 3600 ms
+Task | O ParSPICE | IO ParSPICE | Direct CSPICE
+---:|:---:|:---:|:---:
+vhat | 1850 ms | 2700 ms | 3600 ms
+mxv(vhat) | 3100 ms | 4000 ms | 11300 ms
 
 # GET REKT SPICE

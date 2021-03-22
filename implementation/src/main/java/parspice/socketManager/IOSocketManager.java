@@ -18,7 +18,7 @@ import java.util.List;
  * @param <I> The type serialized to send to the worker.
  * @param <O> The type deserialized from the worker.
  */
-public class InputOutputSocketManager<I,O> extends SocketManager<O> {
+public class IOSocketManager<I,O> extends SocketManager<O> {
     private final Sender<I> inputSender;
     private final Sender<O> outputSender;
     private final List<I> inputs;
@@ -32,7 +32,7 @@ public class InputOutputSocketManager<I,O> extends SocketManager<O> {
      * @param outputSender a deserializer for receiving the outputs from the worker.
      * @param workerIndex the unique index of the worker, used for error reporting.
      */
-    public InputOutputSocketManager(ServerSocket serverSocket, List<I> inputs, Sender<I> inputSender, Sender<O> outputSender, int workerIndex) {
+    public IOSocketManager(ServerSocket serverSocket, List<I> inputs, Sender<I> inputSender, Sender<O> outputSender, int workerIndex) {
         super(serverSocket, workerIndex, inputs.size());
         this.inputs = inputs;
         this.inputSender = inputSender;
