@@ -98,7 +98,7 @@ public interface OWorker<O> {
      * If you need to load a native library or perform any one-time preparation,
      * it should be done in this function. If not, you don't need to override it.
      */
-    default void setup() {}
+    default void setup() throws Exception {}
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range
