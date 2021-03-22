@@ -43,6 +43,6 @@ See [this repo](https://github.com/JoelCourtney/parspice-playground) for an exam
 Task | O ParSPICE | IO ParSPICE | Direct CSPICE
 ---:|:---:|:---:|:---:
 vhat | 1850 ms | 2700 ms | 3600 ms
-mxv(vhat) | 3100 ms | 4000 ms | 11300 ms
+mxv(vhat) | 3700 ms | 4800 ms | 12100 ms
 
 # GET REKT SPICE
