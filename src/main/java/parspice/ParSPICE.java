@@ -1,16 +1,15 @@
 package parspice;
 
 import parspice.sender.Sender;
-import parspice.socketManager.IOSocketManager;
-import parspice.socketManager.OSocketManager;
-import parspice.socketManager.SocketManager;
+import parspice.io.IServer;
+import parspice.io.OServer;
+import parspice.io.IOManager;
 import parspice.worker.IOWorker;
 import parspice.worker.OWorker;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.ArrayList;
@@ -67,21 +66,21 @@ public class ParSPICE {
         String mainClass = ioWorker.getClass().getName();
         Sender<I> inputSender = ioWorker.getInputSender();
         Sender<O> outputSender = ioWorker.getOutputSender();
-        List<SocketManager<O>> socketManagers = new ArrayList<>(numWorkers);
+        List<IOManager<I,O>> socketManagers = new ArrayList<>(numWorkers);
         int numIterations = inputs.size();
         int iteration = 0;
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
-            socketManagers.add(new IOSocketManager<I, O>(
-                    new ServerSocket(minPort + i),
-                    inputs.subList(iteration, iteration + subset),
-                    inputSender,
-                    outputSender,
+            socketManagers.add(new IOManager<>(
+                    new IServer<>(inputSender, inputs.subList(iteration, iteration + subset), minPort + 2*i, i),
+                    new OServer<>(outputSender, subset, minPort + 2*i + 1, i),
                     i
             ));
             iteration += subset;
         }
-        return run(workerJar, mainClass, minPort, numIterations, numWorkers, socketManagers);
+        run(workerJar, mainClass, minPort, numIterations, numWorkers, socketManagers);
+
+        return aggregateOutputs(socketManagers, numIterations);
     }
 
     /**
@@ -103,31 +102,31 @@ public class ParSPICE {
     ) throws Exception {
         String mainClass = oWorker.getClass().getName();
         Sender<O> outputSender = oWorker.getOutputSender();
-        List<SocketManager<O>> socketManagers = new ArrayList<>(numWorkers);
+        List<IOManager<Void,O>> socketManagers = new ArrayList<>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
-            socketManagers.add(new OSocketManager<>(
-                    new ServerSocket(minPort + i),
-                    outputSender,
-                    i,
-                    subset
+            socketManagers.add(new IOManager<>(
+                    null,
+                    new OServer<>(outputSender, subset, minPort + 2*i + 1, i),
+                    i
             ));
         }
-        return run(workerJar, mainClass, minPort, numIterations, numWorkers, socketManagers);
+        run(workerJar, mainClass, minPort, numIterations, numWorkers, socketManagers);
+
+        return aggregateOutputs(socketManagers,  numIterations);
     }
 
     /**
      * Internal logic common to both of the two publicly facing run functions.
      */
-    private static <O> List<O> run(String workerJar, String mainClass, int minPort, int numIterations, int numWorkers, List<SocketManager<O>> socketManagers) throws Exception {
+    private static <I,O> void run(String workerJar, String mainClass, int minPort, int numIterations, int numWorkers, List<IOManager<I,O>> socketManagers) throws Exception {
         checkMainClass(workerJar, mainClass);
 
-        List<O> results = new ArrayList<>(numIterations);
         Process[] processes = new Process[numWorkers];
         int iteration = 0;
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
-            String args = workerJar + " " + mainClass + " " + (minPort + i) + " " + iteration + " " + subset;
+            String args = workerJar + " " + mainClass + " " + (minPort + 2*i) + " " + iteration + " " + subset + " " + i;
             socketManagers.get(i).start();
             processes[i] = Runtime.getRuntime().exec("java -cp " + args);
             iteration += subset;
@@ -135,9 +134,7 @@ public class ParSPICE {
         for (int i = 0; i < numWorkers; i++) {
             socketManagers.get(i).join();
             processes[i].waitFor();
-            results.addAll(socketManagers.get(i).getOutputs());
         }
-        return results;
     }
 
     /**
@@ -196,5 +193,13 @@ public class ParSPICE {
      */
     private static int subset(int numIterations, int numWorkers, int i) {
         return numIterations/numWorkers + ((i < numIterations%numWorkers)?1:0);
+    }
+
+    private static <I,O> List<O> aggregateOutputs(List<IOManager<I,O>> socketManagers, int numIterations) {
+        List<O> results = new ArrayList<>(numIterations);
+        for (IOManager<?, O> socketManager : socketManagers) {
+            results.addAll(socketManager.getOutputs());
+        }
+        return results;
     }
 }
