@@ -71,8 +71,8 @@ public interface OWorker<O> {
             ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
 
             int startI = Integer.parseInt(args[1]);
-            int numIterations = Integer.parseInt(args[2]);
-            for (int i = startI; i < startI + numIterations; i++) {
+            int subset = Integer.parseInt(args[2]);
+            for (int i = startI; i < startI + subset; i++) {
                 outputSender.write(worker.task(i), oos);
             }
             oos.close();

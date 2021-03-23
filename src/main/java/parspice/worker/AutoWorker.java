@@ -33,8 +33,8 @@ public interface AutoWorker {
         try {
             worker.setup();
 
-            int numIterations = Integer.parseInt(args[2]);
-            for (int i = 0; i < numIterations; i++) {
+            int subset = Integer.parseInt(args[2]);
+            for (int i = 0; i < subset; i++) {
                 worker.task(i);
             }
         } catch (Exception e) {

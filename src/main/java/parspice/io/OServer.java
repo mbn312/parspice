@@ -19,17 +19,17 @@ public class OServer<O> implements Runnable {
     private final ServerSocket serverSocket;
     private final Sender<O> outputSender;
     private final int workerIndex;
-    private final int batchSize;
+    private final int subset;
 
     private final List<O> outputs;
 
-    public OServer(Sender<O> outputSender, int batchSize, int port, int workerIndex) throws IOException {
+    public OServer(Sender<O> outputSender, int subset, int port, int workerIndex) throws IOException {
         this.serverSocket = new ServerSocket(port);
 
         this.outputSender = outputSender;
-        this.outputs = new ArrayList<>(batchSize);
+        this.outputs = new ArrayList<>(subset);
         this.workerIndex = workerIndex;
-        this.batchSize = batchSize;
+        this.subset = subset;
     }
 
     /**
@@ -40,7 +40,7 @@ public class OServer<O> implements Runnable {
         try {
             Socket socket = serverSocket.accept();
             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-            for (int i = 0; i < batchSize; i++) {
+            for (int i = 0; i < subset; i++) {
                 outputs.add(outputSender.read(ois));
             }
             ois.close();

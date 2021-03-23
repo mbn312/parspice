@@ -38,8 +38,8 @@ public interface IWorker<I> {
 
             ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
 
-            int numIterations = Integer.parseInt(args[2]);
-            for (int i = 0; i < numIterations; i++) {
+            int subset = Integer.parseInt(args[2]);
+            for (int i = 0; i < subset; i++) {
                 worker.task(inputSender.read(ois));
             }
             ois.close();

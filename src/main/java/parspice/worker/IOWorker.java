@@ -79,8 +79,8 @@ public interface IOWorker<I, O> {
             ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
             ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
 
-            int numIterations = Integer.parseInt(args[2]);
-            for (int i = 0; i < numIterations; i++) {
+            int subset = Integer.parseInt(args[2]);
+            for (int i = 0; i < subset; i++) {
                 outputSender.write(worker.task(inputSender.read(ois)), oos);
             }
             oos.close();
