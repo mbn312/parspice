@@ -1,27 +1,10 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
     id 'java'
-    id 'com.google.protobuf' version '0.8.13'
+    id 'java-library'
+    id 'maven-publish'
 }
 
-def grpcVersion = '1.33.0'
-def protobufVersion = '3.12.0'
-def protocVersion = protobufVersion
-
-sourceSets {
-    main {
-        java {
-            srcDir 'build/generated/sources/automation/main/java'
-            srcDir 'build/generated/source/proto/main/grpc'
-            srcDir 'build/generated/source/proto/main/java'
-        }
-        proto {
-            srcDir 'build/generated/sources/automation/main/proto'
-        }
-    }
-}
-
-group 'org.example'
+group 'org.parspice'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -29,84 +12,35 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-
-    implementation files("/${System.env.JNISPICE_ROOT}/src/JNISpice")
-
-    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
-    implementation "io.grpc:grpc-stub:${grpcVersion}"
-    implementation "javax.annotation:javax.annotation-api:1.3.2"
-    implementation "org.apache.commons:commons-lang3:3.3.2"
-
-    runtimeOnly "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
 }
 
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.12.0"
-    }
-    plugins {
-        grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.33.0'
-        }
-    }
-    generateProtoTasks {
-        all()*.plugins {
-            grpc {}
-        }
-        all().each { task ->
-            task.dependsOn 'genFromCSPICE'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'parspice.implementation'
+            from components.java
         }
     }
 }
+
+task testJar(type: Jar, dependsOn: classes) {
+    manifest {
+        attributes 'Implementation-Title': 'ParSPICE Testing Jar'
+    }
+    archiveBaseName = "testing"
+    from {
+        sourceSets.test.output
+    }
+    from {
+        configurations.testCompileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}
+
+tasks.test.dependsOn(tasks.testJar)
 
 test {
     useJUnitPlatform()
-    systemProperty "java.library.path", file("/${System.env.JNISPICE_ROOT}/lib")
-}
-
-import org.apache.tools.ant.taskdefs.condition.Os
-task genFromCSPICE(type: Exec) {
-    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        commandLine 'cmd', '/c','python3', file("$rootDir/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
-    } else if (Os.isFamily(Os.FAMILY_UNIX)) {
-        commandLine file("$rootDir/src/build/gen.py"), file("/${System.env.JNISPICE_ROOT}/src/JNISpice/spice/basic/CSPICE.java")
-    } else {
-        println('OS not supported: ' + Os.toString())
-    }
-}
-
-tasks.compileJava.dependsOn(genFromCSPICE)
-
-compileJava {
-    options.compilerArgs << '-Xlint:unchecked'
-}
-
-ext.workerClasses = ['parspice/worker/Main.class', 'parspice/worker/SpiceService.class']
-
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
-task libJar(type: ShadowJar, dependsOn: classes) {
-    classifier = 'lib'
-    from sourceSets.main.output
-    configurations = [project.configurations.runtimeClasspath]
-    exclude "parspice/worker/**"
-}
-
-task workerJar(type: ShadowJar, dependsOn: classes) {
-    classifier = 'worker'
-    from(sourceSets.main.output) {
-        include "parspice/worker/**"
-        include "parspice/rpc/**"
-    }
-    manifest {
-        attributes 'Main-Class': 'parspice/worker/Main'
-    }
-    configurations = [project.configurations.runtimeClasspath]
-}
-
-artifacts {
-    archives libJar
-    archives workerJar
 }

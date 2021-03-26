@@ -1,21 +1,48 @@
-# parspice
+# ParSPICE with Custom Workers
 
-A concurrent wrapper for JNISpice.
+The general idea is that the user writes their own worker code. Their worker
+gets compiled into its own jar file, and the ParSPICE api starts several of them
+up like before. The difference is, there don't need to be any network requests,
+and there is only one round of responses.
 
-## Setup
+For tasks without network inputs, the custom worker code has a `O task(int i)` function
+that is called repeatedly, where `O` is any type. The user must find a way to convert that
+integer into the arguments of their first
+spice call, but after that they write *identical* code to what they would do directly
+with JNISpice. The only network overhead is when returning the responses. The user can return
+any type they want from `task`, but they have to implement the `Sender`
+interface to serialize and deserialize the object if it doesn't have a built-in sender. In
+most cases, this will be very easy.
 
-You will need the unzipped JNISpice source somewhere on your system. Then, set the environment variable `JNISPICE_ROOT`:
-
-```
-JNISPICE_ROOT=/absolute/path/to/JNISpice
-```
-
-You can set it with `export` in your shell rc file, or by prepending the above command to every `gradle build` command.
-
-You will need the antlr4-python3-runtime python library installed in order to build the library.
-
-You also need [gradle](https://gradle.org/) installed. Alternatively, you can use the `./gradlew` script instead of the `gradle` command.
+For tasks with network inputs, the custom worker has a `O task(I in)` function instead of
+accepting an integer. `I` can also be any type, as long as the user uses a built-in sender
+or implements their own. This version can be much slower than tasks with just outputs, but
+it is still slightly faster than direct JNISpice even in a bad case.
 
 ## Building
 
-Run `gradle build` in the root of the repo.
+Build with `gradle publishToMavenLocal`. This should store copies of the packaged outputs in
+`~/.m2/repository/org/parspice/`
+
+You should then be able to import the implementation dependency with `mavenLocal()` in the
+repositories list and `implementation 'org.parspice:parspice.implementation:1.0-SNAPSHOT'` in
+the dependencies list.
+
+## Usage
+
+The user needs to compile a fat jar of their project that includes all dependencies needed for the
+worker. Then they should create a subclass of either `OutputWorker` or `InputOutputWorker`,
+and call the appropriate ParSPICE method from the main process.
+
+See [this repo](https://github.com/JoelCourtney/parspice-playground) for an example.
+
+## Basic Performance
+
+10,000,000 task iterations with 6 workers on a 2019 MacBook Pro:
+
+Task | O ParSPICE | IO ParSPICE | Direct CSPICE
+---:|:---:|:---:|:---:
+vhat | 1850 ms | 2700 ms | 3600 ms
+mxv(vhat) | 3700 ms | 4800 ms | 12100 ms
+
+# GET REKT SPICE

@@ -1,7 +1,7 @@
 .gradle
 /build/
-/client/build
-/server/build
+/implementation/build
+/plugin/build
 __pycache__/
 
 # Ignore Gradle GUI config
@@ -19,10 +19,7 @@ gradle-app.setting
 # Intellij
 .idea/
 
-# ANTLR
-*.interp
-*.tokens
-
 # Vim
 *.swp
 *.swo
+
