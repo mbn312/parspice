@@ -202,8 +202,4 @@ public class ParSPICE {
         }
         return results;
     }
-
-    static ParSPICE getTestingInstance() throws IOException {
-        return new ParSPICE("build/libs/testing-1.0-SNAPSHOT.jar", 50050);
-    }
 }
