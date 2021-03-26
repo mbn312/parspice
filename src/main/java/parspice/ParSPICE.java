@@ -30,7 +30,7 @@ public class ParSPICE {
     private final int minPort;
 
     /**
-     * Creates a new ParSPICE object with for a given jar file.
+     * Creates a new ParSPICE object for a given jar file.
      *
      * @param workerJar the jar for all tasks on this instance to be
      *                  run from.
@@ -201,5 +201,9 @@ public class ParSPICE {
             results.addAll(socketManager.getOutputs());
         }
         return results;
+    }
+
+    static ParSPICE getTestingInstance() throws IOException {
+        return new ParSPICE("build/libs/testing-1.0-SNAPSHOT.jar", 50050);
     }
 }

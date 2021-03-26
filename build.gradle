@@ -12,7 +12,8 @@ repositories {
 }
 
 dependencies {
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
 }
 
 publishing {
@@ -22,4 +23,24 @@ publishing {
             from components.java
         }
     }
+}
+
+task testJar(type: Jar, dependsOn: classes) {
+    manifest {
+        attributes 'Implementation-Title': 'ParSPICE Testing Jar'
+    }
+    archiveBaseName = "testing"
+    from {
+        sourceSets.test.output
+    }
+    from {
+        configurations.testCompileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}
+
+tasks.test.dependsOn(tasks.testJar)
+
+test {
+    useJUnitPlatform()
 }
