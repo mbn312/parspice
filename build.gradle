@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
+    id "org.jetbrains.kotlin.jvm" version "1.4.31"
 }
 
 group 'org.parspice'
@@ -11,9 +12,17 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    bench {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+
 }
 
 publishing {
@@ -29,7 +38,7 @@ task testJar(type: Jar, dependsOn: classes) {
     manifest {
         attributes 'Implementation-Title': 'ParSPICE Testing Jar'
     }
-    archiveBaseName = "testing"
+    archiveBaseName.set("testing")
     from {
         sourceSets.test.output
     }
@@ -43,4 +52,49 @@ tasks.test.dependsOn(tasks.testJar)
 
 test {
     useJUnitPlatform()
+}
+
+compileBenchKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+task benchJar(type: Jar, dependsOn: classes) {
+    manifest {
+        attributes 'Implementation-Title': 'ParSPICE Benchmarking Jar'
+        attributes 'Main-Class': "parspiceBench.BenchmarkKt"
+    }
+    archiveBaseName.set("bench")
+    from {
+        sourceSets.bench.output
+    }
+    from {
+        configurations.benchCompileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}
+
+task bench(type: JavaExec, dependsOn: benchJar) {
+    description = "Run the benchmarking jar"
+    classpath = files(tasks.benchJar)
+}
+
+task printInfo() {
+    doFirst {
+        println "Configurations:"
+        configurations.each { conf ->
+            println conf.name
+        }
+        println ""
+    }
+    doLast{
+        println "Source Sets:"
+        sourceSets.each { srcSet ->
+            println "["+srcSet.name+"]"
+            print "-->Source directories: "+srcSet.allJava.srcDirs+"\n"
+            print "-->Output directories: "+srcSet.output.classesDirs.files+"\n"
+            println ""
+        }
+    }
 }
