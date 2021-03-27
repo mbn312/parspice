@@ -45,6 +45,7 @@ task testJar(type: Jar, dependsOn: classes) {
     from {
         configurations.testCompileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+    duplicatesStrategy DuplicatesStrategy.INCLUDE
     with jar
 }
 
@@ -72,6 +73,7 @@ task benchJar(type: Jar, dependsOn: classes) {
     from {
         configurations.benchCompileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+    duplicatesStrategy DuplicatesStrategy.INCLUDE
     with jar
 }
 
