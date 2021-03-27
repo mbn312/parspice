@@ -66,21 +66,21 @@ public class ParSPICE {
         String mainClass = ioWorker.getClass().getName();
         Sender<I> inputSender = ioWorker.getInputSender();
         Sender<O> outputSender = ioWorker.getOutputSender();
-        List<IOManager<I,O>> socketManagers = new ArrayList<>(numWorkers);
+        List<IOManager<I,O>> ioManagers = new ArrayList<>(numWorkers);
         int numIterations = inputs.size();
         int iteration = 0;
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
-            socketManagers.add(new IOManager<>(
+            ioManagers.add(new IOManager<>(
                     new IServer<>(inputSender, inputs.subList(iteration, iteration + subset), minPort + 2*i, i),
                     new OServer<>(outputSender, subset, minPort + 2*i + 1, i),
                     i
             ));
             iteration += subset;
         }
-        run(workerJar, mainClass, minPort, numIterations, numWorkers, socketManagers);
+        run(workerJar, mainClass, minPort, numIterations, numWorkers, ioManagers);
 
-        return aggregateOutputs(socketManagers, numIterations);
+        return aggregateOutputs(ioManagers, numIterations);
     }
 
     /**
@@ -102,24 +102,24 @@ public class ParSPICE {
     ) throws Exception {
         String mainClass = oWorker.getClass().getName();
         Sender<O> outputSender = oWorker.getOutputSender();
-        List<IOManager<Void,O>> socketManagers = new ArrayList<>(numWorkers);
+        List<IOManager<Void,O>> ioManagers = new ArrayList<>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
-            socketManagers.add(new IOManager<>(
+            ioManagers.add(new IOManager<>(
                     null,
                     new OServer<>(outputSender, subset, minPort + 2*i + 1, i),
                     i
             ));
         }
-        run(workerJar, mainClass, minPort, numIterations, numWorkers, socketManagers);
+        run(workerJar, mainClass, minPort, numIterations, numWorkers, ioManagers);
 
-        return aggregateOutputs(socketManagers,  numIterations);
+        return aggregateOutputs(ioManagers,  numIterations);
     }
 
     /**
      * Internal logic common to both of the two publicly facing run functions.
      */
-    private static <I,O> void run(String workerJar, String mainClass, int minPort, int numIterations, int numWorkers, List<IOManager<I,O>> socketManagers) throws Exception {
+    private static <I,O> void run(String workerJar, String mainClass, int minPort, int numIterations, int numWorkers, List<IOManager<I,O>> ioManagers) throws Exception {
         checkMainClass(workerJar, mainClass);
 
         Process[] processes = new Process[numWorkers];
@@ -127,12 +127,12 @@ public class ParSPICE {
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
             String args = workerJar + " " + mainClass + " " + (minPort + 2*i) + " " + iteration + " " + subset + " " + i;
-            socketManagers.get(i).start();
+            ioManagers.get(i).start();
             processes[i] = Runtime.getRuntime().exec("java -cp " + args);
             iteration += subset;
         }
         for (int i = 0; i < numWorkers; i++) {
-            socketManagers.get(i).join();
+            ioManagers.get(i).join();
             processes[i].waitFor();
         }
     }
@@ -195,10 +195,10 @@ public class ParSPICE {
         return numIterations/numWorkers + ((i < numIterations%numWorkers)?1:0);
     }
 
-    private static <I,O> List<O> aggregateOutputs(List<IOManager<I,O>> socketManagers, int numIterations) {
+    private static <I,O> List<O> aggregateOutputs(List<IOManager<I,O>> ioManagers, int numIterations) {
         List<O> results = new ArrayList<>(numIterations);
-        for (IOManager<?, O> socketManager : socketManagers) {
-            results.addAll(socketManager.getOutputs());
+        for (IOManager<?, O> ioManager : ioManagers) {
+            results.addAll(ioManager.getOutputs());
         }
         return results;
     }
