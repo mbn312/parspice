@@ -117,7 +117,7 @@ public abstract class IOWorker<I,O> {
      * All setup that might throw an error should be done here, not in the main
      * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
      */
-    protected void setup() throws Exception {}
+    public void setup() throws Exception {}
 
     final void taskWrapper(ObjectInputStream ois, ObjectOutputStream oos) throws Exception {
         outputSender.write(task(inputSender.read(ois)), oos);
@@ -131,5 +131,5 @@ public abstract class IOWorker<I,O> {
      * @return The value to be sent back to the main process.
      * @throws Exception
      */
-    protected abstract O task(I input) throws Exception;
+    public abstract O task(I input) throws Exception;
 }

@@ -1,8 +1,9 @@
 package parspiceBench
 
+import parspice.sender.Sender
 import parspice.worker.OWorker
 
-abstract class BenchWorker<T>: OWorker<T> {
+abstract class BenchWorker<O>(sender: Sender<O>): OWorker<O>(sender) {
     abstract val bytes: Int
     open val singleIterations: Int = 1000000
     open val iterations: Map<Int, IntArray> = mapOf(

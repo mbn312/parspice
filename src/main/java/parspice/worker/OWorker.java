@@ -107,7 +107,7 @@ public abstract class OWorker<O> {
      * All setup that might throw an error should be done here, not in the main
      * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
      */
-    protected void setup() throws Exception {}
+    public void setup() throws Exception {}
 
     /**
      * Handles the IO for a particular task iteration, and calls task.
@@ -133,5 +133,5 @@ public abstract class OWorker<O> {
      * @return The value to be sent back to the main process.
      * @throws Exception
      */
-    protected abstract O task(int i) throws Exception;
+    public abstract O task(int i) throws Exception;
 }
