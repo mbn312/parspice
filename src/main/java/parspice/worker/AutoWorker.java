@@ -1,45 +1,37 @@
 package parspice.worker;
 
-import parspice.sender.Sender;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.PrintWriter;
-import java.net.Socket;
+import java.io.*;
 
 /**
- * Superclass of all Worker tasks that DO take input arguments sent from
- * the main process. All subclasses should include a main entry point that
- * calls {@code run(...)} on an instance of themselves.
+ * Superclass of all Worker tasks that don't take input arguments sent from
+ * the main process, and do return outputs. All subclasses should include a main entry point that
+ * calls {@code run(new This(), args) with an instance of themselves.
+ *
+ * @param <O> The type returned by the worker to the main process.
  */
-public interface AutoWorker {
+public abstract class AutoWorker {
 
     /**
-     * Runs the worker.
-     *
-     * This function handles the networking so it will not concern the user.
-     * It first calls {@code setup()}, and then repeatedly calls {@code task(i)}
-     * and sends the returned values back to the main process.
-     *
-     * Errors are printed to /tmp/worker_log_i where i is the worker's id.
-     *
-     * @param worker an instance of the worker to put to work.
-     * @param args The CLI arguments given to the main function.
-     *             These should not be modified in any way.
-     * @throws Exception
+     * Creates an instance of a worker subclass and runs the tasks specified
+     * by the CLI arguments.
      */
-    static void run(AutoWorker worker, String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
+        int inputPort = Integer.parseInt(args[1]);
         try {
+            AutoWorker worker = (AutoWorker) Class.forName(args[0]).getConstructor().newInstance();
             worker.setup();
 
-            int subset = Integer.parseInt(args[2]);
-            for (int i = 0; i < subset; i++) {
+            int startI = Integer.parseInt(args[2]);
+            int subset = Integer.parseInt(args[3]);
+            for (int i = startI; i < startI + subset; i++) {
                 worker.task(i);
             }
         } catch (Exception e) {
-            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[3]);
+            System.err.println(e.toString());
+            e.printStackTrace();
+            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[4]);
             writer.write(e.toString());
+            writer.write("Was sending on port " + (inputPort + 1));
             PrintWriter printer = new PrintWriter(writer);
             e.printStackTrace(printer);
             printer.close();
@@ -57,7 +49,7 @@ public interface AutoWorker {
      * All setup that might throw an error should be done here, not in the main
      * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
      */
-    default void setup() throws Exception {}
+    protected void setup() throws Exception {}
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range
@@ -68,5 +60,5 @@ public interface AutoWorker {
      *          The task receives no other indication of which iteration it is.
      * @throws Exception
      */
-    void task(int i) throws Exception;
+    protected abstract void task(int i) throws Exception;
 }

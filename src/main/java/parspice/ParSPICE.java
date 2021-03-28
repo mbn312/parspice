@@ -63,7 +63,8 @@ public class ParSPICE {
             List<I> inputs,
             int numWorkers
     ) throws Exception {
-        String mainClass = ioWorker.getClass().getName();
+        String mainClass = "parspice.worker.IOWorker";
+        String workerClass = ioWorker.getClass().getName();
         Sender<I> inputSender = ioWorker.getInputSender();
         Sender<O> outputSender = ioWorker.getOutputSender();
         List<IOManager<I,O>> ioManagers = new ArrayList<>(numWorkers);
@@ -78,7 +79,7 @@ public class ParSPICE {
             ));
             iteration += subset;
         }
-        run(workerJar, mainClass, minPort, numIterations, numWorkers, ioManagers);
+        run(workerJar, mainClass, workerClass ,minPort, numIterations, numWorkers, ioManagers);
 
         return aggregateOutputs(ioManagers, numIterations);
     }
@@ -100,7 +101,8 @@ public class ParSPICE {
             int numIterations,
             int numWorkers
     ) throws Exception {
-        String mainClass = oWorker.getClass().getName();
+        String mainClass = "parspice.worker.OWorker";
+        String workerClass = oWorker.getClass().getName();
         Sender<O> outputSender = oWorker.getOutputSender();
         List<IOManager<Void,O>> ioManagers = new ArrayList<>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
@@ -111,7 +113,7 @@ public class ParSPICE {
                     i
             ));
         }
-        run(workerJar, mainClass, minPort, numIterations, numWorkers, ioManagers);
+        run(workerJar, mainClass, workerClass, minPort, numIterations, numWorkers, ioManagers);
 
         return aggregateOutputs(ioManagers,  numIterations);
     }
@@ -119,14 +121,14 @@ public class ParSPICE {
     /**
      * Internal logic common to both of the two publicly facing run functions.
      */
-    private static <I,O> void run(String workerJar, String mainClass, int minPort, int numIterations, int numWorkers, List<IOManager<I,O>> ioManagers) throws Exception {
+    private static <I,O> void run(String workerJar, String mainClass, String workerClass, int minPort, int numIterations, int numWorkers, List<IOManager<I,O>> ioManagers) throws Exception {
         checkMainClass(workerJar, mainClass);
 
         Process[] processes = new Process[numWorkers];
         int iteration = 0;
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
-            String args = workerJar + " " + mainClass + " " + (minPort + 2*i) + " " + iteration + " " + subset + " " + i;
+            String args = workerJar + " " + mainClass + " " + workerClass + " " + (minPort + 2*i) + " " + iteration + " " + subset + " " + i;
             ioManagers.get(i).start();
             processes[i] = Runtime.getRuntime().exec("java -cp " + args);
             iteration += subset;

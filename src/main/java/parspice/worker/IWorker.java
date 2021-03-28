@@ -6,48 +6,39 @@ import java.io.*;
 import java.net.Socket;
 
 /**
- * Superclass of all Worker tasks that take input arguments sent from
- * the main process, and return no output. All subclasses should include a main entry point that
- * calls {@code run(new This(), args)} with an instance of themselves.
+ * Superclass of all Worker tasks that don't take input arguments sent from
+ * the main process, and do return outputs.
  *
- * @param <I> The type input to the worker by the main process.
+ * @param <I> The type given to the worker by the main process.
  */
-public interface IWorker<I> {
+public abstract class IWorker<I> {
 
     /**
-     * Runs the worker.
-     *
-     * This function handles the networking so it will not concern the user.
-     * It first calls {@code setup()}, and then repeatedly calls {@code task(T input)}.
-     *
-     * Errors are printed to /tmp/worker_log_i where i is the worker's id.
-     *
-     * @param worker an instance of the worker to put to work.
-     * @param args The CLI arguments given to the main function.
-     *             These should not be modified in any way.
-     * @throws Exception
+     * Creates an instance of a worker subclass and runs the tasks specified
+     * by the CLI arguments.
      */
-    static <I> void run(IWorker<I> worker, String[] args) throws IOException {
-        int inputPort = Integer.parseInt(args[0]);
+    public static void main(String[] args) throws Exception {
+        int inputPort = Integer.parseInt(args[1]);
         try {
+            IWorker<?> worker = (IWorker<?>) Class.forName(args[0]).getConstructor().newInstance();
             worker.setup();
 
-            Sender<I> inputSender = worker.getInputSender();
-
             Socket inputSocket = new Socket("localhost", inputPort);
-
             ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
 
-            int subset = Integer.parseInt(args[2]);
-            for (int i = 0; i < subset; i++) {
-                worker.task(inputSender.read(ois));
+            int startI = Integer.parseInt(args[2]);
+            int subset = Integer.parseInt(args[3]);
+            for (int i = startI; i < startI + subset; i++) {
+                worker.taskWrapper(ois);
             }
             ois.close();
             inputSocket.close();
         } catch (Exception e) {
-            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[3]);
+            System.err.println(e.toString());
+            e.printStackTrace();
+            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[4]);
             writer.write(e.toString());
-            writer.write("Was receiving on port " + inputPort);
+            writer.write("Was sending on port " + (inputPort + 1));
             PrintWriter printer = new PrintWriter(writer);
             e.printStackTrace(printer);
             printer.close();
@@ -56,15 +47,23 @@ public interface IWorker<I> {
         }
     }
 
+    private final Sender<I> inputSender;
+
+    public IWorker(Sender<I> inputSender) {
+        this.inputSender = inputSender;
+    }
+
     /**
      * Get an instance of the input sender.
      *
      * @return instance of the input sender.
      */
-    Sender<I> getInputSender();
+    public Sender<I> getInputSender() {
+        return inputSender;
+    }
 
     /**
-     * Called only once, before repeatedly calling {@code task(i)}.
+     * Called only once, before repeatedly calling {@code task(input)}.
      *
      * If you need to load a native library or perform any one-time preparation,
      * it should be done in this function. If not, you don't need to override it.
@@ -72,14 +71,26 @@ public interface IWorker<I> {
      * All setup that might throw an error should be done here, not in the main
      * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
      */
-    default void setup() throws Exception {}
+    protected void setup() throws Exception {}
 
     /**
-     * Called repeatedly, once for each integer {@code i} in the index range
-     * given by the command line arguments.
+     * Handles the IO for a particular task iteration, and calls task.
      *
-     * @param input The input given to the task by the main process.
+     * This function exists because the generic types can't be handled
+     * in the main function without unchecked casts.
+     *
+     * @param ois the input stream to read from
      * @throws Exception
      */
-    void task(I input) throws Exception;
+    final void taskWrapper(ObjectInputStream ois) throws Exception {
+        task(inputSender.read(ois));
+    }
+
+    /**
+     * Called repeatedly, once for each input sent from the main process.
+     *
+     * @param input The input given by the main process to the worker.
+     * @throws Exception
+     */
+    protected abstract void task(I input) throws Exception;
 }
