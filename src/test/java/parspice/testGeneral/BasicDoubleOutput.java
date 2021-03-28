@@ -17,21 +17,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BasicDoubleOutput implements OWorker<Double> {
+public class BasicDoubleOutput extends OWorker<Double> {
     List<Double> parResults;
     int numIterations = 10;
 
-    public static void main(String[] args) throws IOException {
-        OWorker.run(new BasicDoubleOutput(), args);
+    public BasicDoubleOutput() {
+        super(new DoubleSender());
     }
 
     @Override
-    public Sender<Double> getOutputSender() {
-        return new DoubleSender();
-    }
-
-    @Override
-    public Double task(int i) {
+    public Double task(int i) throws Exception {
         return i/2.;
     }
 

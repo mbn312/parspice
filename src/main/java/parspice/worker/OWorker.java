@@ -10,8 +10,7 @@ import java.net.Socket;
 
 /**
  * Superclass of all Worker tasks that don't take input arguments sent from
- * the main process, and do return outputs. All subclasses should include a main entry point that
- * calls {@code run(new This(), args) with an instance of themselves.
+ * the main process, and do return outputs.
  *
  * -- ex: A dumb vhat task --
  *
@@ -23,12 +22,9 @@ import java.net.Socket;
  * import parspice.worker.OWorker;
  *
  * public class VhatOutputWorker extends OWorker<double[]> {
- *     public static void main(String[] args) throws Exception {
- *         new VhatOutputWorker().run(args);
+ *     public VhatOutputWorker() {
+ *         super(new DoubleArraySender(3));
  *     }
- *
- *     @Override
- *     public Sender<double[]> getOutputSender() { return new DoubleArraySender(3); }
  *
  *     @Override
  *     public void setup() {
@@ -45,40 +41,32 @@ import java.net.Socket;
  *
  * @param <O> The type returned by the worker to the main process.
  */
-public interface OWorker<O> {
+public abstract class OWorker<O> {
 
     /**
-     * Runs the worker.
-     *
-     * This function handles the networking so it will not concern the user.
-     * It first calls {@code setup()}, and then repeatedly calls {@code task(int i)}
-     * and sends the returned values back to the main process.
-     *
-     * Errors are printed to /tmp/worker_log_i where i is the worker's id.
-     *
-     * @param worker an instance of the worker to put to work.
-     * @param args The CLI arguments given to the main function.
-     *             These should not be modified in any way.
+     * Creates an instance of a worker subclass and runs the tasks specified
+     * by the CLI arguments.
      */
-    static <O> void run(OWorker<O> worker, String[] args) throws IOException {
-        int inputPort = Integer.parseInt(args[0]);
+    public static void main(String[] args) throws Exception {
+        OWorker<?> worker = (OWorker<?>) Class.forName(args[0]).getConstructor().newInstance();
+        int inputPort = Integer.parseInt(args[1]);
         try {
             worker.setup();
-
-            Sender<O> outputSender = worker.getOutputSender();
 
             Socket outputSocket = new Socket("localhost", inputPort + 1);
             ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
 
-            int startI = Integer.parseInt(args[1]);
-            int subset = Integer.parseInt(args[2]);
+            int startI = Integer.parseInt(args[2]);
+            int subset = Integer.parseInt(args[3]);
             for (int i = startI; i < startI + subset; i++) {
-                outputSender.write(worker.task(i), oos);
+                worker.taskWrapper(i, oos);
             }
             oos.close();
             outputSocket.close();
         } catch (Exception e) {
-            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[3]);
+            System.err.println(e.toString());
+            e.printStackTrace();
+            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[4]);
             writer.write(e.toString());
             writer.write("Was sending on port " + (inputPort + 1));
             PrintWriter printer = new PrintWriter(writer);
@@ -89,12 +77,26 @@ public interface OWorker<O> {
         }
     }
 
+    private final Sender<O> outputSender;
+
+    /**
+     * Creates a new OWorker instance
+     *
+     * @param outputSender the sender used to sender output results back to
+     *                     the main process
+     */
+    public OWorker(Sender<O> outputSender) {
+        this.outputSender = outputSender;
+    }
+
     /**
      * Get an instance of the output sender.
      *
      * @return instance of the output sender.
      */
-    Sender<O> getOutputSender();
+    public final Sender<O> getOutputSender() {
+        return outputSender;
+    }
 
     /**
      * Called only once, before repeatedly calling {@code task(i)}.
@@ -105,7 +107,21 @@ public interface OWorker<O> {
      * All setup that might throw an error should be done here, not in the main
      * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
      */
-    default void setup() throws Exception {}
+    protected void setup() throws Exception {}
+
+    /**
+     * Handles the IO for a particular task iteration, and calls task.
+     *
+     * This function exists because the generic types can't be handled
+     * in the main function without unchecked casts.
+     *
+     * @param i the integer to give to task(i)
+     * @param oos the output stream to write the output to
+     * @throws Exception
+     */
+    final void taskWrapper(int i, ObjectOutputStream oos) throws Exception {
+        outputSender.write(task(i), oos);
+    }
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range
@@ -117,5 +133,5 @@ public interface OWorker<O> {
      * @return The value to be sent back to the main process.
      * @throws Exception
      */
-    O task(int i) throws Exception;
+    protected abstract O task(int i) throws Exception;
 }

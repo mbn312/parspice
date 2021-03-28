@@ -4,31 +4,25 @@ import parspice.sender.Sender;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
- * Superclass of all Worker tasks that take input arguments sent from
- * the main process, and return outputs back. All subclasses should include a main entry point that
- * calls {@code run(new This(), args)} with an instance of themselves.
+ * Superclass of all Worker tasks that don't take input arguments sent from
+ * the main process, and do return outputs. All subclasses should include a main entry point that
+ * calls {@code run(new This(), args) with an instance of themselves.
  *
- * -- ex: A vhat task --
+ * -- ex: A dumb vhat task --
  *
  * <pre>
  *     {@code
- * import parspice.sender.DoubleArraySender;
+ * import parspice.outputSender.DoubleArraySender;
  * import spice.basic.CSPICE;
  * import spice.basic.SpiceErrorException;
- * import parspice.worker.InputOutputWorker;
+ * import parspice.worker.OWorker;
  *
- * public class VhatInputOutputWorker extends InputOutputWorker<double[]> {
+ * public class VhatOutputWorker extends OWorker<double[]> {
  *     public static void main(String[] args) throws Exception {
- *         new VhatInputOutputWorker().run(args);
+ *         new VhatOutputWorker().run(args);
  *     }
- *
- *     @Override
- *     public Sender<double[]> getInputSender() { return new DoubleArraySender(3); }
  *
  *     @Override
  *     public Sender<double[]> getOutputSender() { return new DoubleArraySender(3); }
@@ -39,58 +33,47 @@ import java.util.List;
  *     }
  *
  *     @Override
- *     public double[] task(double[] in) throws SpiceErrorException {
- *         return CSPICE.vhat(in);
+ *     public double[] task(int i) throws SpiceErrorException {
+ *         return CSPICE.vhat(new double[]{1, 2, i});
  *     }
  * }
  *     }
  * </pre>
  *
- * @param <I> The type input to the worker by the main process.
  * @param <O> The type returned by the worker to the main process.
  */
-public interface IOWorker<I, O> {
+public abstract class IOWorker<I,O> {
 
     /**
-     * Runs the worker.
-     *
-     * This function handles the networking so it will not concern the user.
-     * It first calls {@code setup()}, and then repeatedly calls {@code task(i)}
-     * and sends the returned values back to the main process.
-     *
-     * Errors are printed to /tmp/worker_log_i where i is the worker's id.
-     *
-     * @param worker An instance of the worker to put to work.
-     * @param args The CLI arguments given to the main function.
-     *             These should not be modified in any way.
-     * @throws Exception
+     * Creates an instance of a worker subclass and runs the tasks specified
+     * by the CLI arguments.
      */
-    static <I,O> void run(IOWorker<I,O> worker, String[] args) throws IOException {
-        int inputPort = Integer.parseInt(args[0]);
+    public static void main(String[] args) throws Exception {
+        int inputPort = Integer.parseInt(args[1]);
         try {
+            IOWorker<?,?> worker = (IOWorker<?,?>) Class.forName(args[0]).getConstructor().newInstance();
             worker.setup();
-
-            Sender<I> inputSender = worker.getInputSender();
-            Sender<O> outputSender = worker.getOutputSender();
 
             Socket inputSocket = new Socket("localhost", inputPort);
             Socket outputSocket = new Socket("localhost", inputPort + 1);
-
-            ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
             ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
+            ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
 
-            int subset = Integer.parseInt(args[2]);
-            for (int i = 0; i < subset; i++) {
-                outputSender.write(worker.task(inputSender.read(ois)), oos);
+            int startI = Integer.parseInt(args[2]);
+            int subset = Integer.parseInt(args[3]);
+            for (int i = startI; i < startI + subset; i++) {
+                worker.taskWrapper(ois, oos);
             }
             oos.close();
+            outputSocket.close();
             ois.close();
             inputSocket.close();
-            outputSocket.close();
         } catch (Exception e) {
-            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[3]);
+            System.err.println(e.toString());
+            e.printStackTrace();
+            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[4]);
             writer.write(e.toString());
-            writer.write("Was receiving on port " + inputPort + " and sending on port " + (inputPort + 1));
+            writer.write("Was sending on port " + (inputPort + 1));
             PrintWriter printer = new PrintWriter(writer);
             e.printStackTrace(printer);
             printer.close();
@@ -99,22 +82,34 @@ public interface IOWorker<I, O> {
         }
     }
 
+    private final Sender<I> inputSender;
+    private final Sender<O> outputSender;
+
+    public IOWorker(Sender<I> inputSender, Sender<O> outputSender) {
+        this.inputSender = inputSender;
+        this.outputSender = outputSender;
+    }
+
     /**
      * Get an instance of the input sender.
      *
      * @return instance of the input sender.
      */
-    Sender<I> getInputSender();
+    public Sender<I> getInputSender() {
+        return inputSender;
+    }
 
     /**
      * Get an instance of the output sender.
      *
      * @return instance of the output sender.
      */
-    Sender<O> getOutputSender();
+    public Sender<O> getOutputSender() {
+        return outputSender;
+    }
 
     /**
-     * Called only once, before repeatedly calling {@code task(i)}.
+     * Called only once, before repeatedly calling {@code task(input)}.
      *
      * If you need to load a native library or perform any one-time preparation,
      * it should be done in this function. If not, you don't need to override it.
@@ -122,15 +117,19 @@ public interface IOWorker<I, O> {
      * All setup that might throw an error should be done here, not in the main
      * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
      */
-    default void setup() throws Exception {}
+    protected void setup() throws Exception {}
+
+    final void taskWrapper(ObjectInputStream ois, ObjectOutputStream oos) throws Exception {
+        outputSender.write(task(inputSender.read(ois)), oos);
+    }
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range
      * given by the command line arguments.
      *
-     * @param input The input given to the task by the main process.
+     * @param input The input given by the main process to the worker.
      * @return The value to be sent back to the main process.
      * @throws Exception
      */
-    O task(I input) throws Exception;
+    protected abstract O task(I input) throws Exception;
 }
