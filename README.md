@@ -49,9 +49,11 @@ export JNISPICE_ROOT="/usr/local/JNISpice"
 
 Use `gradle benchmark` to run the benchmark. It could take several minutes. When its done, it will output a regression model of the form
 
+<pre>
         T_0
 T = B_1 --- + B_2 D
          W
+</pre>
 
 where	T   = total time to run task through ParSPICE
 	T_0 = total time to run task singlethreaded
