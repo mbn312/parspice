@@ -17,6 +17,11 @@ public class MxvhatWorkerJava extends BenchWorker<double[]> {
         return 3*Double.BYTES;
     }
 
+    @Override
+    public String getDescription() {
+        return "vhat(mxm(matrix, vector)) but in Java";
+    }
+
     static final double[][] mat = new double[][]{
             {1.0, 2.0, 3.0},
             {10.0, -2.0, 0.0},

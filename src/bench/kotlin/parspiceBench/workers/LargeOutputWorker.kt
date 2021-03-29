@@ -20,6 +20,9 @@ class LargeOutputWorker: BenchWorker<IntArray>(IntArraySender(LENGTH)) {
         8 to intArrayOf(100, 1000, 100000, 1000000)
     )
 
+    override val description: String
+        get() = "output $LENGTH integers"
+
     override fun task(i: Int): IntArray {
         val result = IntArray(LENGTH)
         for (j in 0 until LENGTH) {

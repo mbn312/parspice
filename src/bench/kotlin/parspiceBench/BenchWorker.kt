@@ -24,4 +24,6 @@ abstract class BenchWorker<O>(sender: Sender<O>): OWorker<O>(sender) {
             6 to intArrayOf(100, 1000, 100000, 1000000),
             8 to intArrayOf(100, 1000, 100000, 1000000, 10000000)
         )
+
+    abstract val description: String
 }

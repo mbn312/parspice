@@ -1,5 +1,6 @@
 package parspiceBench
 
+import org.apache.commons.math3.analysis.function.Sinc
 import parspice.ParSPICE
 import parspiceBench.workers.*
 import java.io.File
@@ -16,13 +17,23 @@ val par = ParSPICE("build/libs/bench-1.0-SNAPSHOT.jar", 50050)
  * numIterations, numWorkers, messageSize, taskTime, totalTime
  */
 fun main() {
-    println("Running benchmark. This may take several minutes.")
+    println("Running benchmark.\n")
 
-    val runs = run(LargeOutputWorker())
-    runs.addAll(run(SquareWorker()))
-    runs.addAll(run(SincptWorker()))
-    runs.addAll(run(MxvhatWorker()))
-    runs.addAll(run(MxvhatWorkerJava()))
+    val workers = arrayOf(
+        SquareWorker(),
+        SincptWorker(),
+        MxvhatWorker(),
+        MxvhatWorkerJava(),
+        LargeOutputWorker()
+    )
+
+    val runs: MutableList<Run> = mutableListOf()
+
+    for (i in workers.indices) {
+        println("Running case $i [${workers[i].description}]")
+        runs.addAll(run(workers[i]))
+    }
+
     File("benchmark_log.csv").writeText(
         "${runs[0].headerString()}\n${runs.joinToString("\n")}"
     )

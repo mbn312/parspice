@@ -17,6 +17,8 @@ class SincptWorker: BenchWorker<DoubleArray>(DoubleArraySender(3)) {
             6 to intArrayOf(1000, 100000, 1000000),
             8 to intArrayOf(1000, 100000, 1000000, 2000000)
         )
+    override val description: String
+        get() = "str2et -> getfov -> sincpt"
 
     var shape = arrayOfNulls<String>(1)
     var insfrm = arrayOfNulls<String>(1)

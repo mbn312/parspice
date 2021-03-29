@@ -128,9 +128,16 @@ public class ParSPICE {
         int iteration = 0;
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
-            String args = workerJar + " " + mainClass + " " + workerClass + " " + (minPort + 2*i) + " " + iteration + " " + subset + " " + i;
+            String args = "-Dname=parspice_worker_" + i +
+                    " -cp " + workerJar +
+                    " " + mainClass +
+                    " " + workerClass +
+                    " " + (minPort + 2*i) +
+                    " " + iteration +
+                    " " + subset +
+                    " " + i;
             ioManagers.get(i).start();
-            processes[i] = Runtime.getRuntime().exec("java -cp " + args);
+            processes[i] = Runtime.getRuntime().exec("java " + args);
             iteration += subset;
         }
         for (int i = 0; i < numWorkers; i++) {

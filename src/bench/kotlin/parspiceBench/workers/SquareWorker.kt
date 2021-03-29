@@ -18,6 +18,8 @@ class SquareWorker : BenchWorker<Double>(DoubleSender()) {
             6 to intArrayOf(100, 1000, 100000, 1000000),
             8 to intArrayOf(100, 1000, 100000, 1000000, 10000000, 50000000)
         )
+    override val description: String
+        get() = "square the input"
 
     override fun task(i: Int) = i.toDouble().pow(2)
 }

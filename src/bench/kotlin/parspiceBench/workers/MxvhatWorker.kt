@@ -12,6 +12,9 @@ class MxvhatWorker : BenchWorker<DoubleArray>(DoubleArraySender(3)) {
     override val bytes: Int
         get() = 3*Double.SIZE_BYTES
 
+    override val description: String
+        get() = "vhat(mxm(matrix, vector))"
+
     override fun setup() {
         System.loadLibrary("JNISpice")
     }
