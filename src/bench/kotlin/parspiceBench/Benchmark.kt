@@ -1,17 +1,17 @@
 package parspiceBench
 
 import parspice.ParSPICE
-import parspiceBench.workers.MxvhatWorker
-import parspiceBench.workers.MxvhatWorkerJava
-import parspiceBench.workers.SquareInput
+import parspiceBench.workers.*
 import java.io.File
 
 val par = ParSPICE("build/libs/bench-1.0-SNAPSHOT.jar", 50050)
 
 fun main() {
-    System.loadLibrary("JNISpice")
+    println("Running benchmark. This may take several minutes.")
 
-    val runs = run(SquareInput())
+    val runs = run(LargeOutputWorker())
+    runs.addAll(run(SquareWorker()))
+    runs.addAll(run(SincptWorker()))
     runs.addAll(run(MxvhatWorker()))
     runs.addAll(run(MxvhatWorkerJava()))
     File("benchmark_log.csv").writeText(
@@ -44,10 +44,11 @@ fun <T> run(worker: BenchWorker<T>): MutableList<Run> {
 
 fun <T> taskTime(worker: BenchWorker<T>): Double {
     tick()
+    worker.setup()
     for (i in 0 until worker.singleIterations) {
         worker.task(i)
     }
-    return tock() / worker.singleIterations.toDouble()
+    return tock().toDouble() / worker.singleIterations
 }
 
 var startTime: Long = -1

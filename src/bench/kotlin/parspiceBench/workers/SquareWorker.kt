@@ -5,7 +5,7 @@ import parspice.worker.OWorker
 import parspiceBench.BenchWorker
 import kotlin.math.pow
 
-class SquareInput : BenchWorker<Double>(DoubleSender()) {
+class SquareWorker : BenchWorker<Double>(DoubleSender()) {
     override val bytes
         get() = Double.SIZE_BYTES
     override val iterations

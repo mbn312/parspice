@@ -24,6 +24,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
 
     benchImplementation files("${System.env.JNISPICE_ROOT}/src/JNISpice/")
+    benchImplementation group: 'org.apache.commons', name: 'commons-math3', version: '3.0'
 }
 
 publishing {
@@ -69,10 +70,8 @@ compileBenchKotlin {
 }
 
 task benchJar(type: Jar, dependsOn: classes) {
-
     manifest {
         attributes 'Implementation-Title': 'ParSPICE Benchmarking Jar'
-        attributes 'Main-Class': "parspiceBench.BenchmarkKt"
     }
     archiveBaseName.set("bench")
     from {
@@ -88,14 +87,17 @@ task benchJar(type: Jar, dependsOn: classes) {
 task runBenchmark(type: JavaExec, dependsOn: benchJar) {
     description = "Run the benchmarking jar"
     classpath = files(tasks.benchJar)
+    main = "parspiceBench.BenchmarkKt"
 
     onlyIf {
         tasks.benchJar.didWork
     }
 }
 
-task bench(type: Exec, dependsOn: runBenchmark) {
-    commandLine 'Rscript', 'src/bench/R/analysis.R'
+task bench(type: JavaExec, dependsOn: runBenchmark) {
+    description = "Performs simple regression on benchmark data"
+    classpath = files(tasks.benchJar)
+    main = "parspiceBench.AnalysisKt"
 }
 
 task printInfo() {
