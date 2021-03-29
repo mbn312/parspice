@@ -23,7 +23,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
 
-    benchImplementation files("${System.env.JNISPICE_ROOT}/src/JNISpice/")
+    benchImplementation files("${System.getenv("JNISPICE_ROOT")}/src/JNISpice/")
     benchImplementation group: 'org.apache.commons', name: 'commons-math3', version: '3.0'
 }
 
@@ -94,10 +94,14 @@ task runBenchmark(type: JavaExec, dependsOn: benchJar) {
     }
 }
 
-task bench(type: JavaExec, dependsOn: runBenchmark) {
+task benchmark(type: JavaExec, dependsOn: runBenchmark) {
     description = "Performs simple regression on benchmark data"
     classpath = files(tasks.benchJar)
     main = "parspiceBench.AnalysisKt"
+}
+
+clean {
+	delete "benchmark_log.csv"
 }
 
 task printInfo() {
