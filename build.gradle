@@ -90,7 +90,7 @@ task runBenchmark(type: JavaExec, dependsOn: benchJar) {
     main = "parspiceBench.BenchmarkKt"
 
     onlyIf {
-        tasks.benchJar.didWork
+        tasks.benchJar.didWork || !file("benchmark_log.csv").exists()
     }
 }
 

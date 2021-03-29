@@ -4,6 +4,9 @@ import parspice.sender.DoubleArraySender
 import parspiceBench.BenchWorker
 import spice.basic.CSPICE.*
 
+/**
+ * A simple CSPICE task.
+ */
 class MxvhatWorker : BenchWorker<DoubleArray>(DoubleArraySender(3)) {
 
     override val bytes: Int

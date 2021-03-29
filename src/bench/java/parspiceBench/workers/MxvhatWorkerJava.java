@@ -4,6 +4,12 @@ import parspice.sender.DoubleArraySender;
 import parspiceBench.BenchWorker;
 import spice.basic.CSPICE;
 
+/**
+ * A java copy of the MxvhatWorker kotlin class,
+ * to verify there is no significant performance difference.
+ *
+ * No performance difference was found.
+ */
 public class MxvhatWorkerJava extends BenchWorker<double[]> {
 
     @Override

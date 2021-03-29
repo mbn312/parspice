@@ -3,6 +3,17 @@ package parspiceBench
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression
 import java.io.File
 
+/**
+ * Main function of the `gradle bench` task.
+ *
+ * Performs MLR on the basic model:
+ * T ~ T_0 / W + D
+ *
+ * This model was found to have a good trade-off of simplicity
+ * and accuracy. True accuracy and realism aren't the goal;
+ * its meant to be a simple heuristic model for determining whether
+ * to use ParSPICE or not.
+ */
 fun main() {
     val csv = File("benchmark_log.csv").readLines()
     val runs = csv.subList(1, csv.size).map {
@@ -36,7 +47,7 @@ fun main() {
         To run the benchmark again, run `gradle clean` first.
         
         
-        [Heuristic]
+        [Model]
         
              ${" ".repeat(beta[0].length)}T_0
         T = ${beta[0]} --- + ${beta[1]}[ms/MB] D

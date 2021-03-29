@@ -4,6 +4,9 @@ import parspice.sender.DoubleArraySender
 import parspiceBench.BenchWorker
 import spice.basic.CSPICE.*
 
+/**
+ * A more expensive CSPICE task, with several calls including sincpt.
+ */
 class SincptWorker: BenchWorker<DoubleArray>(DoubleArraySender(3)) {
     override val bytes
         get() = 3 * Double.SIZE_BYTES

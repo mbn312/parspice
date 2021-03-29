@@ -1,5 +1,14 @@
 package parspiceBench
 
+/**
+ * A data class for storing the performance results of a single run
+ *
+ * @property numIterations the number of iterations of the task
+ * @property numWorkers the number of workers used
+ * @property messageSize the number of bytes sent per iteration
+ * @property taskTime the average time to run the task once on one process
+ * @property totalTime the total time it took to run multiprocessed
+ */
 data class Run(
     val numIterations: Int,
     val numWorkers: Int,

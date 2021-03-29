@@ -6,6 +6,15 @@ import java.io.File
 
 val par = ParSPICE("build/libs/bench-1.0-SNAPSHOT.jar", 50050)
 
+/**
+ * Main function of the `gradle runBenchmark` task.
+ *
+ * Runs a series of example workers, with varying numbers of
+ * worker processes and total iterations.
+ *
+ * It stores the results in a csv with header:
+ * numIterations, numWorkers, messageSize, taskTime, totalTime
+ */
 fun main() {
     println("Running benchmark. This may take several minutes.")
 

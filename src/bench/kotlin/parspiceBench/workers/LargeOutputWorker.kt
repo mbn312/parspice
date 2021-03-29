@@ -5,6 +5,10 @@ import parspiceBench.BenchWorker
 
 const val LENGTH = 300
 
+/**
+ * This case is to get high-leverage observations on the data size,
+ * by running a cheap task that returns many integers.
+ */
 class LargeOutputWorker: BenchWorker<IntArray>(IntArraySender(LENGTH)) {
     override val bytes: Int
         get() = LENGTH*Int.SIZE_BYTES
