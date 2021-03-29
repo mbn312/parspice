@@ -1,17 +1,26 @@
 package parspiceBench
 
 import parspice.ParSPICE
+import parspiceBench.workers.MxvhatWorker
+import parspiceBench.workers.MxvhatWorkerJava
 import parspiceBench.workers.SquareInput
+import java.io.File
 
 val par = ParSPICE("build/libs/bench-1.0-SNAPSHOT.jar", 50050)
 
 fun main() {
+    System.loadLibrary("JNISpice")
+
     val runs = run(SquareInput())
-    println(runs.joinToString("\n"))
+    runs.addAll(run(MxvhatWorker()))
+    runs.addAll(run(MxvhatWorkerJava()))
+    File("benchmark_log.csv").writeText(
+        "${runs[0].headerString()}\n${runs.joinToString("\n")}"
+    )
 }
 
-fun <T> run(worker: BenchWorker<T>): List<Run> {
-    val singleThreadTime = singleThreadTime(worker)
+fun <T> run(worker: BenchWorker<T>): MutableList<Run> {
+    val taskTime = taskTime(worker)
 
     val runs: MutableList<Run> = mutableListOf()
     for ((numWorkers, iterationsList) in worker.iterations) {
@@ -24,7 +33,7 @@ fun <T> run(worker: BenchWorker<T>): List<Run> {
                     numIterations,
                     numWorkers,
                     worker.bytes,
-                    singleThreadTime,
+                    taskTime,
                     stopTime
                 )
             )
@@ -33,12 +42,12 @@ fun <T> run(worker: BenchWorker<T>): List<Run> {
     return runs
 }
 
-fun <T> singleThreadTime(worker: BenchWorker<T>): Long {
+fun <T> taskTime(worker: BenchWorker<T>): Double {
     tick()
     for (i in 0 until worker.singleIterations) {
         worker.task(i)
     }
-    return tock()
+    return tock() / worker.singleIterations.toDouble()
 }
 
 var startTime: Long = -1
