@@ -36,13 +36,17 @@ and call the appropriate ParSPICE method from the main process.
 
 See [this repo](https://github.com/JoelCourtney/parspice-playground) for an example.
 
-## Basic Performance
+## Benchmarking
 
-10,000,000 task iterations with 6 workers on a 2019 MacBook Pro:
+You need JNISpice and R installed to run and analyse the benchmark.
 
-Task | O ParSPICE | IO ParSPICE | Direct CSPICE
----:|:---:|:---:|:---:
-vhat | 1850 ms | 2700 ms | 3600 ms
-mxv(vhat) | 3700 ms | 4800 ms | 12100 ms
+Ensure that the JNISpice native library is somewhere in your library path, and set the environment variable
+`JNISPICE_ROOT` to the path to the JNISpice sources. For example, on my machine that would be
 
-# GET REKT SPICE
+```bash
+export JNISPICE_ROOT="/usr/local/JNISpice"
+```
+
+Next, you'll need [Rscript](https://www.r-project.org/) installed and in your path to run the analysis of the benchmark data. 
+
+Use `gradle bench` to run the benchmark. It could take several minutes.
