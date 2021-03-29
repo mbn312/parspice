@@ -23,3 +23,5 @@ gradle-app.setting
 *.swp
 *.swo
 
+# Custom
+benchmark_log.csv
