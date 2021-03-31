@@ -25,6 +25,7 @@ gradle-app.setting
 
 # R
 .Rhistory
+Rplots.pdf
 
 # Custom
 benchmark_log.csv

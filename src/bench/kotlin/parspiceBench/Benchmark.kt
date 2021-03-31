@@ -1,6 +1,5 @@
 package parspiceBench
 
-import org.apache.commons.math3.analysis.function.Sinc
 import parspice.ParSPICE
 import parspiceBench.workers.*
 import java.io.File
