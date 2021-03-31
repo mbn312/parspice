@@ -34,7 +34,7 @@ public class MxvhatWorkerJava extends BenchWorker<double[]> {
 
     @Override
     public void setup() {
-        System.loadLibrary("JNISpice");
+        System.load(System.getenv("JNISPICE_ROOT") + "/lib/libJNISpice.jnilib");
     }
 
     @Override

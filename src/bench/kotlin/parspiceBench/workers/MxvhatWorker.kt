@@ -16,7 +16,7 @@ class MxvhatWorker : BenchWorker<DoubleArray>(DoubleArraySender(3)) {
         get() = "vhat(mxm(matrix, vector))"
 
     override fun setup() {
-        System.loadLibrary("JNISpice")
+        System.load("${System.getenv("JNISPICE_ROOT")}/lib/libJNISpice.jnilib")
     }
 
     override fun task(i: Int) = vhat(mxv(mat, doubleArrayOf(1.0, 2.0, i.toDouble())))
