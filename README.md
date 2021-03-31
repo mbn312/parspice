@@ -53,16 +53,30 @@ Use `gradle benchmark` to run the benchmark. It could take several minutes. When
         T_0
 T = B_1 --- + B_2 D
          W
-</pre>
 
 where	T   = total time to run task through ParSPICE
 	T_0 = total time to run task singlethreaded
 	W   = number of workers used
 	D   = total amount of data transferred between processes, in MB
+</pre>
 
 B_1 is typically between 1 and 2, so if you have a task big enough to make you consider ParSPICE,
 it will almost certainly run faster in ParSPICE (unless you have to transfer hundreds of bytes per iteration).
 
+The benchmark also outputs a break-even point estimate which compares the amount of data sent per iteration with the
+average time it takes to run a single iteration. (This is found by setting `T - T0 = 0` and solving for `d = D/I`
+where `I` is the total number of iterations.
+
+<pre>
+d = (1/B_2 - (B_1/B_2)/w)[B/ns] t
+
+where:  d = data sent per iteration, in bytes
+        w = number of workers
+        t = average single-threaded time per iteration, in ns
+</pre>
+
+For large tasks, this estimates the upper limit of data sent per iteration such that ParSPICE is still more performant
+than running the task directly.
 
 The benchmark runs a series of tasks, with varying computational and network costs. This means that the model
 is biased by a few very high leverage observations of very expensive tasks. So don't expect the model to be accurate
