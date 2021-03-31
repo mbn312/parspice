@@ -7,7 +7,7 @@ import java.io.File
  * Main function of the `gradle bench` task.
  *
  * Performs MLR on the basic model:
- * T ~ T_0 / W + D
+ * T ~ T_0 / w + D
  *
  * This model was found to have a good trade-off of simplicity
  * and accuracy. True accuracy and realism aren't the goal;
@@ -32,12 +32,15 @@ fun main() {
             )
         }.toTypedArray()
     )
-    val beta = regression.estimateRegressionParameters().map {
+    val beta = regression.estimateRegressionParameters()
+    val betaString = regression.estimateRegressionParameters().map {
         String.format("%.2f", it)
     }
     val betaSE = regression.estimateRegressionParametersStandardErrors().map {
         String.format("%.3f", it)
     }
+
+    val breakEven = String.format("%.3f", beta[0] / beta[1])
 
     println("""
         Benchmark results, based on ${runs.size} runs.
@@ -49,13 +52,13 @@ fun main() {
         
         [Model]
         
-             ${" ".repeat(beta[0].length)}T_0
-        T = ${beta[0]} --- + ${beta[1]}[ms/MB] D
-              ${" ".repeat(beta[0].length)}W
+             ${" ".repeat(betaString[0].length)}T_0
+        T = ${betaString[0]} --- + ${betaString[1]}[ms/MB] D
+              ${" ".repeat(betaString[0].length)}w
         
         where:  T   = Multithreaded ParSPICE runtime, in ms
                 T_0 = Single threaded runtime, in ms
-                W   = Number of workers
+                w   = Number of workers
                 D   = Total data to transfer, in MB
         
         [Confidence]
@@ -63,6 +66,17 @@ fun main() {
         Adjusted R^2:         ${String.format("%.4f", regression.calculateAdjustedRSquared())}
         Regression Std. Err.: ${String.format("%.4f", regression.estimateRegressionStandardError())} ms
         Beta Std. Errs.:      ${betaSE[0]}, ${betaSE[1]}[ms/MB]
+        
+        [Break-Even Point]
+        
+        Estimated maximum data that can be sent per iteration
+        before ParSPICE is slower than direct evaluation:
+        
+        d = $breakEven[B/ns] (1 - 1/w) t
+        
+        where:  d = data sent per iteration, in bytes
+                w = number of workers
+                t = average single-threaded time per iteration, in ns
         """.trimIndent())
 }
 
@@ -70,4 +84,13 @@ fun main() {
          T_0
 T = 1.37 --- + 3.2 D
           W
+
+T = I(B1 t/w + B2 d)
+
+T - T0 = I(B1 t/w + B2 d) - I t
+       = I ( B1 t (1/w - 1) + B2 d)
+
+0 = B1 (1/w - 1) t + B2 d
+
+-> d = (B1/B2) (1-1/w) t
  */
