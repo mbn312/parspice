@@ -7,7 +7,6 @@ import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A server for receiving outputs from a worker.
@@ -21,7 +20,7 @@ public class OServer<O> implements Runnable {
     private final int workerIndex;
     private final int subset;
 
-    private final List<O> outputs;
+    private final ArrayList<O> outputs;
 
     public OServer(Sender<O> outputSender, int subset, int port, int workerIndex) throws IOException {
         this.serverSocket = new ServerSocket(port);
@@ -57,7 +56,7 @@ public class OServer<O> implements Runnable {
      *
      * @return the outputs from the worker
      */
-    public List<O> getOutputs() {
+    public ArrayList<O> getOutputs() {
         return outputs;
     }
 }

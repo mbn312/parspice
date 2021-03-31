@@ -16,7 +16,7 @@ val par = ParSPICE("build/libs/bench-1.0-SNAPSHOT.jar", 50050)
  * numIterations, numWorkers, messageSize, taskTime, totalTime
  */
 fun main() {
-    println("Running benchmark.\n")
+    println("Running benchmark. This can take a few minutes.\n")
 
     val workers = arrayOf(
         SquareWorker(),

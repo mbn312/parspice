@@ -67,7 +67,7 @@ public class ParSPICE {
         String workerClass = ioWorker.getClass().getName();
         Sender<I> inputSender = ioWorker.getInputSender();
         Sender<O> outputSender = ioWorker.getOutputSender();
-        List<IOManager<I,O>> ioManagers = new ArrayList<>(numWorkers);
+        ArrayList<IOManager<I,O>> ioManagers = new ArrayList<>(numWorkers);
         int numIterations = inputs.size();
         int iteration = 0;
         for (int i = 0; i < numWorkers; i++) {
@@ -104,7 +104,7 @@ public class ParSPICE {
         String mainClass = "parspice.worker.OWorker";
         String workerClass = oWorker.getClass().getName();
         Sender<O> outputSender = oWorker.getOutputSender();
-        List<IOManager<Void,O>> ioManagers = new ArrayList<>(numWorkers);
+        ArrayList<IOManager<Void,O>> ioManagers = new ArrayList<>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
             int subset = subset(numIterations, numWorkers, i);
             ioManagers.add(new IOManager<>(
@@ -121,7 +121,7 @@ public class ParSPICE {
     /**
      * Internal logic common to both of the two publicly facing run functions.
      */
-    private static <I,O> void run(String workerJar, String mainClass, String workerClass, int minPort, int numIterations, int numWorkers, List<IOManager<I,O>> ioManagers) throws Exception {
+    private static <I,O> void run(String workerJar, String mainClass, String workerClass, int minPort, int numIterations, int numWorkers, ArrayList<IOManager<I,O>> ioManagers) throws Exception {
         checkMainClass(workerJar, mainClass);
 
         Process[] processes = new Process[numWorkers];
@@ -204,9 +204,10 @@ public class ParSPICE {
         return numIterations/numWorkers + ((i < numIterations%numWorkers)?1:0);
     }
 
-    private static <I,O> List<O> aggregateOutputs(List<IOManager<I,O>> ioManagers, int numIterations) {
-        List<O> results = new ArrayList<>(numIterations);
-        for (IOManager<?, O> ioManager : ioManagers) {
+    private static <I,O> List<O> aggregateOutputs(ArrayList<IOManager<I,O>> ioManagers, int numIterations) {
+        ArrayList<O> results = ioManagers.get(0).getOutputs();
+        results.ensureCapacity(numIterations);
+        for (IOManager<?, O> ioManager : ioManagers.subList(1, ioManagers.size())) {
             results.addAll(ioManager.getOutputs());
         }
         return results;
