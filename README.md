@@ -36,7 +36,7 @@ and call the appropriate ParSPICE method from the main process.
 
 See [this repo](https://github.com/JoelCourtney/parspice-playground) for an example.
 
-## Benchmarking & Runtime Prediction
+## Benchmarking
 
 You need JNISpice installed to run the benchmark.
 
@@ -47,7 +47,14 @@ Ensure that the JNISpice native library is somewhere in your library path, and s
 export JNISPICE_ROOT="/usr/local/JNISpice"
 ```
 
-Use `gradle benchmark` to run the benchmark. It could take several minutes. When its done, it will output a regression model of the form
+Use `gradle benchmark` to run the benchmark. It could take several minutes.
+
+You can print out the benchmark analysis again just by running `gradle benchmark` again (the results are cached). To re-run the entire
+benchmark, run `gradle clean` first.
+
+### Runtime Estimation
+
+When the benchmark is done, it will output a regression model of the form
 
 <pre>
         T_0
@@ -62,6 +69,8 @@ where	T   = total time to run task through ParSPICE
 
 B_1 is typically between 1 and 2, so if you have a task big enough to make you consider ParSPICE,
 it will almost certainly run faster in ParSPICE (unless you have to transfer hundreds of bytes per iteration).
+
+### Break-Even Point Estimation
 
 The benchmark also outputs a break-even point estimate which compares the amount of data sent per iteration with the
 average time it takes to run a single iteration. (This is found by setting `T - T0 = 0` and solving for `d = D/I`
@@ -78,10 +87,9 @@ where:  d = data sent per iteration, in bytes
 For large tasks, this estimates the upper limit of data sent per iteration such that ParSPICE is still more performant
 than running the task directly.
 
+### Caveats
+
 The benchmark runs a series of tasks, with varying computational and network costs. This means that the model
 is biased by a few very high leverage observations of very expensive tasks. So don't expect the model to be accurate
 for short, inexpensive tasks with only a few iterations (but in those cases, it probably isn't worth the time to port the task to
 ParSPICE anyway, even if it is slightly faster).
-
-You can print out the benchmark analysis again just by running `gradle benchmark` again (the results are cached). To re-run the entire
-benchmark, run `gradle clean` first.
