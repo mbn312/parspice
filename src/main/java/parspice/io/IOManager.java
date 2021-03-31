@@ -1,6 +1,6 @@
 package parspice.io;
 
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Manages a pair of threads, one sending inputs, one receiving outputs.
@@ -71,7 +71,7 @@ public class IOManager<I, O> {
      *
      * @return the outputs from the worker.
      */
-    public List<O> getOutputs() {
+    public ArrayList<O> getOutputs() {
         return oServer.getOutputs();
     }
 }

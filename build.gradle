@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
+    id "org.jetbrains.kotlin.jvm" version "1.4.31"
 }
 
 group 'org.parspice'
@@ -11,9 +12,19 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    bench {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+
+    benchImplementation files("${System.getenv("JNISPICE_ROOT")}/src/JNISpice/")
+    benchImplementation group: 'org.apache.commons', name: 'commons-math3', version: '3.0'
 }
 
 publishing {
@@ -29,13 +40,14 @@ task testJar(type: Jar, dependsOn: classes) {
     manifest {
         attributes 'Implementation-Title': 'ParSPICE Testing Jar'
     }
-    archiveBaseName = "testing"
+    archiveBaseName.set("testing")
     from {
         sourceSets.test.output
     }
     from {
         configurations.testCompileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+    duplicatesStrategy DuplicatesStrategy.INCLUDE
     with jar
 }
 
@@ -43,4 +55,70 @@ tasks.test.dependsOn(tasks.testJar)
 
 test {
     useJUnitPlatform()
+}
+
+compileBenchKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    doFirst {
+        if (System.getenv("JNISPICE_ROOT") == null) {
+            println "Please set JNISPICE_ROOT environment variable"
+            throw new IOException("JNISPICE_ROOT was null")
+        }
+    }
+}
+
+task benchJar(type: Jar, dependsOn: classes) {
+    manifest {
+        attributes 'Implementation-Title': 'ParSPICE Benchmarking Jar'
+    }
+    archiveBaseName.set("bench")
+    from {
+        sourceSets.bench.output
+    }
+    from {
+        configurations.benchCompileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy DuplicatesStrategy.INCLUDE
+    with jar
+}
+
+task runBenchmark(type: JavaExec, dependsOn: benchJar) {
+    description = "Run the benchmarking jar"
+    classpath = files(tasks.benchJar)
+    main = "parspiceBench.BenchmarkKt"
+
+    onlyIf {
+        tasks.benchJar.didWork || !file("benchmark_log.csv").exists()
+    }
+}
+
+task benchmark(type: JavaExec, dependsOn: runBenchmark) {
+    description = "Performs simple regression on benchmark data"
+    classpath = files(tasks.benchJar)
+    main = "parspiceBench.AnalysisKt"
+}
+
+clean {
+	delete "benchmark_log.csv"
+}
+
+task printInfo() {
+    doFirst {
+        println "Configurations:"
+        configurations.each { conf ->
+            println conf.name
+        }
+        println ""
+    }
+    doLast{
+        println "Source Sets:"
+        sourceSets.each { srcSet ->
+            println "["+srcSet.name+"]"
+            print "-->Source directories: "+srcSet.allJava.srcDirs+"\n"
+            print "-->Output directories: "+srcSet.output.classesDirs.files+"\n"
+            println ""
+        }
+    }
 }

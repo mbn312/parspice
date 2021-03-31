@@ -49,7 +49,7 @@ public abstract class AutoWorker {
      * All setup that might throw an error should be done here, not in the main
      * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
      */
-    protected void setup() throws Exception {}
+    public void setup() throws Exception {}
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range
@@ -60,5 +60,5 @@ public abstract class AutoWorker {
      *          The task receives no other indication of which iteration it is.
      * @throws Exception
      */
-    protected abstract void task(int i) throws Exception;
+    public abstract void task(int i) throws Exception;
 }

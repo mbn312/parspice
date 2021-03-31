@@ -23,3 +23,9 @@ gradle-app.setting
 *.swp
 *.swo
 
+# R
+.Rhistory
+Rplots.pdf
+
+# Custom
+benchmark_log.csv
