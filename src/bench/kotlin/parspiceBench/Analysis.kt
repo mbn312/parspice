@@ -40,7 +40,10 @@ fun main() {
         String.format("%.3f", it)
     }
 
-    val breakEven = String.format("%.3f", beta[0] / beta[1])
+    val breakEven = arrayOf(
+        String.format("%.3f", 1/beta[1]),
+        String.format("%.3f", beta[0]/beta[1])
+    )
 
     println("""
         Benchmark results, based on ${runs.size} runs.
@@ -69,10 +72,10 @@ fun main() {
         
         [Break-Even Point]
         
-        Estimated maximum data that can be sent per iteration
-        before ParSPICE is slower than direct evaluation:
+        Setting T = T0 gives the estimated maximum data that can be sent
+        per iteration before ParSPICE is slower than direct evaluation:
         
-        d = $breakEven[B/ns] (1 - 1/w) t
+        d = (${breakEven[0]} - ${breakEven[1]} / w)[B/ns] t
         
         where:  d = data sent per iteration, in bytes
                 w = number of workers
@@ -90,7 +93,8 @@ T = I(B1 t/w + B2 d)
 T - T0 = I(B1 t/w + B2 d) - I t
        = I ( B1 t (1/w - 1) + B2 d)
 
-0 = B1 (1/w - 1) t + B2 d
+0 = (B1/w - 1) t + B2 d
 
--> d = (B1/B2) (1-1/w) t
+-> d = (1/B2) (1-B1/w) t
+     = (1/B2 - B1/B2/w) t
  */

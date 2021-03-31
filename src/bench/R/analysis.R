@@ -22,11 +22,17 @@ summary(reduced)
 
 anova(full, reduced)
 
-data$response <- data$totalTime
-min <- lm(response ~ 0 +
+min <- lm(totalTime ~ 0 +
             I(numIterations*taskTime/numWorkers)
            + I(messageSize*numIterations)
             # I(1/(numWorkers/(numIterations*messageSize*taskTime)))
           , data)
 summary(min)
-plot(min)
+
+more <- lm(totalTime ~
+             I(numIterations*taskTime/numWorkers)
+           + I(messageSize*numIterations)
+           , data)
+summary(more)
+
+anova(min, more)
