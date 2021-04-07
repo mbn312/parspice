@@ -78,7 +78,7 @@ it will almost certainly run faster in ParSPICE (unless you have to transfer hun
 
 The benchmark also outputs a break-even point estimate which compares the amount of data sent per iteration with the
 average time it takes to run a single iteration. (This is found by setting `T - T0 = 0` and solving for `d = D/I`
-where `I` is the total number of iterations.
+where `I` is the total number of iterations.)
 
 <pre>
 d = (1/B_2 - (B_1/B_2)/w)[B/ns] t
