@@ -21,14 +21,18 @@ it is still slightly faster than direct JNISpice even in a bad case.
 
 ## Building
 
-Build with `gradle publishToMavenLocal`. This should store copies of the packaged outputs in
+Use `./gradlew build` in the root of the repo to build ParSPICE and run the tests.
+
+## Usage
+
+These details will probably change.
+
+To use ParSPICE in another project, publish it with `./gradlew publishToMavenLocal`. This should store copies of the packaged outputs in
 `~/.m2/repository/org/parspice/`
 
 You should then be able to import the implementation dependency with `mavenLocal()` in the
 repositories list and `implementation 'org.parspice:parspice.implementation:1.0-SNAPSHOT'` in
 the dependencies list.
-
-## Usage
 
 The user needs to compile a fat jar of their project that includes all dependencies needed for the
 worker. Then they should create a subclass of either `OutputWorker` or `InputOutputWorker`,
@@ -41,7 +45,7 @@ See [this repo](https://github.com/JoelCourtney/parspice-playground) for an exam
 You need JNISpice installed to run the benchmark.
 
 Ensure that the JNISpice native library is somewhere in your library path, and set the environment variable
-`JNISPICE_ROOT` to the path to the JNISpice sources. For example, on my machine that would be
+`JNISPICE_ROOT` to the path to the JNISpice sources, one level above the `src` directory. For example, on my machine that would be
 
 ```bash
 export JNISPICE_ROOT="/usr/local/JNISpice"
@@ -49,8 +53,8 @@ export JNISPICE_ROOT="/usr/local/JNISpice"
 
 Use `gradle benchmark` to run the benchmark. It could take several minutes.
 
-You can print out the benchmark analysis again just by running `gradle benchmark` again (the results are cached). To re-run the entire
-benchmark, run `gradle clean` first.
+You can print out the benchmark analysis again just by running `./gradlew benchmark` again (the results are cached). To re-run the entire
+benchmark, run `./gradlew clean` first.
 
 ### Runtime Estimation
 
