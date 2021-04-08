@@ -33,7 +33,7 @@ class SincptWorker: BenchWorker<DoubleArray>(DoubleArraySender(3)) {
     var et = 0.0
 
     override fun setup() {
-        System.load("${System.getenv("JNISPICE_ROOT")}/lib/libJNISpice.jnilib")
+        System.loadLibrary("JNISpice");
         furnsh("src/bench/spice/fovint.tm")
         nacid = bodn2c("CASSINI_ISS_NAC")
     }

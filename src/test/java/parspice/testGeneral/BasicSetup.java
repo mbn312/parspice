@@ -15,7 +15,7 @@ public class BasicSetup extends OWorker<double[]> {
 
     @Override
     public void setup() throws Exception {
-        System.load(System.getenv("JNISPICE_ROOT") + "/lib/JNISpice.dll");
+        System.loadLibrary("JNISpice");
     }
 
     @Override
