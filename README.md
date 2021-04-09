@@ -18,60 +18,57 @@ For tasks with network inputs, the custom worker has a `O task(I in)` function i
 accepting an integer. `I` can also be any type, as long as the user uses a built-in sender
 or implements their own. This version can be much slower than tasks with just outputs, but
 it is still slightly faster than direct JNISpice even in a bad case.
-
+***
 ## User Guide
-**Pre-Requisites**
+
+#### Pre-Requisites
 * [Gradle](https://gradle.org/install/)  
 * [JDK version 1.8](https://adoptopenjdk.net)
 
-1. Download [JNISpice](https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/)
+### 1. Download [JNISpice](https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/)
 
-2. Set global variable JNISPICE_ROOT  
+### 2. Set global variable JNISPICE_ROOT as the path to JNISpice.
    ```bash
    export JNISPICE_ROOT=/path/to/JNISpice
    ```
-   To permanently set this variable add this command to your `.bashrc`(Linux), or `.zshrc` (MacOS)   
-Windows instructions  
-MacOS  
-Linux  
+   To permanently set this variable add this command to your `.bashrc`(Linux), `.zshrc` (MacOS) 
+   or follow [these instructions](https://www.howtogeek.com/51807/how-to-create-and-use-global-system-environment-variables/) for windows
 
-3. Clone parspice  
-cd into directory
-Gradle build
-Gradle maven thing
+### 3. Clone ParSPICE and build
+   ```bash
+   > git clone https://github.com/JoelCourtney/parspice.git
+   > cd parspice
+   > ./gradlew build
+   ```
+   This builds ParSPICE and runs the tests.
 
-4. Verify That parspice has been built to maven local
+### 4. Use ParSPICE in your own Java project
 
-5. Import parspice into your own java project with build.gradle
-Build.gradle instructions
+   These details will probably change.
+   
+   To use ParSPICE in another project, publish it with: 
+   ```bash
+   ./gradlew publishToMavenLocal
+   ```
+   This should store copies of the packaged outputs in `~/.m2/repository/org/parspice/`
+   
+   In your `build.gradle` file you should then be able to import the implementation dependency with `mavenLocal()` in the
+   repositories list and `implementation 'org.parspice:parspice.implementation:1.0-SNAPSHOT'` in
+   the dependencies list.
 
-Example usage of ParSpice link
+   [Here is an example build.gradle](https://github.com/JoelCourtney/parspice-playground/blob/main/build.gradle)
 
-Troubleshooting   
-TBD -> will list common problems with building 
+### 5. Usage
+   The user needs to compile a fat jar of their project that includes all dependencies needed for the
+   worker. Then they should create a subclass of either `OutputWorker` or `InputOutputWorker`,
+   and call the appropriate ParSPICE method from the main process.
+   
+   See [this repo](https://github.com/JoelCourtney/parspice-playground) for an example.
 
-### Building
+### 6. Troubleshooting
+   TBD -> will list common problems and subsequents solutions with building and running this repo
 
-Use `./gradlew build` in the root of the repo to build ParSPICE and run the tests.
-
-## Usage
-
-These details will probably change.
-
-To use ParSPICE in another project, publish it with `./gradlew publishToMavenLocal`. This should store copies of the packaged outputs in
-`~/.m2/repository/org/parspice/`
-
-You should then be able to import the implementation dependency with `mavenLocal()` in the
-repositories list and `implementation 'org.parspice:parspice.implementation:1.0-SNAPSHOT'` in
-the dependencies list.
-
-### Usage
-The user needs to compile a fat jar of their project that includes all dependencies needed for the
-worker. Then they should create a subclass of either `OutputWorker` or `InputOutputWorker`,
-and call the appropriate ParSPICE method from the main process.
-
-See [this repo](https://github.com/JoelCourtney/parspice-playground) for an example.
-
+***
 ## Benchmarking
 
 You need JNISpice installed to run the benchmark.
