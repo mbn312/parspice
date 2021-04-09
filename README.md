@@ -25,16 +25,16 @@ it is still slightly faster than direct JNISpice even in a bad case.
 * [Gradle](https://gradle.org/install/)  
 * [JDK version 1.8](https://adoptopenjdk.net)
 
-### 1. Download [JNISpice](https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/)
+### Download [JNISpice](https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/)
 
-### 2. Set global variable JNISPICE_ROOT as the path to JNISpice.
+### Set global variable JNISPICE_ROOT as the path to JNISpice.
    ```bash
    export JNISPICE_ROOT=/path/to/JNISpice
    ```
    To permanently set this variable add this command to your `.bashrc`(Linux), `.zshrc` (MacOS) 
    or follow [these instructions](https://www.howtogeek.com/51807/how-to-create-and-use-global-system-environment-variables/) for windows
 
-### 3. Clone ParSPICE and build
+### Clone ParSPICE and build
    ```bash
    > git clone https://github.com/JoelCourtney/parspice.git
    > cd parspice
@@ -42,7 +42,7 @@ it is still slightly faster than direct JNISpice even in a bad case.
    ```
    This builds ParSPICE and runs the tests.
 
-### 4. Use ParSPICE in your own Java project
+### Use ParSPICE in your own Java project
 
    These details will probably change.
    
@@ -58,14 +58,14 @@ it is still slightly faster than direct JNISpice even in a bad case.
 
    [Here is an example build.gradle](https://github.com/JoelCourtney/parspice-playground/blob/main/build.gradle)
 
-### 5. Usage
+### Usage
    The user needs to compile a fat jar of their project that includes all dependencies needed for the
    worker. Then they should create a subclass of either `OutputWorker` or `InputOutputWorker`,
    and call the appropriate ParSPICE method from the main process.
    
    See [this repo](https://github.com/JoelCourtney/parspice-playground) for an example.
 
-### 6. Troubleshooting
+### Troubleshooting
    TBD -> will list common problems and subsequents solutions with building and running this repo
 
 ***
