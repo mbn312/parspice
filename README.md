@@ -19,7 +19,38 @@ accepting an integer. `I` can also be any type, as long as the user uses a built
 or implements their own. This version can be much slower than tasks with just outputs, but
 it is still slightly faster than direct JNISpice even in a bad case.
 
-## Building
+## User Guide
+**Pre-Requisites**
+* [Gradle](https://gradle.org/install/)  
+* [JDK version 1.8](https://adoptopenjdk.net)
+
+1. Download [JNISpice](https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/)
+
+2. Set global variable JNISPICE_ROOT  
+   ```bash
+   export JNISPICE_ROOT=/path/to/JNISpice
+   ```
+   To permanently set this variable add this command to your `.bashrc`(Linux), or `.zshrc` (MacOS)   
+Windows instructions  
+MacOS  
+Linux  
+
+3. Clone parspice  
+cd into directory
+Gradle build
+Gradle maven thing
+
+4. Verify That parspice has been built to maven local
+
+5. Import parspice into your own java project with build.gradle
+Build.gradle instructions
+
+Example usage of ParSpice link
+
+Troubleshooting   
+TBD -> will list common problems with building 
+
+### Building
 
 Build with `gradle publishToMavenLocal`. This should store copies of the packaged outputs in
 `~/.m2/repository/org/parspice/`
@@ -28,7 +59,7 @@ You should then be able to import the implementation dependency with `mavenLocal
 repositories list and `implementation 'org.parspice:parspice.implementation:1.0-SNAPSHOT'` in
 the dependencies list.
 
-## Usage
+### Usage
 
 The user needs to compile a fat jar of their project that includes all dependencies needed for the
 worker. Then they should create a subclass of either `OutputWorker` or `InputOutputWorker`,
