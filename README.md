@@ -18,7 +18,7 @@ For tasks with network inputs, the custom worker has a `O task(I in)` function i
 accepting an integer. `I` can also be any type, as long as the user uses a built-in sender
 or implements their own. This version can be much slower than tasks with just outputs, but
 it is still slightly faster than direct JNISpice even in a bad case.
-***
+
 ## User Guide
 
 #### Pre-Requisites
@@ -68,7 +68,7 @@ it is still slightly faster than direct JNISpice even in a bad case.
 ### Troubleshooting
    TBD -> will list common problems and subsequents solutions with building and running this repo
 
-***
+
 ## Benchmarking
 
 You need JNISpice installed to run the benchmark.
