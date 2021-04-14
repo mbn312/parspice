@@ -1,27 +1,37 @@
 # ParSPICE
 
-TODO
+ParSPICE is a minimal multi-processing framework designed to run JNISpice jobs in parallel. SPICE is not thread-safe, so naively running concurrent SPICE jobs either results in errors, incorrect results, or (in the case of JNISpice) longer runtimes compared to running the job single-threaded.
+
+Our solution is to break the job into multiple processes instead of multiple threads. Sadly, since this is the JVM, you can't easily share memory between processes, or even clone the memory space with a c-style `fork()`. So all communication between processes in our design uses local network requests.
+
+In broad strokes, the general process of using ParSPICE is three steps:
+
+1. Create a Worker class, which will run in parallel on the worker processes.
+2. Create a fat jar containing your Worker, and all its dependencies.
+3. In the main process, create an instance of the `parspice.ParSPICE` class, and call `parSPICE.run(...)` on it.
+
+If you want to get right to it, you can use a template Java or Kotlin project from [this repo](https://github.com/JoelCourtney/parspice-templates). (You will need to install ParSPICE to the Maven Local repo first, though, details below).
 
 ## Preparation
 
-#### Pre-Requisites
-* [Gradle](https://gradle.org/install/)  
+### Pre-Requisites
+* [Gradle](https://gradle.org/install/) (optional)
+  * You can use the `./gradlew` (unix) or `./gradlew.bat` (windows) wrapper scripts instead of installing Gradle. These instructions assume you are using the `./gradlew` wrapper.
 * [JDK version 1.8](https://adoptopenjdk.net)
-
-### Download [JNISpice](https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/)
-
-This guide assumes you will be using ParSPICE to run JNISpice jobs. Technically, ParSPICE can be
+* [JNISpice](https://naif.jpl.nasa.gov/pub/naif/misc/JNISpice/) (optional)
+  * This guide assumes you will be using ParSPICE to run JNISpice jobs. Technically, ParSPICE can be
 used for any job that meets its design restrictions (not just spice things), so this step is optional
 if you don't intend to use JNISpice.
 
-### Set environment variable JNISPICE_ROOT as the path to JNISpice.
+### Set environment variable JNISPICE_ROOT (optional)
+  If you intend to run the ParSPICE benchmark, you need JNISpice installed, and you need to set the `JNISPICE_ROOT` environment variable.
+
    ```bash
    export JNISPICE_ROOT=/path/to/JNISpice
    ```
+
    To permanently set this variable add this command to your `.bashrc`(Linux), `.zshrc` (MacOS) 
    or follow [these instructions](https://www.howtogeek.com/51807/how-to-create-and-use-global-system-environment-variables/) for windows
-
-   This is used in the benchmark only. If you don't need to run the benchmark, this is optional.
 
 ### Clone ParSPICE and build
    ```bash
@@ -31,55 +41,42 @@ if you don't intend to use JNISpice.
    ```
    This builds ParSPICE and runs the tests.
 
+### Publish to Maven Local
+
+To use ParSPICE in other projects, we recommend doing so through the Maven Local repo.
+
+```bash
+./gradlew publishToMavenLocal
+```
+
+This should store copies of the packaged outputs in `~/.m2/repository/org/parspice/`
+
+In your own `build.gradle` file you should then be able to import the implementation dependency with `mavenLocal()` in the repositories list and `implementation 'org.parspice:parspice.implementation:1.0-SNAPSHOT'` in the dependencies list. Examples of that can be found in the [templates repo](https://github.com/JoelCourtney/parspice-templates).
+
 ## Usage
 
 The following assumes that your project uses Gradle. All example code is written in Java, but Kotlin
 works fine and is even recommended, because it simplifies the boilerplate that ParSPICE requires you to write.
 No ParSPICE-specific performance difference has been observed between Java and Kotlin.
 
-### Adding to Gradle Dependencies through mavenLocal
-
-   To use ParSPICE in another project, publish it to the local maven repo with: 
-   ```bash
-   ./gradlew publishToMavenLocal
-   ```
-   This should store copies of the packaged outputs in `~/.m2/repository/org/parspice/`
-   
-   In your own `build.gradle` file you should then be able to import the implementation dependency with `mavenLocal()` in the
-   repositories list and `implementation 'org.parspice:parspice.implementation:1.0-SNAPSHOT'` in
-   the dependencies list.
-
-   [Here is an example build.gradle](https://github.com/JoelCourtney/parspice-playground/blob/main/build.gradle)
-
-### Adding to Gradle Dependencies with direct filepaths
-
-This is not recommended, but it should work even if maven local does not. Simply add:
-
-```groovy
-implementation files("/path/to/ParSPICE/src")
-```
-
-to your dependencies list.
-
 ### Implementing a worker
 
-Each worker contains two key functions that you have to implement: `void setup()` and `task()`.
+Each worker contains two key functions that you have to implement: `void setup()` and `task(...)`.
 
-- When the worker is started, `setup()` will be called once. If you have to load the JNISpice native library or furnsh a kernel, do it in setup.
-  Remember that the worker is a separate process entirely; any setup you did on the main process is
-  not available to the workers.
-- Then, `task()` is called repeatedly. The return type and input argument type are determined by you (in the next section).
-  `task`'s behavior should depend *only* on its inputs.
+- When the worker is started, `setup()` will be called once. If you have to load the JNISpice native library or furnsh a kernel, do it in setup. Remember that the worker is a separate process entirely; any setup you did on the main process is not available to the workers.
+- Then, `task(...)` is called repeatedly. The return type and input argument type are determined by you (in the next section). `task(...)` is the smallest piece of your job's logic that has to run sequentially (i.e. if you ran your job single-threaded in a for loop, `task(...)` is the body of the loop). `task(...)`'s behavior should depend *only* on its inputs.
 
-#### IO
+For example, if you need to perform some orbital calculation 100,000 times over some time-window, you should load the JNISpice library and your kernels in `setup()`, and `task(...)` should perform the calculation *once*.
+
+#### Worker Types and IO Combinations
 
 Choose what IO you need for your worker. For performance, less IO is usually better if you can
-get away with it. Any datatype can be sent as input or output, but default networking behavior is only provided
+get away with it. Any data type can be sent as input or output, but default networking behavior is only provided
 for basic types and arrays of basic types. (see next section for details.)
 
 - Output: Most tasks will need to return output data of some type (such as `ResultType` in the
-  above example). Whatever data you return from the `task()` function will be sent back to the main
-  process, collected in an `ArrayList`, and returned from the `ParSPICE.run()` call.
+  below example). Whatever data you return from the `task(...)` function will be sent back to the main
+  process, collected in an `ArrayList`, and returned from the `ParSPICE.run(...)` call.
   If by some miracle you do not need to return data, you can implement a `void task()`
   instead, and you'll have no network overhead for it.
 - Input: if you absolutely need to give custom input arguments to each iteration of `task()`, you'll
@@ -94,7 +91,7 @@ for basic types and arrays of basic types. (see next section for details.)
     results.add(someResult);
   }
   ```
-  Then you can easily translate this into a task with no network input:
+  Then you can easily translate this into a task with *no network overhead for the inputs*:
   ```java
   @Override
   public ResultType task(int i) throws Exception {
@@ -103,21 +100,20 @@ for basic types and arrays of basic types. (see next section for details.)
     return someResult;
   }
   ```
-
   
-The four IO configurations each have an abstract Worker superclass for you to extend:
+The four combinations of IO each have an abstract Worker superclass for you to extend:
 
 - Both Input and Output: extend `IOWorker<I,O>`, override `O task(I input)`
 - Only Output: extend `OWorker<O>`, override `O task(int i)`
 - Only Input: extend `IWorker<I>`, override `void task(I input)`
-- No input or output: extend `AutoWorker`, override `void task(int i)`
+- No communication at all: extend `AutoWorker`, override `void task(int i)`
 
 #### Sending data
 
 All data, for both inputs and outputs, is sent over network sockets by implementers of the
 `Sender<T>` interface.
 
-##### Pre-built senders
+##### Built-in senders
 
 Senders have already been implemented for twelve types:
 
@@ -181,7 +177,9 @@ In a simple case like this, you could also directly call `ois.readInt()`, `ois.r
 `oos.writeInt(out.i)`, and `oos.writeDouble(out.d)`, which is what the Int and Double Senders
 do anyway.
 
-#### Assembling the fat Worker Jar
+At the end of the day, you can do whatever you want to the Input and Output object streams; these are supposed to be as bare-bones and efficient as possible, so ParSPICE has no checks to make sure you are handling them correctly. Try to avoid using `writeObject` and `readObject` though; they use reflection and are *very* slow. They also cache object addresses, which can cause bugs if you want to send data from the same location multiple times with different contents.
+
+#### Creating the fat Worker Jar
 
 Now that you have a worker implemented, along with custom Senders if needed, you need to package them
 and all their dependencies in a fat jar. No main class is needed; so, if you are using the same jar for
@@ -199,30 +197,13 @@ jar {
 ```
 
 If you want to get fancier and only include worker-specific dependencies (not *all* dependencies, as above),
-you can use custom source sets:
-
-```groovy
-sourceSets {
-  worker
-}
-
-jar {
-  from {
-    configurations.workerCompileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-  }
-  archiveBaseName.set("worker")
-}
-```
-
-You would then add worker dependencies with `workerImplementation`, and put your worker source code under
-`src/worker/java` instead of `src/main/java`.
-
-Both of the above examples would produce jar files called `build/libs/worker-<version>.jar` where `version` is
-set elsewhere in your `build.gradle` file.
+we recommend custom source sets. The [templates repo](https://github.com/JoelCourtney/parspice-templates) contains examples of this, along with a custom `gradle workerJar` task, so you can create a different jar for the main process if you want.
 
 #### Running the worker
 
-TODO (easy)
+Running your ParSPICE job in parallel is easy. Create a new instance of the `parspice.ParSPICE` class; arguments are the path to the worker jar, and the minimum port number to use for networking.
+
+Then call `parSPICE.run` on your instance; arguments are an instance of your worker, either the number of iterations to run (for no-input tasks) or the list of inputs to run on (for tasks with network input), and the number of workers to use.
 
 #### Examples
 
@@ -230,8 +211,11 @@ The following is an `OWorker<double[]>` that calls `CSPICE.mxv` and `CSPICE.vhat
 and a vector constructed from the input `int i` (the actual matrix and vector are nonsense values,
 just a proof of concept):
 
+**Worker:**
+
 ```java
-// imports omitted
+import parspice.worker.OWorker;
+import parspice.sender.DoubleArraySender;
 
 public class MxvhatWorker extends OWorker<double[]> {
 
@@ -264,8 +248,12 @@ public class MxvhatWorker extends OWorker<double[]> {
         return CSPICE.vhat(v);
     }
 }
+```
 
-public class MainProcess {
+**Main Process:**
+
+```java
+public class Main {
     public static void main(String[] args) {
         // create the ParSPICE instance.
         ParSPICE par = new ParSPICE("build/libs/worker.jar", 50050);
@@ -276,9 +264,11 @@ public class MainProcess {
 }
 ```
 
-### Troubleshooting
-   TBD -> will list common problems and subsequents solutions with building and running this repo
+The `build.gradle` file would be copied from the [templates repo's build.gradle](https://github.com/JoelCourtney/parspice-templates/blob/java/build.gradle)
 
+### Error handling
+
+The Worker superclasses allow `setup()` and `task(...)` to throw arbitrary errors. If any error is thrown on the worker process, the stacktrace will be printed to `/tmp/worker_log_i` where `i` is the ID of the worker, ranging from 0 to one less than the number of workers.
 
 ## Benchmarking
 
@@ -291,10 +281,9 @@ Ensure that the JNISpice native library is somewhere in your library path, and s
 export JNISPICE_ROOT="/usr/local/JNISpice"
 ```
 
-Use `gradle benchmark` to run the benchmark. It could take several minutes.
+Use `./gradlew benchmark` to run the benchmark. It could take several minutes.
 
-You can print out the benchmark analysis again just by running `./gradlew benchmark` again (the results are cached). To re-run the entire
-benchmark, run `./gradlew clean` first.
+You can print out the benchmark analysis again just by running `./gradlew benchmark` again (the results are cached). To re-run the entire benchmark, run `./gradlew clean` first.
 
 ### Runtime Estimation
 
@@ -302,7 +291,7 @@ When the benchmark is done, it will output a regression model of the form
 
 <pre>
         T_0
-T = B_1 --- + B_2 D
+T = B_1 --- + B_2[ms/MB] D
          W
 
 where	T   = total time to run task through ParSPICE
@@ -311,14 +300,13 @@ where	T   = total time to run task through ParSPICE
 	D   = total amount of data transferred between processes, in MB
 </pre>
 
-B_1 is typically between 1 and 2, so if you have a task big enough to make you consider ParSPICE,
-it will almost certainly run faster in ParSPICE (unless you have to transfer hundreds of bytes per iteration).
+B_1 is typically between 1 and 2 on modern consumer machines, which means that if you have a job big enough to make you consider ParSPICE, it will almost certainly run faster in ParSPICE (unless you have to transfer hundreds of bytes per iteration).
+
+B_2 it typically between 1 and 10, which means that if you only need to send a small, fixed number of integers or doubles each iteration, you shouldn't need to worry about the network overhead making ParSPICE slower than single-threaded. In fact, we've found that on average consumer machines, if you have to send so much data that the overhead makes it slower, you'll run out of memory storing all of that data anyway.
 
 ### Break-Even Point Estimation
 
-The benchmark also outputs a break-even point estimate which compares the amount of data sent per iteration with the
-average time it takes to run a single iteration. (This is found by setting `T - T0 = 0` and solving for `d = D/I`
-where `I` is the total number of iterations.)
+The benchmark also outputs a break-even point estimate which compares the amount of data sent per iteration with the average time it takes to run a single iteration. (This is found by setting `T - T0 = 0` and solving for `d = D/I` where `I` is the total number of iterations.)
 
 <pre>
 d = (1/B_2 - (B_1/B_2)/w)[B/ns] t
@@ -328,12 +316,8 @@ where:  d = data sent per iteration, in bytes
         t = average single-threaded time per iteration, in ns
 </pre>
 
-For large tasks, this estimates the upper limit of data sent per iteration such that ParSPICE is still more performant
-than running the task directly.
+For large tasks, this estimates the upper limit of data sent per iteration such that ParSPICE is still more performant than running the task directly.
 
 ### Caveats
 
-The benchmark runs a series of tasks, with varying computational and network costs. This means that the model
-is biased by a few very high leverage observations of very expensive tasks. So don't expect the model to be accurate
-for short, inexpensive tasks with only a few iterations (but in those cases, it probably isn't worth the time to port the task to
-ParSPICE anyway, even if it is slightly faster).
+The benchmark runs a series of tasks, with varying computational and network costs. This means that the model is biased by a few very high leverage observations of very expensive tasks. So don't expect the model to be accurate for short, inexpensive tasks with only a few iterations (but in those cases, it probably isn't worth the time to port the task to ParSPICE anyway, even if it is slightly faster).
