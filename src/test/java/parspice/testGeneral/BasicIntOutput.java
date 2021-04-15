@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BasicIntOutput extends OWorker<Integer> {
-    List<Integer> parResults;
+    ArrayList<Integer> parResults;
     int numIterations = 10;
 
     public BasicIntOutput() {

@@ -58,7 +58,7 @@ public class ParSPICE {
      * @return The list of outputs, in the same order as the inputs
      * @throws Exception
      */
-    public <I,O> List<O> run(
+    public <I,O> ArrayList<O> run(
             IOWorker<I,O> ioWorker,
             List<I> inputs,
             int numWorkers
@@ -96,7 +96,7 @@ public class ParSPICE {
      * @return The list of outputs, sorted by index i. (see argument numIterations)
      * @throws Exception
      */
-    public <O> List<O> run(
+    public <O> ArrayList<O> run(
             OWorker<O> oWorker,
             int numIterations,
             int numWorkers
@@ -204,7 +204,7 @@ public class ParSPICE {
         return numIterations/numWorkers + ((i < numIterations%numWorkers)?1:0);
     }
 
-    private static <I,O> List<O> aggregateOutputs(ArrayList<IOManager<I,O>> ioManagers, int numIterations) {
+    private static <I,O> ArrayList<O> aggregateOutputs(ArrayList<IOManager<I,O>> ioManagers, int numIterations) {
         ArrayList<O> results = ioManagers.get(0).getOutputs();
         results.ensureCapacity(numIterations);
         for (IOManager<?, O> ioManager : ioManagers.subList(1, ioManagers.size())) {

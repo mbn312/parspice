@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BasicDoubleMatrixOutput extends OWorker<double[][]> {
-    List<double[][]> parResults;
+    ArrayList<double[][]> parResults;
     int numIterations = 10;
 
     public BasicDoubleMatrixOutput() {

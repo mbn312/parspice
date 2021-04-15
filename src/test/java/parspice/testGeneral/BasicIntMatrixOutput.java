@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BasicIntMatrixOutput extends OWorker<int[][]> {
-    List<int[][]> parResults;
+    ArrayList<int[][]> parResults;
     int numIterations = 10;
 
     public BasicIntMatrixOutput() {

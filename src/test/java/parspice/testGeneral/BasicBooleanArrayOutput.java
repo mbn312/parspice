@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BasicBooleanArrayOutput extends OWorker<boolean[]> {
-    List<boolean[]> parResults;
+    ArrayList<boolean[]> parResults;
     int numIterations = 10;
 
     public BasicBooleanArrayOutput() {
