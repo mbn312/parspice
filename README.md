@@ -49,9 +49,9 @@ To use ParSPICE in other projects, we recommend doing so through the Maven Local
 ./gradlew publishToMavenLocal
 ```
 
-This should store copies of the packaged outputs in `~/.m2/repository/org/parspice/`
+This should store copies of the packaged outputs in `~/.m2/repository/parspice/`
 
-In your own `build.gradle` file you should then be able to import the implementation dependency with `mavenLocal()` in the repositories list and `implementation 'org.parspice:parspice.implementation:1.0-SNAPSHOT'` in the dependencies list. Examples of that can be found in the [templates repo](https://github.com/JoelCourtney/parspice-templates).
+In your own `build.gradle` file you should then be able to import the implementation dependency with `mavenLocal()` in the repositories list and `implementation 'parspice:parspice:1.0'` in the dependencies list. Examples of that can be found in the [templates repo](https://github.com/JoelCourtney/parspice-templates).
 
 ## Usage
 

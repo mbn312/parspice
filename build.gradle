@@ -5,8 +5,8 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.4.31"
 }
 
-group 'org.parspice'
-version '1.0-SNAPSHOT'
+group 'parspice'
+version '1.0'
 
 repositories {
     mavenCentral()
@@ -30,7 +30,7 @@ dependencies {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = 'parspice.implementation'
+            artifactId = 'parspice'
             from components.java
         }
     }
