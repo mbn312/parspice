@@ -11,6 +11,30 @@ In broad strokes, the general process of using ParSPICE is three steps:
 3. In the main process, create an instance of the `parspice.ParSPICE` class, and call `parSPICE.run(...)` on it.
 
 If you want to get right to it, you can use a template Java or Kotlin project from [this repo](https://github.com/JoelCourtney/parspice-templates). (You will need to install ParSPICE to the Maven Local repo first, though, details below).
+### Table of Contents
+* [Preparation](#prep)
+  * Pre-Requisites
+  * Set Environment Variable JNISPICE_ROOT
+  * Clone ParSPICE and build
+  * Publish to Maven Local
+* [Usage](#usage)
+  * Implementing a worker
+      * Worker Types and IO Combinations
+      * Sending data
+      * Built-in senders
+      * Custom Senders
+      * Creating the fat Worker Jar
+      * Running the worker
+      * Examples
+        * Worker
+        * Main Process
+  * Error handling
+* [Benchmarking](#bench)
+  * Runtime Estimation
+  * Break-Even Point Estimation
+  * Caveats
+
+<a name="prep"></a>
 
 ## Preparation
 
@@ -53,6 +77,7 @@ This should store copies of the packaged outputs in `~/.m2/repository/parspice/`
 
 In your own `build.gradle` file you should then be able to import the implementation dependency with `mavenLocal()` in the repositories list and `implementation 'parspice:parspice:1.0'` in the dependencies list. Examples of that can be found in the [templates repo](https://github.com/JoelCourtney/parspice-templates).
 
+<a name="prep"></a>
 ## Usage
 
 The following assumes that your project uses Gradle. All example code is written in Java, but Kotlin
@@ -272,6 +297,7 @@ The `build.gradle` file would be copied from the [templates repo's build.gradle]
 
 The Worker superclasses allow `setup()` and `task(...)` to throw arbitrary errors. If any error is thrown on the worker process, the stacktrace will be printed to `/tmp/worker_log_i` where `i` is the ID of the worker, ranging from 0 to one less than the number of workers.
 
+<a id="bench"></a>
 ## Benchmarking
 
 You need JNISpice installed to run the benchmark.
