@@ -42,45 +42,7 @@ import java.net.Socket;
  *
  * @param <O> The type returned by the worker to the main process.
  */
-public abstract class IOWorker<I,O> {
-
-    /**
-     * Creates an instance of a worker subclass and runs the tasks specified
-     * by the CLI arguments.
-     */
-    public static void main(String[] args) throws Exception {
-        int inputPort = Integer.parseInt(args[1]);
-        try {
-            IOWorker<?,?> worker = (IOWorker<?,?>) Class.forName(args[0]).getConstructor().newInstance();
-            worker.setup();
-
-            Socket inputSocket = new Socket("localhost", inputPort);
-            Socket outputSocket = new Socket("localhost", inputPort + 1);
-            ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
-            ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
-
-            int startI = Integer.parseInt(args[2]);
-            int subset = Integer.parseInt(args[3]);
-            for (int i = startI; i < startI + subset; i++) {
-                worker.taskWrapper(ois, oos);
-            }
-            oos.close();
-            outputSocket.close();
-            ois.close();
-            inputSocket.close();
-        } catch (Exception e) {
-            System.err.println(e.toString());
-            e.printStackTrace();
-            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[4]);
-            writer.write(e.toString());
-            writer.write("Was sending on port " + (inputPort + 1));
-            PrintWriter printer = new PrintWriter(writer);
-            e.printStackTrace(printer);
-            printer.close();
-            writer.flush();
-            writer.close();
-        }
-    }
+public abstract class IOWorker<I,O> extends Worker {
 
     private final Sender<I> inputSender;
     private final Sender<O> outputSender;
@@ -88,6 +50,26 @@ public abstract class IOWorker<I,O> {
     public IOWorker(Sender<I> inputSender, Sender<O> outputSender) {
         this.inputSender = inputSender;
         this.outputSender = outputSender;
+    }
+
+    /**
+     * Creates an instance of a worker subclass and runs the tasks specified
+     * by the CLI arguments.
+     */
+    public final void run() throws Exception {
+        Socket inputSocket = new Socket("localhost", inputPort);
+        Socket outputSocket = new Socket("localhost", inputPort + 1);
+        ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
+        ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
+
+        for (int i = startIndex; i < startIndex + subset; i++) {
+            outputSender.write(task(inputSender.read(ois)), oos);
+        }
+
+        oos.close();
+        outputSocket.close();
+        ois.close();
+        inputSocket.close();
     }
 
     /**
@@ -106,21 +88,6 @@ public abstract class IOWorker<I,O> {
      */
     public Sender<O> getOutputSender() {
         return outputSender;
-    }
-
-    /**
-     * Called only once, before repeatedly calling {@code task(input)}.
-     *
-     * If you need to load a native library or perform any one-time preparation,
-     * it should be done in this function. If not, you don't need to override it.
-     *
-     * All setup that might throw an error should be done here, not in the main
-     * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
-     */
-    public void setup() throws Exception {}
-
-    final void taskWrapper(ObjectInputStream ois, ObjectOutputStream oos) throws Exception {
-        outputSender.write(task(inputSender.read(ois)), oos);
     }
 
     /**

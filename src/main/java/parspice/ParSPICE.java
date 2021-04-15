@@ -65,7 +65,6 @@ public class ParSPICE {
             List<I> inputs,
             int numWorkers
     ) throws Exception {
-        String mainClass = "parspice.worker.IOWorker";
         String workerClass = ioWorker.getClass().getName();
         Sender<I> inputSender = ioWorker.getInputSender();
         Sender<O> outputSender = ioWorker.getOutputSender();
@@ -81,7 +80,7 @@ public class ParSPICE {
             ));
             iteration += subset;
         }
-        runInternal(mainClass, workerClass, numIterations, numWorkers, ioManagers);
+        runInternal(workerClass, numIterations, numWorkers, ioManagers);
 
         return aggregateOutputs(ioManagers, numIterations);
     }
@@ -103,7 +102,6 @@ public class ParSPICE {
             int numIterations,
             int numWorkers
     ) throws Exception {
-        String mainClass = "parspice.worker.OWorker";
         String workerClass = oWorker.getClass().getName();
         Sender<O> outputSender = oWorker.getOutputSender();
         ArrayList<IOManager<Void,O>> ioManagers = new ArrayList<>(numWorkers);
@@ -115,7 +113,7 @@ public class ParSPICE {
                     i
             ));
         }
-        runInternal(mainClass, workerClass, numIterations, numWorkers, ioManagers);
+        runInternal(workerClass, numIterations, numWorkers, ioManagers);
 
         return aggregateOutputs(ioManagers,  numIterations);
     }
@@ -134,7 +132,6 @@ public class ParSPICE {
             List<I> inputs,
             int numWorkers
     ) throws Exception {
-        String mainClass = "parspice.worker.IWorker";
         String workerClass = iWorker.getClass().getName();
         Sender<I> inputSender = iWorker.getInputSender();
         ArrayList<IOManager<I, Void>> ioManagers = new ArrayList<>(numWorkers);
@@ -149,7 +146,7 @@ public class ParSPICE {
             ));
             iteration += subset;
         }
-        runInternal(mainClass, workerClass, numIterations, numWorkers, ioManagers);
+        runInternal(workerClass, numIterations, numWorkers, ioManagers);
     }
 
     /**
@@ -167,16 +164,16 @@ public class ParSPICE {
             int numIterations,
             int numWorkers
     ) throws Exception {
-        String mainClass = "parspice.worker.AutoWorker";
         String workerClass = autoWorker.getClass().getName();
-        runInternal(mainClass, workerClass, numIterations, numWorkers, null);
+        runInternal(workerClass, numIterations, numWorkers, null);
     }
 
     /**
      * Internal logic common to both of the publicly facing run functions.
      */
-    private <I,O> void runInternal(String mainClass, String workerClass, int numIterations, int numWorkers, ArrayList<IOManager<I,O>> ioManagers) throws Exception {
-        checkMainClass(workerJar, mainClass);
+    private <I,O> void runInternal(String workerClass, int numIterations, int numWorkers, ArrayList<IOManager<I,O>> ioManagers) throws Exception {
+        checkClass(workerJar, "parspice.worker.Worker");
+        checkClass(workerJar, workerClass);
         if (ioManagers != null) {
             for (IOManager<I,O> manager : ioManagers) {
                 manager.start();
@@ -188,12 +185,14 @@ public class ParSPICE {
             int subset = subset(numIterations, numWorkers, i);
             String args = "-Dname=parspice_worker_" + i +
                     " -cp " + workerJar +
-                    " " + mainClass +
+                    " parspice.worker.Worker" +
                     " " + workerClass +
                     " " + (minPort + 2*i) +
                     " " + iteration +
                     " " + subset +
-                    " " + i;
+                    " " + i +
+                    " " + numWorkers +
+                    " " + numIterations;
             processes[i] = Runtime.getRuntime().exec("java " + args);
             iteration += subset;
         }
@@ -225,14 +224,14 @@ public class ParSPICE {
     }
 
     /**
-     * Checks that the given main class is in the the jar file. Throws an exception if not.
+     * Checks that the given class is in the the jar file. Throws an exception if not.
      *
      * @param workerJar path (can be relative) to the jar file
-     * @param mainClass main class to look for, in package notation as given as a jvm argument.
+     * @param cls class to look for, in package notation as given as a jvm argument.
      * @throws ClassNotFoundException
      * @throws IOException
      */
-    private static void checkMainClass(String workerJar, String mainClass) throws ClassNotFoundException, IOException {
+    private static void checkClass(String workerJar, String cls) throws ClassNotFoundException, IOException {
         JarFile jarFile = new JarFile(workerJar);
         Enumeration<JarEntry> e = jarFile.entries();
         while (e.hasMoreElements()) {
@@ -241,12 +240,12 @@ public class ParSPICE {
                 String className = jarEntry.getName()
                         .replace("/", ".")
                         .replace(".class", "");
-                if (className.equals(mainClass)) {
+                if (className.equals(cls)) {
                     return;
                 }
             }
         }
-        throw new ClassNotFoundException(mainClass);
+        throw new ClassNotFoundException(cls);
     }
 
     /**

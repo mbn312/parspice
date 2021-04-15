@@ -41,41 +41,7 @@ import java.net.Socket;
  *
  * @param <O> The type returned by the worker to the main process.
  */
-public abstract class OWorker<O> {
-
-    /**
-     * Creates an instance of a worker subclass and runs the tasks specified
-     * by the CLI arguments.
-     */
-    public static void main(String[] args) throws Exception {
-        OWorker<?> worker = (OWorker<?>) Class.forName(args[0]).getConstructor().newInstance();
-        int inputPort = Integer.parseInt(args[1]);
-        try {
-            worker.setup();
-
-            Socket outputSocket = new Socket("localhost", inputPort + 1);
-            ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
-
-            int startI = Integer.parseInt(args[2]);
-            int subset = Integer.parseInt(args[3]);
-            for (int i = startI; i < startI + subset; i++) {
-                worker.taskWrapper(i, oos);
-            }
-            oos.close();
-            outputSocket.close();
-        } catch (Exception e) {
-            System.err.println(e.toString());
-            e.printStackTrace();
-            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[4]);
-            writer.write(e.toString());
-            writer.write("Was sending on port " + (inputPort + 1));
-            PrintWriter printer = new PrintWriter(writer);
-            e.printStackTrace(printer);
-            printer.close();
-            writer.flush();
-            writer.close();
-        }
-    }
+public abstract class OWorker<O> extends Worker {
 
     private final Sender<O> outputSender;
 
@@ -90,37 +56,28 @@ public abstract class OWorker<O> {
     }
 
     /**
+     * Creates an instance of a worker subclass and runs the tasks specified
+     * by the CLI arguments.
+     */
+    @Override
+    public final void run() throws Exception {
+        Socket outputSocket = new Socket("localhost", inputPort + 1);
+        ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
+
+        for (int i = startIndex; i < startIndex + subset; i++) {
+            outputSender.write(task(i), oos);
+        }
+        oos.close();
+        outputSocket.close();
+    }
+
+    /**
      * Get an instance of the output sender.
      *
      * @return instance of the output sender.
      */
     public final Sender<O> getOutputSender() {
         return outputSender;
-    }
-
-    /**
-     * Called only once, before repeatedly calling {@code task(i)}.
-     *
-     * If you need to load a native library or perform any one-time preparation,
-     * it should be done in this function. If not, you don't need to override it.
-     *
-     * All setup that might throw an error should be done here, not in the main
-     * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
-     */
-    public void setup() throws Exception {}
-
-    /**
-     * Handles the IO for a particular task iteration, and calls task.
-     *
-     * This function exists because the generic types can't be handled
-     * in the main function without unchecked casts.
-     *
-     * @param i the integer to give to task(i)
-     * @param oos the output stream to write the output to
-     * @throws Exception
-     */
-    final void taskWrapper(int i, ObjectOutputStream oos) throws Exception {
-        outputSender.write(task(i), oos);
     }
 
     /**
