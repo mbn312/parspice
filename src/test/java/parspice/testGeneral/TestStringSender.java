@@ -2,11 +2,9 @@ package parspice.testGeneral;
 
 import org.junit.jupiter.api.TestInstance;
 import parspice.ParSPICEInstance;
-import parspice.sender.DoubleMatrixSender;
-import parspice.sender.Sender;
+import parspice.sender.StringSender;
 import parspice.worker.OWorker;
-import parspice.worker.IOWorker;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,19 +15,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BasicDoubleMatrixOutput extends OWorker<double[][]> {
-    ArrayList<double[][]> parResults;
+public class TestStringSender extends OWorker<String> {
+    ArrayList<String> parResults;
     int numIterations = 10;
 
-    public BasicDoubleMatrixOutput() {
-        super(new DoubleMatrixSender());
+    public TestStringSender() {
+        super(new StringSender());
     }
 
     @Override
-    public double[][] task(int i) throws Exception {
-        System.out.println(i);
-        double[][] results = {{1.1,2.2},{1.1,2.2}};
-        return results;
+    public String task(int i) throws Exception {
+        return "Test";
     }
 
     @Test
@@ -37,22 +33,19 @@ public class BasicDoubleMatrixOutput extends OWorker<double[][]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new BasicDoubleMatrixOutput(),
+                    new TestStringSender(),
                     numIterations,
                     2
             );
         });
-
     }
 
     @Test
     public void testCorrectness() {
-        List<double[][]> directResults = new ArrayList<double[][]>(numIterations);
+        List<String> directResults = new ArrayList<String>(numIterations);
         for (int i = 0; i < numIterations; i++) {
-            double[][] x = {{1.1,2.2},{1.1,2.2}};
-            directResults.add(x);
+            directResults.add("Test");
         }
-
         assertArrayEquals(parResults.toArray(), directResults.toArray());
     }
 }

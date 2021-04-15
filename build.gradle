@@ -41,6 +41,7 @@ task testJar(type: Jar, dependsOn: classes) {
         attributes 'Implementation-Title': 'ParSPICE Testing Jar'
     }
     archiveBaseName.set("testing")
+    archiveVersion.set("")
     from {
         sourceSets.test.output
     }

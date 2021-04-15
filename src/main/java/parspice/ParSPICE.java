@@ -4,7 +4,9 @@ import parspice.sender.Sender;
 import parspice.io.IServer;
 import parspice.io.OServer;
 import parspice.io.IOManager;
+import parspice.worker.AutoWorker;
 import parspice.worker.IOWorker;
+import parspice.worker.IWorker;
 import parspice.worker.OWorker;
 
 import java.io.File;
@@ -79,7 +81,7 @@ public class ParSPICE {
             ));
             iteration += subset;
         }
-        run(workerJar, mainClass, workerClass ,minPort, numIterations, numWorkers, ioManagers);
+        runInternal(mainClass, workerClass, numIterations, numWorkers, ioManagers);
 
         return aggregateOutputs(ioManagers, numIterations);
     }
@@ -113,17 +115,73 @@ public class ParSPICE {
                     i
             ));
         }
-        run(workerJar, mainClass, workerClass, minPort, numIterations, numWorkers, ioManagers);
+        runInternal(mainClass, workerClass, numIterations, numWorkers, ioManagers);
 
         return aggregateOutputs(ioManagers,  numIterations);
     }
 
     /**
-     * Internal logic common to both of the two publicly facing run functions.
+     * Runs a custom task that takes remote inputs and don't return output.
+     *
+     * @param iWorker An instance of the worker to parallelize
+     * @param inputs List of inputs to be sent and processed in parallel
+     * @param numWorkers Number of worker processes to distribute to
+     * @param <I> Input argument type
+     * @throws Exception
      */
-    private static <I,O> void run(String workerJar, String mainClass, String workerClass, int minPort, int numIterations, int numWorkers, ArrayList<IOManager<I,O>> ioManagers) throws Exception {
-        checkMainClass(workerJar, mainClass);
+    public <I> void run(
+            IWorker<I> iWorker,
+            List<I> inputs,
+            int numWorkers
+    ) throws Exception {
+        String mainClass = "parspice.worker.IWorker";
+        String workerClass = iWorker.getClass().getName();
+        Sender<I> inputSender = iWorker.getInputSender();
+        ArrayList<IOManager<I, Void>> ioManagers = new ArrayList<>(numWorkers);
+        int numIterations = inputs.size();
+        int iteration = 0;
+        for (int i = 0; i < numWorkers; i++) {
+            int subset = subset(numIterations, numWorkers, i);
+            ioManagers.add(new IOManager<>(
+                    new IServer<>(inputSender, inputs.subList(iteration, iteration + subset), minPort + 2*i, i),
+                    null,
+                    i
+            ));
+            iteration += subset;
+        }
+        runInternal(mainClass, workerClass, numIterations, numWorkers, ioManagers);
+    }
 
+    /**
+     * Runs a custom task that takes a locally-generated integer as input
+     * and doesn't return output.
+     *
+     * @param autoWorker An instance of the worker to parallelize
+     * @param numIterations Number of times to run the task. Each run will receive as
+     *                      argument a unique index i in the range 0:(numIterations-1) (inclusive)
+     * @param numWorkers Number of worker processes to distribute to
+     * @throws Exception
+     */
+    public void run(
+            AutoWorker autoWorker,
+            int numIterations,
+            int numWorkers
+    ) throws Exception {
+        String mainClass = "parspice.worker.AutoWorker";
+        String workerClass = autoWorker.getClass().getName();
+        runInternal(mainClass, workerClass, numIterations, numWorkers, null);
+    }
+
+    /**
+     * Internal logic common to both of the publicly facing run functions.
+     */
+    private <I,O> void runInternal(String mainClass, String workerClass, int numIterations, int numWorkers, ArrayList<IOManager<I,O>> ioManagers) throws Exception {
+        checkMainClass(workerJar, mainClass);
+        if (ioManagers != null) {
+            for (IOManager<I,O> manager : ioManagers) {
+                manager.start();
+            }
+        }
         Process[] processes = new Process[numWorkers];
         int iteration = 0;
         for (int i = 0; i < numWorkers; i++) {
@@ -136,12 +194,15 @@ public class ParSPICE {
                     " " + iteration +
                     " " + subset +
                     " " + i;
-            ioManagers.get(i).start();
             processes[i] = Runtime.getRuntime().exec("java " + args);
             iteration += subset;
         }
+        if (ioManagers != null) {
+            for (IOManager<I,O> manager : ioManagers) {
+                manager.join();
+            }
+        }
         for (int i = 0; i < numWorkers; i++) {
-            ioManagers.get(i).join();
             processes[i].waitFor();
         }
     }

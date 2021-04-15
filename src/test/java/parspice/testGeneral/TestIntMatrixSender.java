@@ -2,11 +2,9 @@ package parspice.testGeneral;
 
 import org.junit.jupiter.api.TestInstance;
 import parspice.ParSPICEInstance;
-import parspice.sender.BooleanMatrixSender;
-import parspice.sender.Sender;
+import parspice.sender.IntMatrixSender;
 import parspice.worker.OWorker;
-import parspice.worker.IOWorker;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,19 +15,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BasicBooleanMatrixOutput extends OWorker<boolean[][]> {
-    ArrayList<boolean[][]> parResults;
+public class TestIntMatrixSender extends OWorker<int[][]> {
+    ArrayList<int[][]> parResults;
     int numIterations = 10;
 
-    public BasicBooleanMatrixOutput() {
-        super(new BooleanMatrixSender());
+    public TestIntMatrixSender() {
+        super(new IntMatrixSender());
     }
 
     @Override
-    public boolean[][] task(int i) throws Exception {
+    public int[][] task(int i) throws Exception {
         System.out.println(i);
-        boolean[][] re = {{false,true},{false,true}};
-        return re;
+        int[][] results = {{1,2},{1,2}};
+        return results;
     }
 
     @Test
@@ -37,7 +35,7 @@ public class BasicBooleanMatrixOutput extends OWorker<boolean[][]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new BasicBooleanMatrixOutput(),
+                    new TestIntMatrixSender(),
                     numIterations,
                     2
             );
@@ -47,9 +45,9 @@ public class BasicBooleanMatrixOutput extends OWorker<boolean[][]> {
 
     @Test
     public void testCorrectness() {
-        List<boolean[][]> directResults = new ArrayList<boolean[][]>(numIterations);
+        List<int[][]> directResults = new ArrayList<int[][]>(numIterations);
         for (int i = 0; i < numIterations; i++) {
-            boolean[][] x = {{false,true},{false,true}};
+            int[][] x = {{1,2},{1,2}};
             directResults.add(x);
         }
 

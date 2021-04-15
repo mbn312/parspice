@@ -7,7 +7,7 @@ public class ParSPICEInstance {
 
     static {
         try {
-            par = new ParSPICE("build/libs/testing-1.0-SNAPSHOT.jar", 50050);
+            par = new ParSPICE("build/libs/testing.jar", 50050);
         } catch (IOException e) {
             e.printStackTrace();
         }

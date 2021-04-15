@@ -2,11 +2,9 @@ package parspice.testGeneral;
 
 import org.junit.jupiter.api.TestInstance;
 import parspice.ParSPICEInstance;
-import parspice.sender.DoubleArraySender;
-import parspice.sender.Sender;
+import parspice.sender.IntArraySender;
 import parspice.worker.OWorker;
-import parspice.worker.IOWorker;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,18 +15,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BasicDoubleArrayOutput extends OWorker<double[]> {
-    ArrayList<double[]> parResults;
+public class TestIntArraySender extends OWorker<int[]> {
+    ArrayList<int[]> parResults;
     int numIterations = 10;
 
-    public BasicDoubleArrayOutput() {
-        super(new DoubleArraySender());
+    public TestIntArraySender() {
+        super(new IntArraySender());
     }
 
     @Override
-    public double[] task(int i) throws Exception {
+    public int[] task(int i) throws Exception {
         System.out.println(i);
-        double[] results = {1.1,2.2};
+        int[] results = {1,2};
         return results;
     }
 
@@ -37,7 +35,7 @@ public class BasicDoubleArrayOutput extends OWorker<double[]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new BasicDoubleArrayOutput(),
+                    new TestIntArraySender(),
                     numIterations,
                     2
             );
@@ -47,9 +45,9 @@ public class BasicDoubleArrayOutput extends OWorker<double[]> {
 
     @Test
     public void testCorrectness() {
-        List<double[]> directResults = new ArrayList<double[]>(numIterations);
+        List<int[]> directResults = new ArrayList<int[]>(numIterations);
         for (int i = 0; i < numIterations; i++) {
-            double[] x = {1.1,2.2};
+            int[] x = {1,2};
             directResults.add(x);
         }
         assertArrayEquals(parResults.toArray(), directResults.toArray());

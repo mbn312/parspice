@@ -2,11 +2,9 @@ package parspice.testGeneral;
 
 import org.junit.jupiter.api.TestInstance;
 import parspice.ParSPICEInstance;
-import parspice.sender.StringArraySender;
-import parspice.sender.Sender;
+import parspice.sender.BooleanMatrixSender;
 import parspice.worker.OWorker;
-import parspice.worker.IOWorker;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,19 +15,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BasicStringArrayOutput extends OWorker<String[]> {
-    ArrayList<String[]> parResults;
+public class TestBooleanMatrixSender extends OWorker<boolean[][]> {
+    ArrayList<boolean[][]> parResults;
     int numIterations = 10;
 
-    public BasicStringArrayOutput() {
-        super(new StringArraySender());
+    public TestBooleanMatrixSender() {
+        super(new BooleanMatrixSender());
     }
 
     @Override
-    public String[] task(int i) throws Exception {
+    public boolean[][] task(int i) throws Exception {
         System.out.println(i);
-        String[] results = {"Test","Correct"};
-        return results;
+        boolean[][] re = {{false,true},{false,true}};
+        return re;
     }
 
     @Test
@@ -37,7 +35,7 @@ public class BasicStringArrayOutput extends OWorker<String[]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new BasicStringArrayOutput(),
+                    new TestBooleanMatrixSender(),
                     numIterations,
                     2
             );
@@ -47,11 +45,12 @@ public class BasicStringArrayOutput extends OWorker<String[]> {
 
     @Test
     public void testCorrectness() {
-        List<String[]> directResults = new ArrayList<String[]>(numIterations);
+        List<boolean[][]> directResults = new ArrayList<boolean[][]>(numIterations);
         for (int i = 0; i < numIterations; i++) {
-            String[] x = {"Test","Correct"};
+            boolean[][] x = {{false,true},{false,true}};
             directResults.add(x);
         }
+
         assertArrayEquals(parResults.toArray(), directResults.toArray());
     }
 }

@@ -15,11 +15,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BasicBooleanOutput extends OWorker<Boolean>  {
+public class TestBooleanSender extends OWorker<Boolean>  {
     ArrayList<Boolean> parResults;
     int numIterations = 10;
 
-    public BasicBooleanOutput() {
+    public TestBooleanSender() {
         super(new BooleanSender());
     }
 
@@ -33,7 +33,7 @@ public class BasicBooleanOutput extends OWorker<Boolean>  {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new BasicBooleanOutput(),
+                    new TestBooleanSender(),
                     numIterations,
                     2
             );
