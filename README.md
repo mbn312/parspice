@@ -253,6 +253,8 @@ public class MxvhatWorker extends OWorker<double[]> {
 **Main Process:**
 
 ```java
+import parspice.ParSPICE;
+
 public class Main {
     public static void main(String[] args) {
         // create the ParSPICE instance.
