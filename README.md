@@ -11,9 +11,33 @@ In broad strokes, the general process of using ParSPICE is three steps:
 3. In the main process, create an instance of the `parspice.ParSPICE` class, and call `parSPICE.run(...)` on it.
 
 If you want to get right to it, you can use a template Java or Kotlin project from [this repo](https://github.com/JoelCourtney/parspice-templates). (You will need to install ParSPICE to the Maven Local repo first, though, details below).
+### Table of Contents
+* [Preparation](#prep)
+  * [Pre-Requisites](#prereq)
+  * [Set Environment Variable JNISPICE_ROOT](#setenv)
+  * [Clone ParSPICE and build](#cloneps)
+  * [Publish to Maven Local](#publish)
+* [Usage](#usage)
+  * [Implementing a worker](#implworker)
+      * [Worker Types and IO Combinations](#workertypes)
+      * [Sending data](#sendingdata)
+        * [Built-in senders](#bisenders)
+        * [Custom Senders](#csenders)
+      * [Creating the fat Worker Jar](#fatjar)
+      * [Running the worker](#runworker)
+  * [Examples](#examples)
+      * [Worker](#worker)
+      * [Main Process](#main)
+  * [Error handling](#error)
+* [Benchmarking](#bench)
+  * [Runtime Estimation](#runtime)
+  * [Break-Even Point Estimation](#breakeven)
+  * [Caveats](#caveats)
 
+<a id="prep"></a>
 ## Preparation
 
+<a id="prereq"></a>
 ### Pre-Requisites
 * [Gradle](https://gradle.org/install/) (optional)
   * You can use the `./gradlew` (unix) or `./gradlew.bat` (windows) wrapper scripts instead of installing Gradle. These instructions assume you are using the `./gradlew` wrapper.
@@ -23,6 +47,7 @@ If you want to get right to it, you can use a template Java or Kotlin project fr
 used for any job that meets its design restrictions (not just spice things), so this step is optional
 if you don't intend to use JNISpice.
 
+<a id="setenv"></a>
 ### Set environment variable JNISPICE_ROOT (optional)
   If you intend to run the ParSPICE benchmark, you need JNISpice installed, and you need to set the `JNISPICE_ROOT` environment variable.
 
@@ -33,6 +58,7 @@ if you don't intend to use JNISpice.
    To permanently set this variable add this command to your `.bashrc`(Linux), `.zshrc` (MacOS) 
    or follow [these instructions](https://www.howtogeek.com/51807/how-to-create-and-use-global-system-environment-variables/) for windows
 
+<a id="cloneps"></a>
 ### Clone ParSPICE and build
    ```bash
    > git clone https://github.com/JoelCourtney/parspice.git
@@ -41,6 +67,7 @@ if you don't intend to use JNISpice.
    ```
    This builds ParSPICE and runs the tests.
 
+<a id="publish"></a>
 ### Publish to Maven Local
 
 To use ParSPICE in other projects, we recommend doing so through the Maven Local repo.
@@ -53,12 +80,14 @@ This should store copies of the packaged outputs in `~/.m2/repository/parspice/`
 
 In your own `build.gradle` file you should then be able to import the implementation dependency with `mavenLocal()` in the repositories list and `implementation 'parspice:parspice:1.0'` in the dependencies list. Examples of that can be found in the [templates repo](https://github.com/JoelCourtney/parspice-templates).
 
+<a id="usage"></a>
 ## Usage
 
 The following assumes that your project uses Gradle. All example code is written in Java, but Kotlin
 works fine and is even recommended, because it simplifies the boilerplate that ParSPICE requires you to write.
 No ParSPICE-specific performance difference has been observed between Java and Kotlin.
 
+<a id="implworker"></a>
 ### Implementing a worker
 
 Each worker contains two key functions that you have to implement: `void setup()` and `task(...)`.
@@ -68,6 +97,7 @@ Each worker contains two key functions that you have to implement: `void setup()
 
 For example, if you need to perform some orbital calculation 100,000 times over some time-window, you should load the JNISpice library and your kernels in `setup()`, and `task(...)` should perform the calculation *once*.
 
+<a id="workertypes"></a>
 #### Worker Types and IO Combinations
 
 Choose what IO you need for your worker. For performance, less IO is usually better if you can
@@ -107,12 +137,14 @@ The four combinations of IO each have an abstract Worker superclass for you to e
 - Only Output: extend `OWorker<O>`, override `O task(int i)`
 - Only Input: extend `IWorker<I>`, override `void task(I input)`
 - No communication at all: extend `AutoWorker`, override `void task(int i)`
-
+  
+<a id="sendingdata"></a>
 #### Sending data
 
 All data, for both inputs and outputs, is sent over network sockets by implementers of the
 `Sender<T>` interface.
 
+<a id="bisenders"></a>
 ##### Built-in senders
 
 Senders have already been implemented for twelve types:
@@ -137,6 +169,7 @@ The Array/Matrix senders allow you to specify the dimensions of the array/matrix
 you are allowed to send arrays/matrices of varying sizes, at the cost of slightly more network
 overhead (negligible for arrays/matrices with more than a few elements).
 
+<a id="csenders"></a>
 ##### Custom Senders
 
 If you need to send other types, or combinations of these types, you have to create your own sender.
@@ -179,6 +212,7 @@ do anyway.
 
 At the end of the day, you can do whatever you want to the Input and Output object streams; these are supposed to be as bare-bones and efficient as possible, so ParSPICE has no checks to make sure you are handling them correctly. Try to avoid using `writeObject` and `readObject` though; they use reflection and are *very* slow. They also cache object addresses, which can cause bugs if you want to send data from the same location multiple times with different contents.
 
+<a id="fatjar"></a>
 #### Creating the fat Worker Jar
 
 Now that you have a worker implemented, along with custom Senders if needed, you need to package them
@@ -199,18 +233,21 @@ jar {
 If you want to get fancier and only include worker-specific dependencies (not *all* dependencies, as above),
 we recommend custom source sets. The [templates repo](https://github.com/JoelCourtney/parspice-templates) contains examples of this, along with a custom `gradle workerJar` task, so you can create a different jar for the main process if you want.
 
+<a id="runworker"></a>
 #### Running the worker
 
 Running your ParSPICE job in parallel is easy. Create a new instance of the `parspice.ParSPICE` class; arguments are the path to the worker jar, and the minimum port number to use for networking.
 
 Then call `parSPICE.run` on your instance; arguments are an instance of your worker, either the number of iterations to run (for no-input tasks) or the list of inputs to run on (for tasks with network input), and the number of workers to use.
 
+<a id="examples"></a>
 #### Examples
 
 The following is an `OWorker<double[]>` that calls `CSPICE.mxv` and `CSPICE.vhat` based on a fixed matrix
 and a vector constructed from the input `int i` (the actual matrix and vector are nonsense values,
 just a proof of concept):
 
+<a id="worker"></a>
 **Worker:**
 
 ```java
@@ -249,7 +286,7 @@ public class MxvhatWorker extends OWorker<double[]> {
     }
 }
 ```
-
+<a id="main"></a>
 **Main Process:**
 
 ```java
@@ -267,11 +304,12 @@ public class Main {
 ```
 
 The `build.gradle` file would be copied from the [templates repo's build.gradle](https://github.com/JoelCourtney/parspice-templates/blob/java/build.gradle)
-
+<a id="error"></a>
 ### Error handling
 
 The Worker superclasses allow `setup()` and `task(...)` to throw arbitrary errors. If any error is thrown on the worker process, the stacktrace will be printed to `/tmp/worker_log_i` where `i` is the ID of the worker, ranging from 0 to one less than the number of workers.
 
+<a id="bench"></a>
 ## Benchmarking
 
 You need JNISpice installed to run the benchmark.
@@ -287,6 +325,7 @@ Use `./gradlew benchmark` to run the benchmark. It could take several minutes.
 
 You can print out the benchmark analysis again just by running `./gradlew benchmark` again (the results are cached). To re-run the entire benchmark, run `./gradlew clean` first.
 
+<a id="runtime"></a>
 ### Runtime Estimation
 
 When the benchmark is done, it will output a regression model of the form
@@ -306,6 +345,7 @@ B_1 is typically between 1 and 2 on modern consumer machines, which means that i
 
 B_2 it typically between 1 and 10, which means that if you only need to send a small, fixed number of integers or doubles each iteration, you shouldn't need to worry about the network overhead making ParSPICE slower than single-threaded. In fact, we've found that on average consumer machines, if you have to send so much data that the overhead makes it slower, you'll run out of memory storing all of that data anyway.
 
+<a id="breakeven"></a>
 ### Break-Even Point Estimation
 
 The benchmark also outputs a break-even point estimate which compares the amount of data sent per iteration with the average time it takes to run a single iteration. (This is found by setting `T - T0 = 0` and solving for `d = D/I` where `I` is the total number of iterations.)
@@ -320,6 +360,7 @@ where:  d = data sent per iteration, in bytes
 
 For large tasks, this estimates the upper limit of data sent per iteration such that ParSPICE is still more performant than running the task directly.
 
+<a id="caveats"></a>
 ### Caveats
 
 The benchmark runs a series of tasks, with varying computational and network costs. This means that the model is biased by a few very high leverage observations of very expensive tasks. So don't expect the model to be accurate for short, inexpensive tasks with only a few iterations (but in those cases, it probably isn't worth the time to port the task to ParSPICE anyway, even if it is slightly faster).
