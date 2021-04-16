@@ -109,9 +109,9 @@ for basic types and arrays of basic types. (see next section for details.)
   process, collected in an `ArrayList`, and returned from the `ParSPICE.run(...)` call.
   If by some miracle you do not need to return data, you can implement a `void task()`
   instead, and you'll have no network overhead for it.
-- Input: if you absolutely need to give custom input arguments to each iteration of `task()`, you'll
+- Input: if you absolutely need to give custom input arguments to each call of `task()`, you'll
   need to aggregate those arguments into a `List` (see examples). But if you can get away with it, you
-  can instead use the default argument `int i` which indicates which iteration you are on. For example,
+  can instead use the default argument `int i` which indicates which task you are on. For example,
   if you have single-threaded code that can be written in the form:
   ```java
   List<ResultType> results = new ArrayList<ResultType>();
@@ -175,7 +175,7 @@ When in doubt, just don't specify the length.
 ##### Custom Senders
 
 If you need to send other types, or combinations of these types, you have to create your own sender.
-For example, if you want to return both an int and a double for each iteration:
+For example, if you want to return both an int and a double from each task:
 
 ```java
 public class IntAndDouble {
@@ -240,7 +240,7 @@ we recommend custom source sets. The [templates repo](https://github.com/JoelCou
 
 Running your ParSPICE job in parallel is easy. Create a new instance of the `parspice.ParSPICE` class; arguments are the path to the worker jar, and the minimum port number to use for networking.
 
-Then call `parSPICE.run` on your instance; arguments are an instance of your worker, either the number of iterations to run (for no-input tasks) or the list of inputs to run on (for tasks with network input), and the number of workers to use.
+Then call `parSPICE.run` on your instance; arguments are an instance of your worker, either the number of tasks to run (for no-input tasks) or the list of inputs to run on (for tasks with network input), and the number of workers to use.
 
 <a id="examples"></a>
 #### Examples
@@ -299,7 +299,7 @@ public class Main {
         // create the ParSPICE instance.
         ParSPICE par = new ParSPICE("build/libs/worker.jar", 50050);
         
-        // run 1000 iterations with 5 workers in parallel.
+        // run 1000 tasks with 5 workers in parallel.
         ArrayList<double[]> results = par.run(new MxvhatWorker(), 1000, 5);
     }
 }
@@ -337,32 +337,32 @@ When the benchmark is done, it will output a regression model of the form
 T = B_1 --- + B_2[ms/MB] D
          W
 
-where	T   = total time to run task through ParSPICE
-	T_0 = total time to run task singlethreaded
+where	T   = total time to run the job through ParSPICE
+	T_0 = total time to run job singlethreaded
 	W   = number of workers used
 	D   = total amount of data transferred between processes, in MB
 </pre>
 
-B_1 is typically between 1 and 2 on modern consumer machines, which means that if you have a job big enough to make you consider ParSPICE, it will almost certainly run faster in ParSPICE (unless you have to transfer hundreds of bytes per iteration). B_1 being less than 1 is mathematically impossible (that would mean ParSPICE has negative overhead), so if that happens something's gone horribly wrong.
+B_1 is typically between 1 and 2 on modern consumer machines, which means that if you have a job big enough to make you consider ParSPICE, it will almost certainly run faster in ParSPICE (unless you have to transfer hundreds of bytes per task). B_1 being less than 1 is mathematically impossible (that would mean ParSPICE has negative overhead), so if that happens something's gone horribly wrong.
 
-B_2 it typically between 1 and 10, which means that if you only need to send a small, fixed number of integers or doubles each iteration, you shouldn't need to worry about the network overhead making ParSPICE slower than single-threaded. In fact, we've found that on average consumer machines, if you have to send so much data that the overhead makes it slower, you'll first run out of memory storing all of that data anyway.
+B_2 it typically between 1 and 10, which means that if you only need to send a small, fixed number of integers or doubles each task, you shouldn't need to worry about the network overhead making ParSPICE slower than single-threaded. In fact, we've found that on average consumer machines, if you have to send so much data that the overhead makes it slower, you'll first run out of memory storing all of that data anyway.
 
 <a id="breakeven"></a>
 ### Break-Even Point Estimation
 
-The benchmark also outputs a break-even point estimate which compares the amount of data sent per iteration with the average time it takes to run a single iteration. (This is found by setting `T - T0 = 0` and solving for `d = D/I` where `I` is the total number of iterations.)
+The benchmark also outputs a break-even point estimate which compares the amount of data sent per task with the average time it takes to run a single task. (This is found by setting `T - T0 = 0` and solving for `d = D/I` where `I` is the total number of tasks.)
 
 <pre>
 d = (1/B_2 - (B_1/B_2)/w)[B/ns] t
 
-where:  d = data sent per iteration, in bytes
+where:  d = data sent per task, in bytes
         w = number of workers
-        t = average single-threaded time per iteration, in ns
+        t = average single-threaded time per task, in ns
 </pre>
 
-For large tasks, this estimates the upper limit of data sent per iteration such that ParSPICE is still more performant than running the task directly.
+For large jobs, this estimates the upper limit of data sent per task such that ParSPICE is still more performant than running the job directly.
 
 <a id="caveats"></a>
 ### Caveats
 
-The benchmark runs a series of tasks, with varying computational and network costs. This means that the model is biased by a few very high leverage observations of very expensive tasks. So don't expect the model to be accurate for short, inexpensive tasks with only a few iterations (but in those cases, it probably isn't worth the time to port the task to ParSPICE anyway, even if it is slightly faster).
+The benchmark runs a series of jobs, with varying computational and network costs. This means that the model is biased by a few very high leverage observations of very expensive jobs. So don't expect the model to be accurate for short, inexpensive jobs with only a few tasks (but in those cases, it probably isn't worth the time to port the job to ParSPICE anyway, even if it is slightly faster).
