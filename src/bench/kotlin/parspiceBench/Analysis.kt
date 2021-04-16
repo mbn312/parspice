@@ -27,8 +27,8 @@ fun main() {
         }.toDoubleArray(),
         runs.map {
             doubleArrayOf(
-                it.numIterations.toDouble() * it.taskTime / it.numWorkers,
-                it.messageSize.toDouble() * it.numIterations / 1000000.0
+                it.numTasks.toDouble() * it.taskTime / it.numWorkers,
+                it.messageSize.toDouble() * it.numTasks / 1000000.0
             )
         }.toTypedArray()
     )
@@ -73,13 +73,13 @@ fun main() {
         [Break-Even Point]
         
         Setting T = T0 gives the estimated maximum data that can be sent
-        per iteration before ParSPICE is slower than direct evaluation:
+        per task before ParSPICE is slower than direct evaluation:
         
         d = (${breakEven[0]} - ${breakEven[1]} / w)[B/ns] t
         
-        where:  d = data sent per iteration, in bytes
+        where:  d = data sent per task, in bytes
                 w = number of workers
-                t = average single-threaded time per iteration, in ns
+                t = average single-threaded time per task, in ns
         """.trimIndent())
 }
 

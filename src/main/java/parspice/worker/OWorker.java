@@ -63,7 +63,7 @@ public abstract class OWorker<O> extends Worker {
         Socket outputSocket = new Socket("localhost", inputPort + 1);
         ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
 
-        for (int i = startIndex; i < startIndex + subset; i++) {
+        for (int i = startIndex; i < startIndex + taskSubset; i++) {
             outputSender.write(task(i), oos);
         }
         oos.close();

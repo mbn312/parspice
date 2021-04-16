@@ -23,14 +23,14 @@ class GfposcWorker: BenchWorker<DoubleArray>(DoubleArraySender()) {
     override val bytes: Int
         // this is an approximation (the size varies with the number of workers
         get() = Int.SIZE_BYTES + 3*Double.SIZE_BYTES
-    override val iterations
+    override val numParallelTasks
         get() = mapOf(
             2 to intArrayOf(2),
             3 to intArrayOf(3),
             5 to intArrayOf(5),
             8 to intArrayOf(8)
         )
-    override val singleIterations: Int
+    override val numSingleThreadedTasks: Int
         get() = 1
     override val description: String
         get() = "gfposc with small step (long)"

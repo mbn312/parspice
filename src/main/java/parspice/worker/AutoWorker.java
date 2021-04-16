@@ -13,7 +13,7 @@ public abstract class AutoWorker extends Worker {
      * Repeatedly calls task.
      */
     public final void run() throws Exception {
-        for (int i = startIndex; i < startIndex + subset; i++) {
+        for (int i = startIndex; i < startIndex + taskSubset; i++) {
             task(i);
         }
     }

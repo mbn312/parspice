@@ -1,19 +1,19 @@
 data <- read.csv("benchmark_log.csv")
 
-full <- lm(I(totalTime - numIterations*taskTime) ~
+full <- lm(I(totalTime - numTasks*taskTime) ~
              0 +
              numWorkers +
-             I(numIterations*messageSize) +
-             I(numIterations*messageSize/numWorkers) +
-             I(numIterations*taskTime) +
-             I(numIterations*taskTime/numWorkers),
+             I(numTasks*messageSize) +
+             I(numTasks*messageSize/numWorkers) +
+             I(numTasks*taskTime) +
+             I(numTasks*taskTime/numWorkers),
            data
            )
 summary(full)
 
-reduced <- lm(I(totalTime - numIterations*taskTime) ~ 0 +
-                I(numIterations*messageSize/numWorkers) +
-                I(numIterations*taskTime) +
+reduced <- lm(I(totalTime - numTasks*taskTime) ~ 0 +
+                I(numTasks*messageSize/numWorkers) +
+                I(numTasks*taskTime) +
                 numWorkers,
               data
 )
@@ -23,15 +23,15 @@ summary(reduced)
 anova(full, reduced)
 
 min <- lm(totalTime ~ 0 +
-            I(numIterations*taskTime/numWorkers)
-           + I(messageSize*numIterations)
-            # I(1/(numWorkers/(numIterations*messageSize*taskTime)))
+            I(numTasks*taskTime/numWorkers)
+           + I(messageSize*numTasks)
+            # I(1/(numWorkers/(numTasks*messageSize*taskTime)))
           , data)
 summary(min)
 
 more <- lm(totalTime ~
-             I(numIterations*taskTime/numWorkers)
-           + I(messageSize*numIterations)
+             I(numTasks*taskTime/numWorkers)
+           + I(messageSize*numTasks)
            , data)
 summary(more)
 

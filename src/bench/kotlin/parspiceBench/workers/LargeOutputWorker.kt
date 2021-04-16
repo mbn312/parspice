@@ -12,7 +12,7 @@ const val LENGTH = 300
 class LargeOutputWorker: BenchWorker<IntArray>(IntArraySender(LENGTH)) {
     override val bytes: Int
         get() = LENGTH*Int.SIZE_BYTES
-    override val iterations
+    override val numParallelTasks
         get() = mapOf(
         2 to intArrayOf(1000, 100000),
         4 to intArrayOf(1000, 10000, 100000, 1000000),

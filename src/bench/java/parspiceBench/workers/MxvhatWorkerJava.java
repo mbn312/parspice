@@ -1,5 +1,6 @@
 package parspiceBench.workers;
 
+import org.jetbrains.annotations.NotNull;
 import parspice.sender.DoubleArraySender;
 import parspiceBench.BenchWorker;
 import spice.basic.CSPICE;
@@ -17,6 +18,7 @@ public class MxvhatWorkerJava extends BenchWorker<double[]> {
         return 3*Double.BYTES;
     }
 
+    @NotNull
     @Override
     public String getDescription() {
         return "vhat(mxm(matrix, vector)) but in Java";

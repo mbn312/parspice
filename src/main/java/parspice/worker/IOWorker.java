@@ -61,7 +61,7 @@ public abstract class IOWorker<I,O> extends Worker {
         ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
         ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
 
-        for (int i = startIndex; i < startIndex + subset; i++) {
+        for (int i = startIndex; i < startIndex + taskSubset; i++) {
             outputSender.write(task(inputSender.read(ois)), oos);
         }
 

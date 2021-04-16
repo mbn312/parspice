@@ -18,7 +18,7 @@ public abstract class Worker {
     /**
      * Total number of iterations to be run.
      */
-    static int numIterations = 1;
+    static int numTasks = 1;
 
     /**
      * Port used to receive inputs.
@@ -36,9 +36,9 @@ public abstract class Worker {
     static int startIndex = 0;
 
     /**
-     * How many iterations this worker needs to run.
+     * How many tasks this worker needs to run.
      */
-    static int subset = 1;
+    static int taskSubset = 1;
 
     /**
      * Gets an instance of the user's Worker and runs it.
@@ -46,8 +46,8 @@ public abstract class Worker {
      * @param args Command line args:
      *             0. Full classname of user's Worker (including package)
      *             1. Input port to use
-     *             2. Iteration index to start at
-     *             3. Number of iterations to run
+     *             2. Task index to start at
+     *             3. Number of tasks to run
      *             4. Unique ID for this worker
      *             5. Total number of workers
      *             6. Total number of iterations
@@ -58,10 +58,10 @@ public abstract class Worker {
         inputPort = Integer.parseInt(args[1]);
         outputPort = inputPort + 1;
         startIndex = Integer.parseInt(args[2]);
-        subset = Integer.parseInt(args[3]);
+        taskSubset = Integer.parseInt(args[3]);
         workerID = Integer.parseInt(args[4]);
         numWorkers = Integer.parseInt(args[5]);
-        numIterations = Integer.parseInt(args[6]);
+        numTasks = Integer.parseInt(args[6]);
         try {
             worker.setup();
             worker.run();
@@ -121,11 +121,11 @@ public abstract class Worker {
         return startIndex;
     }
 
-    public static int getSubset() {
-        return subset;
+    public static int getTaskSubset() {
+        return taskSubset;
     }
 
-    public static int getNumIterations() {
-        return numIterations;
+    public static int getNumTasks() {
+        return numTasks;
     }
 }

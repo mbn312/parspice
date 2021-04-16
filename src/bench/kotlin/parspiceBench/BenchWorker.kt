@@ -8,16 +8,16 @@ import parspice.worker.OWorker
  * about how many times it should be run, and how many bytes are sent per iteration.
  *
  * @property bytes Number of bytes sent per iteration.
- * @property singleIterations how many iterations should be run during the
- *                            single threaded case
- * @property iterations a map from the number of workers, to a list of iteration counts
- *                      to run with that many workers.
+ * @property numSingleThreadedTasks how many tasks should be run during the
+ *                                  single threaded case
+ * @property numParallelTasks a map from the number of workers, to a list of task counts
+ *                            to run with that many workers.
  */
 abstract class BenchWorker<O>(sender: Sender<O>): OWorker<O>(sender) {
     abstract val bytes: Int
-    open val singleIterations
+    open val numSingleThreadedTasks
         get() = 1000000
-    open val iterations
+    open val numParallelTasks
         get() = mapOf(
             2 to intArrayOf(1000, 100000),
             4 to intArrayOf(1000, 10000, 100000, 1000000),

@@ -69,20 +69,20 @@ public class ParSPICE {
         Sender<I> inputSender = ioWorker.getInputSender();
         Sender<O> outputSender = ioWorker.getOutputSender();
         ArrayList<IOManager<I,O>> ioManagers = new ArrayList<>(numWorkers);
-        int numIterations = inputs.size();
-        int iteration = 0;
+        int numTasks = inputs.size();
+        int task = 0;
         for (int i = 0; i < numWorkers; i++) {
-            int subset = subset(numIterations, numWorkers, i);
+            int taskSubset = taskSubset(numTasks, numWorkers, i);
             ioManagers.add(new IOManager<>(
-                    new IServer<>(inputSender, inputs.subList(iteration, iteration + subset), minPort + 2*i, i),
-                    new OServer<>(outputSender, subset, minPort + 2*i + 1, i),
+                    new IServer<>(inputSender, inputs.subList(task, task + taskSubset), minPort + 2*i, i),
+                    new OServer<>(outputSender, taskSubset, minPort + 2*i + 1, i),
                     i
             ));
-            iteration += subset;
+            task += taskSubset;
         }
-        runInternal(workerClass, numIterations, numWorkers, ioManagers);
+        runInternal(workerClass, numTasks, numWorkers, ioManagers);
 
-        return aggregateOutputs(ioManagers, numIterations);
+        return aggregateOutputs(ioManagers, numTasks);
     }
 
     /**
@@ -90,32 +90,32 @@ public class ParSPICE {
      * and returns outputs to the main process.
      *
      * @param oWorker An instance of the worker to parallelize.
-     * @param numIterations Number of times to run the task. Each run will receive as
-     *                      argument a unique index i in the range 0:(numIterations-1) (inclusive)
+     * @param numTasks Number of times to run the task. Each run will receive as
+     *                      argument a unique index i in the range 0:(numTasks-1) (inclusive)
      * @param numWorkers Number of worker processes to distribute to
      * @param <O> Output return type
-     * @return The list of outputs, sorted by index i. (see argument numIterations)
+     * @return The list of outputs, sorted by index i. (see argument numTasks)
      * @throws Exception
      */
     public <O> ArrayList<O> run(
             OWorker<O> oWorker,
-            int numIterations,
+            int numTasks,
             int numWorkers
     ) throws Exception {
         String workerClass = oWorker.getClass().getName();
         Sender<O> outputSender = oWorker.getOutputSender();
         ArrayList<IOManager<Void,O>> ioManagers = new ArrayList<>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
-            int subset = subset(numIterations, numWorkers, i);
+            int taskSubset = taskSubset(numTasks, numWorkers, i);
             ioManagers.add(new IOManager<>(
                     null,
-                    new OServer<>(outputSender, subset, minPort + 2*i + 1, i),
+                    new OServer<>(outputSender, taskSubset, minPort + 2*i + 1, i),
                     i
             ));
         }
-        runInternal(workerClass, numIterations, numWorkers, ioManagers);
+        runInternal(workerClass, numTasks, numWorkers, ioManagers);
 
-        return aggregateOutputs(ioManagers,  numIterations);
+        return aggregateOutputs(ioManagers,  numTasks);
     }
 
     /**
@@ -135,18 +135,18 @@ public class ParSPICE {
         String workerClass = iWorker.getClass().getName();
         Sender<I> inputSender = iWorker.getInputSender();
         ArrayList<IOManager<I, Void>> ioManagers = new ArrayList<>(numWorkers);
-        int numIterations = inputs.size();
-        int iteration = 0;
+        int numTasks = inputs.size();
+        int task = 0;
         for (int i = 0; i < numWorkers; i++) {
-            int subset = subset(numIterations, numWorkers, i);
+            int taskSubset = taskSubset(numTasks, numWorkers, i);
             ioManagers.add(new IOManager<>(
-                    new IServer<>(inputSender, inputs.subList(iteration, iteration + subset), minPort + 2*i, i),
+                    new IServer<>(inputSender, inputs.subList(task, task + taskSubset), minPort + 2*i, i),
                     null,
                     i
             ));
-            iteration += subset;
+            task += taskSubset;
         }
-        runInternal(workerClass, numIterations, numWorkers, ioManagers);
+        runInternal(workerClass, numTasks, numWorkers, ioManagers);
     }
 
     /**
@@ -154,24 +154,24 @@ public class ParSPICE {
      * and doesn't return output.
      *
      * @param autoWorker An instance of the worker to parallelize
-     * @param numIterations Number of times to run the task. Each run will receive as
-     *                      argument a unique index i in the range 0:(numIterations-1) (inclusive)
+     * @param numTasks Number of times to run the task. Each run will receive as
+     *                      argument a unique index i in the range 0:(numTasks-1) (inclusive)
      * @param numWorkers Number of worker processes to distribute to
      * @throws Exception
      */
     public void run(
             AutoWorker autoWorker,
-            int numIterations,
+            int numTasks,
             int numWorkers
     ) throws Exception {
         String workerClass = autoWorker.getClass().getName();
-        runInternal(workerClass, numIterations, numWorkers, null);
+        runInternal(workerClass, numTasks, numWorkers, null);
     }
 
     /**
      * Internal logic common to both of the publicly facing run functions.
      */
-    private <I,O> void runInternal(String workerClass, int numIterations, int numWorkers, ArrayList<IOManager<I,O>> ioManagers) throws Exception {
+    private <I,O> void runInternal(String workerClass, int numTasks, int numWorkers, ArrayList<IOManager<I,O>> ioManagers) throws Exception {
         checkClass(workerJar, "parspice.worker.Worker");
         checkClass(workerJar, workerClass);
         if (ioManagers != null) {
@@ -180,21 +180,21 @@ public class ParSPICE {
             }
         }
         Process[] processes = new Process[numWorkers];
-        int iteration = 0;
+        int task = 0;
         for (int i = 0; i < numWorkers; i++) {
-            int subset = subset(numIterations, numWorkers, i);
+            int taskSubset = taskSubset(numTasks, numWorkers, i);
             String args = "-Dname=parspice_worker_" + i +
                     " -cp " + workerJar +
                     " parspice.worker.Worker" +
                     " " + workerClass +
                     " " + (minPort + 2*i) +
-                    " " + iteration +
-                    " " + subset +
+                    " " + task +
+                    " " + taskSubset +
                     " " + i +
                     " " + numWorkers +
-                    " " + numIterations;
+                    " " + numTasks;
             processes[i] = Runtime.getRuntime().exec("java " + args);
-            iteration += subset;
+            task += taskSubset;
         }
         if (ioManagers != null) {
             for (IOManager<I,O> manager : ioManagers) {
@@ -249,24 +249,24 @@ public class ParSPICE {
     }
 
     /**
-     * Calculate how many iterations should be given to a particular worker.
+     * Calculate how many tasks should be given to a particular worker.
      *
-     * Each worker is given an almost-equal subset. If numIterations is not
+     * Each worker is given an almost-equal taskSubset. If numTasks is not
      * an even multiple of numWorkers, the remainder is spread across the
-     * first numIterations % numWorkers workers.
+     * first numTasks % numWorkers workers.
      *
-     * @param numIterations total number of iterations
+     * @param numTasks total number of tasks
      * @param numWorkers number of workers
      * @param i the index of a particular worker
-     * @return the number of iterations that worker should run
+     * @return the number of tasks that worker should run
      */
-    private static int subset(int numIterations, int numWorkers, int i) {
-        return numIterations/numWorkers + ((i < numIterations%numWorkers)?1:0);
+    private static int taskSubset(int numTasks, int numWorkers, int i) {
+        return numTasks/numWorkers + ((i < numTasks%numWorkers)?1:0);
     }
 
-    private static <I,O> ArrayList<O> aggregateOutputs(ArrayList<IOManager<I,O>> ioManagers, int numIterations) {
+    private static <I,O> ArrayList<O> aggregateOutputs(ArrayList<IOManager<I,O>> ioManagers, int numTasks) {
         ArrayList<O> results = ioManagers.get(0).getOutputs();
-        results.ensureCapacity(numIterations);
+        results.ensureCapacity(numTasks);
         for (IOManager<?, O> ioManager : ioManagers.subList(1, ioManagers.size())) {
             results.addAll(ioManager.getOutputs());
         }

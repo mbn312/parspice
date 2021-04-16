@@ -26,7 +26,7 @@ public abstract class IWorker<I> extends Worker {
         Socket inputSocket = new Socket("localhost", inputPort);
         ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
 
-        for (int i = startIndex; i < startIndex + subset; i++) {
+        for (int i = startIndex; i < startIndex + taskSubset; i++) {
             task(inputSender.read(ois));
         }
         ois.close();
