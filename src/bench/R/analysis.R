@@ -48,11 +48,11 @@ ggplot(sincpt) +
                       values=c(actual="black", predicted="blue", ideal="red")) +
   geom_point(aes(numWorkers, totalTime, color="actual"), size=2) +
   geom_point(aes(numWorkers, fit, color="predicted"), shape=15) +
-  geom_errorbar(aes(numWorkers, fit, ymin = lwr, ymax = upr, color="predicted")) +
+  geom_errorbar(aes(numWorkers, fit, ymin = lwr, ymax = upr, color="predicted", width=0.5)) +
   stat_function(fun=function(x) singleTime / x, aes(color="ideal")) +
   
   ylim(0, 60) +
   xlab("Number of Workers") +
-  ylab("Running Time (s)") +
+  ylab("Running Time (sec)") +
   ggtitle("Running sincpt 1,000,000 times")
   
