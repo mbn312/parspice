@@ -4,7 +4,7 @@ import parspice.ParSPICE
 import parspiceBench.workers.*
 import java.io.File
 
-val par = ParSPICE("build/libs/bench-1.0-SNAPSHOT.jar", 50050)
+val par = ParSPICE("build/libs/bench.jar", 50050)
 
 /**
  * Main function of the `gradle runBenchmark` task.
@@ -20,10 +20,11 @@ fun main() {
 
     val workers = arrayOf(
         SquareWorker(),
+        LargeOutputWorker(),
+        GfposcWorker(),
         SincptWorker(),
         MxvhatWorker(),
-        MxvhatWorkerJava(),
-        LargeOutputWorker()
+        MxvhatWorkerJava()
     )
 
     val runs: MutableList<Run> = mutableListOf()
@@ -46,14 +47,14 @@ fun <T> run(worker: BenchWorker<T>): MutableList<Run> {
         for (numIterations in iterationsList) {
             tick()
             par.run(worker, numIterations, numWorkers)
-            val stopTime = tock()
+            val time = tock()
             runs.add(
                 Run (
                     numIterations,
                     numWorkers,
                     worker.bytes,
                     taskTime,
-                    stopTime
+                    time
                 )
             )
         }

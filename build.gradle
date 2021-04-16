@@ -75,6 +75,7 @@ task benchJar(type: Jar, dependsOn: classes) {
         attributes 'Implementation-Title': 'ParSPICE Benchmarking Jar'
     }
     archiveBaseName.set("bench")
+    archiveVersion.set("")
     from {
         sourceSets.bench.output
     }

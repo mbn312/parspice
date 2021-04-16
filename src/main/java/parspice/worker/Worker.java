@@ -4,13 +4,13 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 
 public abstract class Worker {
-    static int workerID;
-    static int numWorkers;
-    static int numIterations;
-    static int inputPort;
-    static int outputPort;
-    static int startIndex;
-    static int subset;
+    static int workerID = 0;
+    static int numWorkers = 1;
+    static int numIterations = 1;
+    static int inputPort = 0;
+    static int outputPort = 1;
+    static int startIndex = 0;
+    static int subset = 1;
 
     public static void main(String[] args) throws Exception {
         Worker worker = (Worker) Class.forName(args[0]).getConstructor().newInstance();

@@ -4,7 +4,7 @@ import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression
 import java.io.File
 
 /**
- * Main function of the `gradle bench` task.
+ * Main function of the `gradle benchmark` task.
  *
  * Performs MLR on the basic model:
  * T ~ T_0 / w + D
