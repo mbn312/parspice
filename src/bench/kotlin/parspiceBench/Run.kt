@@ -3,6 +3,8 @@ package parspiceBench
 /**
  * A data class for storing the performance results of a single run
  *
+ * @property caseDescription the string description of the case, used as
+ *                           a bodgy identifier
  * @property numTasks the number of tasks of the task
  * @property numWorkers the number of workers used
  * @property messageSize the number of bytes sent per iteration
@@ -10,6 +12,7 @@ package parspiceBench
  * @property totalTime the total time it took to run multiprocessed
  */
 data class Run(
+    val caseDescription: String,
     val numTasks: Int,
     val numWorkers: Int,
     val messageSize: Int,
@@ -17,22 +20,23 @@ data class Run(
     val totalTime: Long
 ) {
     override fun toString(): String {
-        return "$numTasks,$numWorkers,$messageSize,$taskTime,$totalTime"
+        return "$caseDescription,$numTasks,$numWorkers,$messageSize,$taskTime,$totalTime"
     }
 
     fun headerString(): String {
-        return "numTasks,numWorkers,messageSize,taskTime,totalTime"
+        return "caseDescription,numTasks,numWorkers,messageSize,taskTime,totalTime"
     }
 
     companion object {
         fun fromString(s: String): Run {
             val parts = s.split(',')
             return Run(
-                parts[0].toInt(),
+                parts[0],
                 parts[1].toInt(),
                 parts[2].toInt(),
-                parts[3].toDouble(),
-                parts[4].toLong()
+                parts[3].toInt(),
+                parts[4].toDouble(),
+                parts[5].toLong()
             )
         }
     }

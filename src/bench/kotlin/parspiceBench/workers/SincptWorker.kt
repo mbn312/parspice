@@ -12,13 +12,13 @@ class SincptWorker: BenchWorker<DoubleArray>(DoubleArraySender(3)) {
         get() = 3 * Double.SIZE_BYTES
     override val numParallelTasks
         get() = mapOf(
-            2 to intArrayOf(1000, 100000),
-            4 to intArrayOf(1000, 10000, 100000),
+            2 to intArrayOf(1000, 1000000),
+            4 to intArrayOf(1000, 10000, 1000000),
             6 to intArrayOf(1000, 100000, 1000000),
             8 to intArrayOf(1000, 100000, 1000000, 2000000)
         )
     override val description: String
-        get() = "str2et -> getfov -> sincpt (long)"
+        get() = "str2et -> getfov -> sincpt (very long)"
 
     var shape = arrayOfNulls<String>(1)
     var insfrm = arrayOfNulls<String>(1)

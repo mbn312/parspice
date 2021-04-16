@@ -13,10 +13,9 @@ val par = ParSPICE("build/libs/bench.jar", 50050)
  * worker processes and total tasks.
  *
  * It stores the results in a csv with header:
- * numTasks, numWorkers, messageSize, taskTime, totalTime
+ * caseDescription, numTasks, numWorkers, messageSize, taskTime, totalTime
  */
 fun main() {
-    println("Running benchmark. This can take a few minutes.\n")
 
     val workers = arrayOf(
         SquareWorker(),
@@ -26,6 +25,8 @@ fun main() {
         MxvhatWorker(),
         MxvhatWorkerJava()
     )
+
+    println("Running ${workers.size} benchmark cases. This can take a few minutes.\n")
 
     val runs: MutableList<Run> = mutableListOf()
 
@@ -50,6 +51,7 @@ fun <T> run(worker: BenchWorker<T>): MutableList<Run> {
             val time = tock()
             runs.add(
                 Run (
+                    worker.description,
                     numTasks,
                     numWorkers,
                     worker.bytes,

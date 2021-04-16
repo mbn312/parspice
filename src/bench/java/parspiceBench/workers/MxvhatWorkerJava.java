@@ -21,7 +21,7 @@ public class MxvhatWorkerJava extends BenchWorker<double[]> {
     @NotNull
     @Override
     public String getDescription() {
-        return "vhat(mxm(matrix, vector)) but in Java";
+        return "vhat(mxm( ... )) but in Java";
     }
 
     static final double[][] mat = new double[][]{
