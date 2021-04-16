@@ -63,6 +63,7 @@ public abstract class Worker {
         numWorkers = Integer.parseInt(args[5]);
         numTasks = Integer.parseInt(args[6]);
         try {
+            worker.startConnections();
             worker.setup();
             worker.run();
         } catch (Exception e) {
@@ -77,6 +78,8 @@ public abstract class Worker {
             printer.close();
             writer.flush();
             writer.close();
+        } finally {
+            worker.endConnections();
         }
     }
 
@@ -100,6 +103,9 @@ public abstract class Worker {
      * @throws Exception
      */
     public abstract void run() throws Exception;
+
+    public abstract void startConnections() throws Exception;
+    public abstract void endConnections() throws Exception;
 
     public static int getWorkerID() {
         return workerID;

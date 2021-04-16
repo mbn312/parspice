@@ -47,6 +47,11 @@ public abstract class IOWorker<I,O> extends Worker {
     private final Sender<I> inputSender;
     private final Sender<O> outputSender;
 
+    private Socket inputSocket;
+    private Socket outputSocket;
+    private ObjectInputStream ois;
+    private ObjectOutputStream oos;
+
     public IOWorker(Sender<I> inputSender, Sender<O> outputSender) {
         this.inputSender = inputSender;
         this.outputSender = outputSender;
@@ -56,15 +61,21 @@ public abstract class IOWorker<I,O> extends Worker {
      * Prepares the input and output streams and repeatedly calls task.
      */
     public final void run() throws Exception {
-        Socket inputSocket = new Socket("localhost", inputPort);
-        Socket outputSocket = new Socket("localhost", inputPort + 1);
-        ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
-        ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
-
         for (int i = startIndex; i < startIndex + taskSubset; i++) {
             outputSender.write(task(inputSender.read(ois)), oos);
         }
+    }
 
+    @Override
+    public final void startConnections() throws Exception {
+        inputSocket = new Socket("localhost", inputPort);
+        outputSocket = new Socket("localhost", inputPort + 1);
+        ois = new ObjectInputStream(inputSocket.getInputStream());
+        oos = new ObjectOutputStream(outputSocket.getOutputStream());
+    }
+
+    @Override
+    public final void endConnections() throws Exception {
         oos.close();
         outputSocket.close();
         ois.close();

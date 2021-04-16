@@ -15,6 +15,9 @@ public abstract class IWorker<I> extends Worker {
 
     private final Sender<I> inputSender;
 
+    private Socket inputSocket;
+    private ObjectInputStream ois;
+
     public IWorker(Sender<I> inputSender) {
         this.inputSender = inputSender;
     }
@@ -23,12 +26,19 @@ public abstract class IWorker<I> extends Worker {
      * Prepares the argument input stream and repeatedly calls task.
      */
     public final void run() throws Exception {
-        Socket inputSocket = new Socket("localhost", inputPort);
-        ObjectInputStream ois = new ObjectInputStream(inputSocket.getInputStream());
-
         for (int i = startIndex; i < startIndex + taskSubset; i++) {
             task(inputSender.read(ois));
         }
+    }
+
+    @Override
+    public final void startConnections() throws Exception {
+        inputSocket = new Socket("localhost", inputPort);
+        ois = new ObjectInputStream(inputSocket.getInputStream());
+    }
+
+    @Override
+    public final void endConnections() throws Exception {
         ois.close();
         inputSocket.close();
     }

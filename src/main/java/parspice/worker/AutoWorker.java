@@ -18,6 +18,12 @@ public abstract class AutoWorker extends Worker {
         }
     }
 
+    @Override
+    public final void startConnections() {}
+
+    @Override
+    public final void endConnections() {}
+
     /**
      * Called repeatedly, once for each integer {@code i} in the index range
      * given by the command line arguments.

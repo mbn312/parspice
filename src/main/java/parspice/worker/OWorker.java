@@ -45,6 +45,9 @@ public abstract class OWorker<O> extends Worker {
 
     private final Sender<O> outputSender;
 
+    private Socket outputSocket;
+    private ObjectOutputStream oos;
+
     /**
      * Creates a new OWorker instance
      *
@@ -60,12 +63,19 @@ public abstract class OWorker<O> extends Worker {
      */
     @Override
     public final void run() throws Exception {
-        Socket outputSocket = new Socket("localhost", inputPort + 1);
-        ObjectOutputStream oos = new ObjectOutputStream(outputSocket.getOutputStream());
-
         for (int i = startIndex; i < startIndex + taskSubset; i++) {
             outputSender.write(task(i), oos);
         }
+    }
+
+    @Override
+    public final void startConnections() throws Exception {
+        outputSocket = new Socket("localhost", inputPort + 1);
+        oos = new ObjectOutputStream(outputSocket.getOutputStream());
+    }
+
+    @Override
+    public final void endConnections() throws Exception {
         oos.close();
         outputSocket.close();
     }
