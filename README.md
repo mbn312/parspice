@@ -115,7 +115,7 @@ for basic types and arrays of basic types. (see next section for details.)
   if you have single-threaded code that can be written in the form:
   ```java
   List<ResultType> results = new ArrayList<ResultType>();
-  for (int i = 0; i < numIterations; i++) {
+  for (int i = 0; i < numTasks; i++) {
     var arg = ...; // some calculation depending only on i
     // do things with arg
     results.add(someResult);
