@@ -52,7 +52,7 @@ if you don't intend to use JNISpice.
   If you intend to run the ParSPICE benchmark, you need the JNISpice source installed, and you need to set the `JNISPICE_ROOT` environment variable.
 
    ```bash
-   export JNISPICE_ROOT=/path/to/JNISpice
+   > export JNISPICE_ROOT=/path/to/JNISpice
    ```
 
    To permanently set this variable add this command to your `.bashrc`(Linux), `.zshrc` (MacOS) 
@@ -73,7 +73,7 @@ if you don't intend to use JNISpice.
 To use ParSPICE in other projects, we recommend doing so through the Maven Local repo.
 
 ```bash
-./gradlew publishToMavenLocal
+> ./gradlew publishToMavenLocal
 ```
 
 This should store copies of the packaged outputs in `~/.m2/repository/parspice/`
@@ -320,7 +320,7 @@ Ensure that the JNISpice native library is somewhere in your library path, and s
 `JNISPICE_ROOT` to the path to the JNISpice sources, one level above the `src` directory. For example, on my machine that would be
 
 ```bash
-export JNISPICE_ROOT="/usr/local/JNISpice"
+> export JNISPICE_ROOT="/usr/local/JNISpice"
 ```
 
 Use `./gradlew benchmark` to run the benchmark. It could take several minutes. It prints updates as it finishes cases; if you don't finish case 0 within a minute, something might have broken.
