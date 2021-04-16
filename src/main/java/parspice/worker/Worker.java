@@ -50,7 +50,7 @@ public abstract class Worker {
      *             3. Number of tasks to run
      *             4. Unique ID for this worker
      *             5. Total number of workers
-     *             6. Total number of iterations
+     *             6. Total number of tasks
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
@@ -69,7 +69,7 @@ public abstract class Worker {
         } catch (Exception e) {
             System.err.println(e.toString());
             e.printStackTrace();
-            FileWriter writer = new FileWriter("/tmp/worker_log_" + args[4]);
+            FileWriter writer = new FileWriter("ParSPICE_worker_log_" + workerID + ".txt");
             writer.write("Was receiving on port " + inputPort);
             writer.write("Was sending on port " + (inputPort + 1));
             writer.write(e.toString());
