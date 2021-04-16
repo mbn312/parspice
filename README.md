@@ -10,7 +10,7 @@ In broad strokes, the general process of using ParSPICE is three steps:
 2. Create a fat jar containing your Worker, and all its dependencies.
 3. In the main process, create an instance of the `parspice.ParSPICE` class, and call `parSPICE.run(...)` on it.
 
-If you want to get right to it, you can use a template Java or Kotlin project from [this repo](https://github.com/JoelCourtney/parspice-templates). (You will need to install ParSPICE to the Maven Local repo first, though, details below).
+If you want to get right to it, you can use a template Java or Kotlin project from [this repo](https://github.com/JoelCourtney/parspice-templates). (You will need to install ParSPICE to the Maven Local repo first, though, [details below](#publish)).
 ### Table of Contents
 * [Preparation](#prep)
   * [Pre-Requisites](#prereq)
@@ -49,7 +49,7 @@ if you don't intend to use JNISpice.
 
 <a id="setenv"></a>
 ### Set environment variable JNISPICE_ROOT (optional)
-  If you intend to run the ParSPICE benchmark, you need JNISpice installed, and you need to set the `JNISPICE_ROOT` environment variable.
+  If you intend to run the ParSPICE benchmark, you need the JNISpice source installed, and you need to set the `JNISPICE_ROOT` environment variable.
 
    ```bash
    export JNISPICE_ROOT=/path/to/JNISpice
@@ -167,7 +167,9 @@ Type | Constructor(s)
 The Array/Matrix senders allow you to specify the dimensions of the array/matrix,
 *as long as the dimensions are constant*. If you do not specify the dimensions,
 you are allowed to send arrays/matrices of varying sizes, at the cost of slightly more network
-overhead (negligible for arrays/matrices with more than a few elements).
+overhead (negligible for arrays/matrices with more than a few elements). If you *do* specify the dimensions,
+attempting to send an array of a different size is undefined behavior and may *or may not* result in an error.
+When in doubt, just don't specify the length.
 
 <a id="csenders"></a>
 ##### Custom Senders
@@ -321,7 +323,7 @@ Ensure that the JNISpice native library is somewhere in your library path, and s
 export JNISPICE_ROOT="/usr/local/JNISpice"
 ```
 
-Use `./gradlew benchmark` to run the benchmark. It could take several minutes.
+Use `./gradlew benchmark` to run the benchmark. It could take several minutes. It prints updates as it finishes cases; if you don't finish case 0 within a minute, something might have broken.
 
 You can print out the benchmark analysis again just by running `./gradlew benchmark` again (the results are cached). To re-run the entire benchmark, run `./gradlew clean` first.
 
@@ -341,9 +343,9 @@ where	T   = total time to run task through ParSPICE
 	D   = total amount of data transferred between processes, in MB
 </pre>
 
-B_1 is typically between 1 and 2 on modern consumer machines, which means that if you have a job big enough to make you consider ParSPICE, it will almost certainly run faster in ParSPICE (unless you have to transfer hundreds of bytes per iteration).
+B_1 is typically between 1 and 2 on modern consumer machines, which means that if you have a job big enough to make you consider ParSPICE, it will almost certainly run faster in ParSPICE (unless you have to transfer hundreds of bytes per iteration). B_1 being less than 1 is mathematically impossible (that would mean ParSPICE has negative overhead), so if that happens something's gone horribly wrong.
 
-B_2 it typically between 1 and 10, which means that if you only need to send a small, fixed number of integers or doubles each iteration, you shouldn't need to worry about the network overhead making ParSPICE slower than single-threaded. In fact, we've found that on average consumer machines, if you have to send so much data that the overhead makes it slower, you'll run out of memory storing all of that data anyway.
+B_2 it typically between 1 and 10, which means that if you only need to send a small, fixed number of integers or doubles each iteration, you shouldn't need to worry about the network overhead making ParSPICE slower than single-threaded. In fact, we've found that on average consumer machines, if you have to send so much data that the overhead makes it slower, you'll first run out of memory storing all of that data anyway.
 
 <a id="breakeven"></a>
 ### Break-Even Point Estimation
