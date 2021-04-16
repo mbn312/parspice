@@ -10,8 +10,7 @@ package parspice.worker;
 public abstract class AutoWorker extends Worker {
 
     /**
-     * Creates an instance of a worker subclass and runs the tasks specified
-     * by the CLI arguments.
+     * Repeatedly calls task.
      */
     public final void run() throws Exception {
         for (int i = startIndex; i < startIndex + subset; i++) {

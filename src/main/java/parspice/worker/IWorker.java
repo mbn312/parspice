@@ -20,8 +20,7 @@ public abstract class IWorker<I> extends Worker {
     }
 
     /**
-     * Creates an instance of a worker subclass and runs the tasks specified
-     * by the CLI arguments.
+     * Prepares the argument input stream and repeatedly calls task.
      */
     public final void run() throws Exception {
         Socket inputSocket = new Socket("localhost", inputPort);

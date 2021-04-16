@@ -4,14 +4,55 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 
 public abstract class Worker {
+
+    /**
+     * Unique ID for the worker, in the range [0, numWorkers)
+     */
     static int workerID = 0;
+
+    /**
+     * Total number of workers in this job.
+     */
     static int numWorkers = 1;
+
+    /**
+     * Total number of iterations to be run.
+     */
     static int numIterations = 1;
+
+    /**
+     * Port used to receive inputs.
+     */
     static int inputPort = 0;
+
+    /**
+     * Port used to send outputs.
+     */
     static int outputPort = 1;
+
+    /**
+     * Iteration index that this worker starts at.
+     */
     static int startIndex = 0;
+
+    /**
+     * How many iterations this worker needs to run.
+     */
     static int subset = 1;
 
+    /**
+     * Gets an instance of the user's Worker and runs it.
+     *
+     * @param args Command line args:
+     *             0. Full classname of user's Worker (including package)
+     *             1. Input port to use
+     *             2. Iteration index to start at
+     *             3. Number of iterations to run
+     *             4. Unique ID for this worker
+     *             5. Total number of workers
+     *             6. Total number of iterations
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
         Worker worker = (Worker) Class.forName(args[0]).getConstructor().newInstance();
         inputPort = Integer.parseInt(args[1]);
@@ -50,6 +91,14 @@ public abstract class Worker {
      */
     public void setup() throws Exception {}
 
+    /**
+     * Contains the task-loop logic specific to each worker type.
+     *
+     * This function is final in the Worker subclasses, so the user
+     * cannot override it.
+     *
+     * @throws Exception
+     */
     public abstract void run() throws Exception;
 
     public static int getWorkerID() {

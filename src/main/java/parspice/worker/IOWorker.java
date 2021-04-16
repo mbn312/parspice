@@ -53,8 +53,7 @@ public abstract class IOWorker<I,O> extends Worker {
     }
 
     /**
-     * Creates an instance of a worker subclass and runs the tasks specified
-     * by the CLI arguments.
+     * Prepares the input and output streams and repeatedly calls task.
      */
     public final void run() throws Exception {
         Socket inputSocket = new Socket("localhost", inputPort);

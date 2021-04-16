@@ -56,8 +56,7 @@ public abstract class OWorker<O> extends Worker {
     }
 
     /**
-     * Creates an instance of a worker subclass and runs the tasks specified
-     * by the CLI arguments.
+     * Prepares the output stream and repeatedly calls task.
      */
     @Override
     public final void run() throws Exception {
