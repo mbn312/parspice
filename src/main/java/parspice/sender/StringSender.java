@@ -1,3 +1,6 @@
+// THIS FILE WAS GENERATED. DO NOT EDIT IT DIRECTLY.
+// See `src/gen/README.md` for details.
+
 package parspice.sender;
 
 import java.io.IOException;

@@ -8,7 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Sender implementation for int[].
+ * Sender implementation for char[].
  *
  * Accepts arrays of fixed length or dynamic length. If fixed length, the length should
  * be declared on initialization. If the length is declared, then using arrays of
@@ -18,45 +18,45 @@ import java.io.ObjectOutputStream;
  * network usage slightly. It doesn't matter significantly for more tasks, but
  * remember to specify the lengths for optimal performance.
  */
-public class IntArraySender implements Sender<int[]> {
+public class CharArraySender implements Sender<char[]> {
     private final int length;
 
     /**
-     * Creates an instance of IntArraySender for dynamic length arrays.
+     * Creates an instance of CharArraySender for dynamic length arrays.
      */
-    public IntArraySender() {
+    public CharArraySender() {
         this.length = -1;
     }
 
     /**
-     * Creates an instance of IntArraySender for fixed length arrays.
+     * Creates an instance of CharArraySender for fixed length arrays.
      *
      * @param length the length of all arrays to be serialized an deserialized
      */
-    public IntArraySender(int length) {
+    public CharArraySender(int length) {
         this.length = length;
     }
 
     @Override
-    public int[] read(ObjectInputStream ois) throws IOException {
+    public char[] read(ObjectInputStream ois) throws IOException {
         int localLength = length;
         if (length == -1) {
             localLength = ois.readInt();
         }
-        int[] in = new int[localLength];
+        char[] in = new char[localLength];
         for (int i = 0; i < localLength; i++) {
-            in[i] = ois.readInt();
+            in[i] = ois.readChar();
         }
         return in;
     }
 
     @Override
-    public void write(int[] out, ObjectOutputStream oos) throws IOException {
+    public void write(char[] out, ObjectOutputStream oos) throws IOException {
         if (length == -1) {
             oos.writeInt(out.length);
         }
-        for (int b : out) {
-            oos.writeInt(b);
+        for (char b : out) {
+            oos.writeChar(b);
         }
     }
 }

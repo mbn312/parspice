@@ -1,8 +1,12 @@
-package parspice.testGeneral;
+package parspiceTest.worker;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
-import parspice.ParSPICEInstance;
-import parspice.sender.IntArraySender;
+import parspiceTest.ParSPICEInstance;
+import parspice.sender.IntSender;
+
+
+import org.junit.jupiter.api.Test;
 import parspice.worker.OWorker;
 
 import java.util.ArrayList;
@@ -11,23 +15,25 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeAll;
-
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestIntArraySender extends OWorker<int[]> {
-    ArrayList<int[]> parResults;
+public class TestSetup extends OWorker<Integer> {
+    ArrayList<Integer> parResults;
     int numIterations = 10;
 
-    public TestIntArraySender() {
-        super(new IntArraySender());
+    private static int n = 0;
+
+    public TestSetup() {
+        super(new IntSender());
     }
 
     @Override
-    public int[] task(int i) throws Exception {
-        System.out.println(i);
-        int[] results = {1,2};
-        return results;
+    public void setup() throws Exception {
+        n = 2;
+    }
+
+    @Override
+    public Integer task(int i) throws Exception {
+        return n + i;
     }
 
     @Test
@@ -35,20 +41,18 @@ public class TestIntArraySender extends OWorker<int[]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestIntArraySender(),
+                    new TestSetup(),
                     numIterations,
                     2
             );
         });
-
     }
 
     @Test
     public void testCorrectness() {
-        List<int[]> directResults = new ArrayList<int[]>(numIterations);
+        List<Integer> directResults = new ArrayList<>(numIterations);
         for (int i = 0; i < numIterations; i++) {
-            int[] x = {1,2};
-            directResults.add(x);
+            directResults.add(i + 2);
         }
         assertArrayEquals(parResults.toArray(), directResults.toArray());
     }

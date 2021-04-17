@@ -8,7 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Sender implementation for int[].
+ * Sender implementation for short[].
  *
  * Accepts arrays of fixed length or dynamic length. If fixed length, the length should
  * be declared on initialization. If the length is declared, then using arrays of
@@ -18,45 +18,45 @@ import java.io.ObjectOutputStream;
  * network usage slightly. It doesn't matter significantly for more tasks, but
  * remember to specify the lengths for optimal performance.
  */
-public class IntArraySender implements Sender<int[]> {
+public class ShortArraySender implements Sender<short[]> {
     private final int length;
 
     /**
-     * Creates an instance of IntArraySender for dynamic length arrays.
+     * Creates an instance of ShortArraySender for dynamic length arrays.
      */
-    public IntArraySender() {
+    public ShortArraySender() {
         this.length = -1;
     }
 
     /**
-     * Creates an instance of IntArraySender for fixed length arrays.
+     * Creates an instance of ShortArraySender for fixed length arrays.
      *
      * @param length the length of all arrays to be serialized an deserialized
      */
-    public IntArraySender(int length) {
+    public ShortArraySender(int length) {
         this.length = length;
     }
 
     @Override
-    public int[] read(ObjectInputStream ois) throws IOException {
+    public short[] read(ObjectInputStream ois) throws IOException {
         int localLength = length;
         if (length == -1) {
             localLength = ois.readInt();
         }
-        int[] in = new int[localLength];
+        short[] in = new short[localLength];
         for (int i = 0; i < localLength; i++) {
-            in[i] = ois.readInt();
+            in[i] = ois.readShort();
         }
         return in;
     }
 
     @Override
-    public void write(int[] out, ObjectOutputStream oos) throws IOException {
+    public void write(short[] out, ObjectOutputStream oos) throws IOException {
         if (length == -1) {
             oos.writeInt(out.length);
         }
-        for (int b : out) {
-            oos.writeInt(b);
+        for (short b : out) {
+            oos.writeShort(b);
         }
     }
 }

@@ -1,3 +1,6 @@
+// THIS FILE WAS GENERATED. DO NOT EDIT IT DIRECTLY.
+// See `src/gen/README.md` for details.
+
 package parspice.sender;
 
 import java.io.IOException;
@@ -5,7 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Sender implementation for double.
+ * Sender implementation for Double.
  */
 public class DoubleSender implements Sender<Double> {
     @Override

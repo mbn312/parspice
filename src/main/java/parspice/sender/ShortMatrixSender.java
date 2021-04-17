@@ -8,7 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Sender implementation for int[][].
+ * Sender implementation for short[][].
  *
  * Accepts matrices of fixed dimensions or dynamic dimensions. If fixed dims, the size should
  * be declared on initialization. If the size is declared, then using matrices of
@@ -18,52 +18,52 @@ import java.io.ObjectOutputStream;
  * network usage slightly. It doesn't matter significantly for more tasks, but
  * remember to specify the lengths for optimal performance.
  */
-public class IntMatrixSender implements Sender<int[][]> {
+public class ShortMatrixSender implements Sender<short[][]> {
     private final int rows;
     private final int columns;
 
-    public IntMatrixSender() {
+    public ShortMatrixSender() {
         rows = -1;
         columns = -1;
     }
 
     /**
-     * Creates an instance of IntMatrix.
+     * Creates an instance of ShortMatrix.
      *
      * @param rows the number of rows (first dimension) of the matrix.
      * @param columns the number of columns (second dimension) of the matrix.
      */
-    public IntMatrixSender(int rows, int columns) {
+    public ShortMatrixSender(int rows, int columns) {
         this.rows = rows;
         this.columns = columns;
     }
 
     @Override
-    public int[][] read(ObjectInputStream ois) throws IOException {
+    public short[][] read(ObjectInputStream ois) throws IOException {
         int localRows = rows;
         int localColumns = columns;
         if (rows == -1) {
             localRows = ois.readInt();
             localColumns = ois.readInt();
         }
-        int[][] in = new int[localRows][localColumns];
+        short[][] in = new short[localRows][localColumns];
         for (int i = 0; i < localRows; i++) {
             for (int j = 0; j < localColumns; j++) {
-                in[i][j] = ois.readInt();
+                in[i][j] = ois.readShort();
             }
         }
         return in;
     }
 
     @Override
-    public void write(int[][] out, ObjectOutputStream oos) throws IOException {
+    public void write(short[][] out, ObjectOutputStream oos) throws IOException {
         if (rows == -1) {
             oos.writeInt(out.length);
             oos.writeInt(out[0].length);
         }
-        for (int[] row : out) {
-            for (int b : row) {
-                oos.writeInt(b);
+        for (short[] row : out) {
+            for (short b : row) {
+                oos.writeShort(b);
             }
         }
     }

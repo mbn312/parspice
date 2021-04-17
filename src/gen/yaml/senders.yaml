@@ -1,0 +1,56 @@
+# List of Sender types to generate from
+
+- name: Int
+  types:
+    - Integer
+    - int
+    - int
+  stream: Int
+- name: Boolean
+  types:
+    - Boolean
+    - boolean
+    - boolean
+  stream: Boolean
+- name: Double
+  types:
+    - Double
+    - double
+    - double
+  stream: Double
+- name: String
+  types:
+    - String
+    - String
+    - String
+  stream: UTF
+- name: Short
+  types:
+    - Short
+    - short
+    - short
+  stream: Short
+- name: Long
+  types:
+    - Long
+    - long
+    - long
+  stream: Long
+- name: Float
+  types:
+    - Float
+    - float
+    - float
+  stream: Float
+- name: Char
+  types:
+    - Character
+    - char
+    - char
+  stream: Char
+- name: Byte
+  types:
+    - Byte
+    - byte
+    - byte
+  stream: Byte
