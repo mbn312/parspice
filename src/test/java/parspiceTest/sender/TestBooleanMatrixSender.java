@@ -1,8 +1,8 @@
-package parspice.testGeneral;
+package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
-import parspice.ParSPICEInstance;
-import parspice.sender.DoubleMatrixSender;
+import parspiceTest.ParSPICEInstance;
+import parspice.sender.BooleanMatrixSender;
 import parspice.worker.OWorker;
 
 import java.util.ArrayList;
@@ -15,19 +15,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestDoubleMatrixSender extends OWorker<double[][]> {
-    ArrayList<double[][]> parResults;
+public class TestBooleanMatrixSender extends OWorker<boolean[][]> {
+    ArrayList<boolean[][]> parResults;
     int numIterations = 10;
 
-    public TestDoubleMatrixSender() {
-        super(new DoubleMatrixSender());
+    public TestBooleanMatrixSender() {
+        super(new BooleanMatrixSender());
     }
 
     @Override
-    public double[][] task(int i) throws Exception {
+    public boolean[][] task(int i) throws Exception {
         System.out.println(i);
-        double[][] results = {{1.1,2.2},{1.1,2.2}};
-        return results;
+        boolean[][] re = {{false,true},{false,true}};
+        return re;
     }
 
     @Test
@@ -35,7 +35,7 @@ public class TestDoubleMatrixSender extends OWorker<double[][]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestDoubleMatrixSender(),
+                    new TestBooleanMatrixSender(),
                     numIterations,
                     2
             );
@@ -45,9 +45,9 @@ public class TestDoubleMatrixSender extends OWorker<double[][]> {
 
     @Test
     public void testCorrectness() {
-        List<double[][]> directResults = new ArrayList<double[][]>(numIterations);
+        List<boolean[][]> directResults = new ArrayList<boolean[][]>(numIterations);
         for (int i = 0; i < numIterations; i++) {
-            double[][] x = {{1.1,2.2},{1.1,2.2}};
+            boolean[][] x = {{false,true},{false,true}};
             directResults.add(x);
         }
 

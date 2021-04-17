@@ -5,7 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Sender implementation for double.
+ * Sender implementation for Double.
  */
 public class DoubleSender implements Sender<Double> {
     @Override

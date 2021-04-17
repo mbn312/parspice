@@ -1,4 +1,6 @@
-package parspice;
+package parspiceTest;
+
+import parspice.ParSPICE;
 
 import java.io.IOException;
 

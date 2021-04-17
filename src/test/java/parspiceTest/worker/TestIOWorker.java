@@ -1,15 +1,13 @@
-package parspice.testGeneral;
+package parspiceTest.worker;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import parspice.ParSPICEInstance;
+import parspiceTest.ParSPICEInstance;
 import parspice.sender.IntSender;
 import parspice.worker.IOWorker;
-import parspice.worker.OWorker;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;

@@ -1,8 +1,8 @@
-package parspice.testGeneral;
+package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
-import parspice.ParSPICEInstance;
-import parspice.sender.StringMatrixSender;
+import parspiceTest.ParSPICEInstance;
+import parspice.sender.DoubleArraySender;
 import parspice.worker.OWorker;
 
 import java.util.ArrayList;
@@ -15,18 +15,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestStringMatrixSender extends OWorker<String[][]> {
-    ArrayList<String[][]> parResults;
+public class TestDoubleArraySender extends OWorker<double[]> {
+    ArrayList<double[]> parResults;
     int numIterations = 10;
 
-    public TestStringMatrixSender() {
-        super(new StringMatrixSender());
+    public TestDoubleArraySender() {
+        super(new DoubleArraySender());
     }
 
     @Override
-    public String[][] task(int i) throws Exception {
+    public double[] task(int i) throws Exception {
         System.out.println(i);
-        String[][] results = {{"Test","Correct"},{"Test","Correct"}};
+        double[] results = {1.1,2.2};
         return results;
     }
 
@@ -35,7 +35,7 @@ public class TestStringMatrixSender extends OWorker<String[][]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestStringMatrixSender(),
+                    new TestDoubleArraySender(),
                     numIterations,
                     2
             );
@@ -45,12 +45,11 @@ public class TestStringMatrixSender extends OWorker<String[][]> {
 
     @Test
     public void testCorrectness() {
-        List<String[][]> directResults = new ArrayList<String[][]>(numIterations);
+        List<double[]> directResults = new ArrayList<double[]>(numIterations);
         for (int i = 0; i < numIterations; i++) {
-            String[][] x = {{"Test","Correct"},{"Test","Correct"}};
+            double[] x = {1.1,2.2};
             directResults.add(x);
         }
-
         assertArrayEquals(parResults.toArray(), directResults.toArray());
     }
 }

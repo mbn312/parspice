@@ -5,7 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Sender implementation for boolean.
+ * Sender implementation for Boolean.
  */
 public class BooleanSender implements Sender<Boolean> {
     @Override

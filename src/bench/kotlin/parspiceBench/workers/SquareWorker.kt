@@ -1,7 +1,6 @@
 package parspiceBench.workers
 
 import parspice.sender.DoubleSender
-import parspice.worker.OWorker
 import parspiceBench.BenchWorker
 import kotlin.math.pow
 

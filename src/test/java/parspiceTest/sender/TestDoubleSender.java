@@ -1,8 +1,8 @@
-package parspice.testGeneral;
+package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
-import parspice.ParSPICEInstance;
-import parspice.sender.BooleanMatrixSender;
+import parspiceTest.ParSPICEInstance;
+import parspice.sender.DoubleSender;
 import parspice.worker.OWorker;
 
 import java.util.ArrayList;
@@ -15,19 +15,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestBooleanMatrixSender extends OWorker<boolean[][]> {
-    ArrayList<boolean[][]> parResults;
+public class TestDoubleSender extends OWorker<Double> {
+    ArrayList<Double> parResults;
     int numIterations = 10;
 
-    public TestBooleanMatrixSender() {
-        super(new BooleanMatrixSender());
+    public TestDoubleSender() {
+        super(new DoubleSender());
     }
 
     @Override
-    public boolean[][] task(int i) throws Exception {
-        System.out.println(i);
-        boolean[][] re = {{false,true},{false,true}};
-        return re;
+    public Double task(int i) throws Exception {
+        return i/2.;
     }
 
     @Test
@@ -35,22 +33,19 @@ public class TestBooleanMatrixSender extends OWorker<boolean[][]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestBooleanMatrixSender(),
+                    new TestDoubleSender(),
                     numIterations,
                     2
             );
         });
-
     }
 
     @Test
     public void testCorrectness() {
-        List<boolean[][]> directResults = new ArrayList<boolean[][]>(numIterations);
+        List<Double> directResults = new ArrayList<>(numIterations);
         for (int i = 0; i < numIterations; i++) {
-            boolean[][] x = {{false,true},{false,true}};
-            directResults.add(x);
+            directResults.add(i/2.);
         }
-
         assertArrayEquals(parResults.toArray(), directResults.toArray());
     }
 }

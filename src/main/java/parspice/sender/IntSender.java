@@ -5,7 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Sender implementation for int.
+ * Sender implementation for Integer.
  */
 public class IntSender implements Sender<Integer> {
     @Override

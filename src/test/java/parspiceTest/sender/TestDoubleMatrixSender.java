@@ -1,8 +1,8 @@
-package parspice.testGeneral;
+package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
-import parspice.ParSPICEInstance;
-import parspice.sender.IntMatrixSender;
+import parspiceTest.ParSPICEInstance;
+import parspice.sender.DoubleMatrixSender;
 import parspice.worker.OWorker;
 
 import java.util.ArrayList;
@@ -15,18 +15,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestIntMatrixSender extends OWorker<int[][]> {
-    ArrayList<int[][]> parResults;
+public class TestDoubleMatrixSender extends OWorker<double[][]> {
+    ArrayList<double[][]> parResults;
     int numIterations = 10;
 
-    public TestIntMatrixSender() {
-        super(new IntMatrixSender());
+    public TestDoubleMatrixSender() {
+        super(new DoubleMatrixSender());
     }
 
     @Override
-    public int[][] task(int i) throws Exception {
+    public double[][] task(int i) throws Exception {
         System.out.println(i);
-        int[][] results = {{1,2},{1,2}};
+        double[][] results = {{1.1,2.2},{1.1,2.2}};
         return results;
     }
 
@@ -35,7 +35,7 @@ public class TestIntMatrixSender extends OWorker<int[][]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestIntMatrixSender(),
+                    new TestDoubleMatrixSender(),
                     numIterations,
                     2
             );
@@ -45,9 +45,9 @@ public class TestIntMatrixSender extends OWorker<int[][]> {
 
     @Test
     public void testCorrectness() {
-        List<int[][]> directResults = new ArrayList<int[][]>(numIterations);
+        List<double[][]> directResults = new ArrayList<double[][]>(numIterations);
         for (int i = 0; i < numIterations; i++) {
-            int[][] x = {{1,2},{1,2}};
+            double[][] x = {{1.1,2.2},{1.1,2.2}};
             directResults.add(x);
         }
 

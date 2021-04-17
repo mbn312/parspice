@@ -1,7 +1,6 @@
 package parspiceBench.workers
 
 import parspice.sender.DoubleArraySender
-import parspice.sender.IntSender
 import parspiceBench.BenchWorker
 import spice.basic.CSPICE.*
 

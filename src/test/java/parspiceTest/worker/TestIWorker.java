@@ -1,8 +1,8 @@
-package parspice.testGeneral;
+package parspiceTest.worker;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import parspice.ParSPICEInstance;
+import parspiceTest.ParSPICEInstance;
 import parspice.sender.IntSender;
 import parspice.worker.IWorker;
 
