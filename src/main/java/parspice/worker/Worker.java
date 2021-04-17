@@ -74,15 +74,16 @@ public abstract class Worker {
             FileWriter writer = new FileWriter("ParSPICE_worker_log_" + workerID + ".txt");
 
             writer.write("workerName\t" + args[0]);
-            writer.write("inputPort\t" + inputPort);
-            writer.write("outputPort\t" + (inputPort + 1));
-            writer.write("startIndex\t" + startIndex);
-            writer.write("taskSubset\t" + taskSubset);
-            writer.write("workerID\t" + workerID);
-            writer.write("numWorkers\t" + numWorkers);
-            writer.write("numTasks\t" + numTasks);
+            writer.write("\ninputPort\t" + inputPort);
+            writer.write("\noutputPort\t" + (inputPort + 1));
+            writer.write("\nstartIndex\t" + startIndex);
+            writer.write("\ntaskSubset\t" + taskSubset);
+            writer.write("\nworkerID\t" + workerID);
+            writer.write("\nnumWorkers\t" + numWorkers);
+            writer.write("\nnumTasks\t" + numTasks + "\n\n");
 
             writer.write(e.toString());
+            writer.write("\n\n");
             PrintWriter printer = new PrintWriter(writer);
             e.printStackTrace(printer);
             printer.close();
