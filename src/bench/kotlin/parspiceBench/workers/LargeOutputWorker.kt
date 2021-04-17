@@ -3,7 +3,7 @@ package parspiceBench.workers
 import parspice.sender.IntArraySender
 import parspiceBench.BenchWorker
 
-const val LENGTH = 300
+const val LENGTH = 1000
 
 /**
  * This case is to get high-leverage observations on the data size,

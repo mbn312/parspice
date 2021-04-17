@@ -18,8 +18,8 @@ val par = ParSPICE("build/libs/bench.jar", 50050)
 fun main() {
 
     val workers = arrayOf(
-        SquareWorker(),
         LargeOutputWorker(),
+        SquareWorker(),
         GfposcWorker(),
         SincptWorker(),
         MxvhatWorker(),
