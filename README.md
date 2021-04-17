@@ -147,29 +147,32 @@ All data, for both inputs and outputs, is sent over network sockets by implement
 <a id="bisenders"></a>
 ##### Built-in senders
 
-Senders have already been implemented for twelve types:
+Senders have already been implemented for all primitive types and Strings, as well as arrays of those types, and matrices (nested arrays) of those types. They are named in the format `<type>Sender`, `<type>ArraySender`, or `<type>MatrixSender`
 
-Type | Constructor(s)
-:---:|:---:
-`Boolean` | `BooleanSender()`
-`Integer` | `IntSender()`
-`Double` | `DoubleSender()`
-`String` | `StringSender()`
-`boolean[]` | `BooleanArraySender()`<br/>`BooleanArraySender(int length)`
-`int[]` | `IntArraySender()`<br/>`IntArraySender(int length)`
-`double[]` | `DoubleArraySender()`<br/>`DoubleArraySender(int length)`
-`String[]` | `StringArraySender()`<br/>`StringArraySender(int length)`
-`boolean[][]` | `BooleanMatrixSender()`<br/>`BooleanMatrixSender(int width, int height)`
-`int[][]` | `IntMatrixSender()`<br/>`IntMatrixSender(int width, int height)`
-`double[][]` | `DoubleMatrixSender()`<br/>`DoubleMatrixSender(int width, int height)`
-`String[][]` | `StringMatrixSender()`<br/>`StringMatrixSender(int width, int height)`
+The Array/Matrix senders allow you to optionally specify the dimensions of the array/matrix in the constructor, *as long as the dimensions are constant*. If you do not specify the dimensions, you are allowed to send arrays/matrices of varying sizes, at the cost of slightly more network overhead (negligible for arrays/matrices with more than a few elements). If you *do* specify the dimensions, attempting to send an array of a different size is undefined behavior and may *or may not* result in an error. When in doubt, just don't specify the length.
 
-The Array/Matrix senders allow you to specify the dimensions of the array/matrix,
-*as long as the dimensions are constant*. If you do not specify the dimensions,
-you are allowed to send arrays/matrices of varying sizes, at the cost of slightly more network
-overhead (negligible for arrays/matrices with more than a few elements). If you *do* specify the dimensions,
-attempting to send an array of a different size is undefined behavior and may *or may not* result in an error.
-When in doubt, just don't specify the length.
+Examples:
+
+```java
+// Sends single chars at a time
+CharSender s1 = new CharSender();
+
+// Sends double[] of any size
+DoubleArraySender s2 = new DoubleArraySender();
+
+// Sends String[] of *EXACTLY* five elements
+StringArraySender s3 = new StringArraySender(5);
+
+// Sends long[][] of any size
+LongMatrixSender s4 = new LongMatrixSender();
+
+// Sends int[][] that are *EXACTLY* 3x4 in size (i.e. int[3][4])
+IntMatrixSender s5 = new IntMatrixSender(3, 4);
+```
+
+Currently you aren't able to specify only one dimension for matrix senders (either both or neither).
+
+The source code of the senders was generated from templates, because Java doesn't let you use primitive types as generic type arguments. See `src/gen/README.md` for details on changing the source or adding more built-in senders.
 
 <a id="csenders"></a>
 ##### Custom Senders

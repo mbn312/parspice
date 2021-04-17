@@ -1,8 +1,8 @@
 # Pre-built Sender Generation
 
-Java doesn't allow you to use primitive types as generic arguments (which is *so spectacularly frustrating*), so in order to provide the user with pre-built senders for primitives, primitive arrays, and primitive matrices, all of them have to be hardcoded.
+Java doesn't allow you to use primitive types as generic arguments (which is *so spectacularly frustrating*), so in order to provide the user with pre-built senders for primitives, primitive arrays, and primitive matrices, *all* of them have to be hardcoded.
 
-Since they all have very similar code that cannot be consolidated *at all* (seriously, the ArraySenders and MatrixSenders cannot even have a common superclass with a generic argument because that would require the argument to be a primitive), we are generating the source instead. Since the generated source is unlikely to change, we are including the output in the repo instead of forcing users to generate it on build.
+They all have very similar code that cannot be consolidated *at all* (seriously, the ArraySenders and MatrixSenders cannot even have a common superclass with a generic argument because that would require the argument to be a primitive), so we are generating the source instead. Since the generated source is unlikely to change, we are including the output in the repo instead of forcing users to generate it on build (which would a python3 dependency on PyYAML).
 
 But if the source does need to change, that's what this is for.
 
