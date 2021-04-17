@@ -309,7 +309,7 @@ The `build.gradle` file would be copied from the [templates repo's build.gradle]
 <a id="error"></a>
 ### Error handling
 
-The Worker superclasses allow `setup()` and `task(...)` to throw arbitrary errors. If any error is thrown on the worker process, the stacktrace will be printed to `ParSPICE_worker_log_i.txt` where `i` is the ID of the worker, ranging from 0 to one less than the number of workers.
+The Worker superclasses allow `setup()` and `task(...)` to throw arbitrary errors. If any error is thrown on the worker process, the stacktrace will be printed to `ParSPICE_worker_log_ID.txt` where `ID` is the ID of the worker, ranging from 0 to one less than the number of workers.
 
 <a id="bench"></a>
 ## Benchmarking

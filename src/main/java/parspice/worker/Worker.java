@@ -69,9 +69,18 @@ public abstract class Worker {
         } catch (Exception e) {
             System.err.println(e.toString());
             e.printStackTrace();
+
             FileWriter writer = new FileWriter("ParSPICE_worker_log_" + workerID + ".txt");
-            writer.write("Was receiving on port " + inputPort);
-            writer.write("Was sending on port " + (inputPort + 1));
+
+            writer.write("workerName\t" + args[0]);
+            writer.write("inputPort\t" + inputPort);
+            writer.write("outputPort\t" + (inputPort + 1));
+            writer.write("startIndex\t" + startIndex);
+            writer.write("taskSubset\t" + taskSubset);
+            writer.write("workerID\t" + workerID);
+            writer.write("numWorkers\t" + numWorkers);
+            writer.write("numTasks\t" + numTasks);
+
             writer.write(e.toString());
             PrintWriter printer = new PrintWriter(writer);
             e.printStackTrace(printer);
