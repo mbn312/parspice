@@ -18,14 +18,14 @@ public class IServer<I> implements Runnable {
     private final ServerSocket serverSocket;
     private final Sender<I> inputSender;
     private final List<I> inputs;
-    private final int workerIndex;
+    private final int workerID;
 
-    public IServer(Sender<I> inputSender, List<I> inputs, int port, int workerIndex) throws IOException {
+    public IServer(Sender<I> inputSender, List<I> inputs, int port, int workerID) throws IOException {
         this.serverSocket = new ServerSocket(port);
 
         this.inputSender = inputSender;
         this.inputs = inputs;
-        this.workerIndex = workerIndex;
+        this.workerID = workerID;
     }
 
     /**
@@ -44,7 +44,12 @@ public class IServer<I> implements Runnable {
             socket.close();
             serverSocket.close();
         } catch (IOException e) {
-            System.err.println("Input Runnable " + workerIndex + " failed:");
+            System.err.println(
+                    "IServer thread " + workerID + " failed. Check log file 'ParSPICE_worker_log_"
+                            + workerID
+                            + ".txt for details. If it does not exist, the worker wasn't able to run."
+            );
+            System.err.println(e.toString());
             e.printStackTrace();
         }
     }

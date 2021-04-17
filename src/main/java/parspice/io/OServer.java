@@ -17,17 +17,17 @@ public class OServer<O> implements Runnable {
 
     private final ServerSocket serverSocket;
     private final Sender<O> outputSender;
-    private final int workerIndex;
+    private final int workerID;
     private final int taskSubset;
 
     private final ArrayList<O> outputs;
 
-    public OServer(Sender<O> outputSender, int taskSubset, int port, int workerIndex) throws IOException {
+    public OServer(Sender<O> outputSender, int taskSubset, int port, int workerID) throws IOException {
         this.serverSocket = new ServerSocket(port);
 
         this.outputSender = outputSender;
         this.outputs = new ArrayList<>(taskSubset);
-        this.workerIndex = workerIndex;
+        this.workerID = workerID;
         this.taskSubset = taskSubset;
     }
 
@@ -46,7 +46,12 @@ public class OServer<O> implements Runnable {
             socket.close();
             serverSocket.close();
         } catch (IOException e) {
-            System.err.println("Output Runnable " + workerIndex + " failed:");
+            System.err.println(
+                    "OServer thread " + workerID + " failed. Check log file 'ParSPICE_worker_log_"
+                    + workerID
+                    + ".txt for details. If it does not exist, the worker wasn't able to run."
+            );
+            System.err.println(e.toString());
             e.printStackTrace();
         }
     }

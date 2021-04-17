@@ -55,14 +55,15 @@ public abstract class Worker {
      */
     public static void main(String[] args) throws Exception {
         Worker worker = (Worker) Class.forName(args[0]).getConstructor().newInstance();
-        inputPort = Integer.parseInt(args[1]);
-        outputPort = inputPort + 1;
-        startIndex = Integer.parseInt(args[2]);
-        taskSubset = Integer.parseInt(args[3]);
-        workerID = Integer.parseInt(args[4]);
-        numWorkers = Integer.parseInt(args[5]);
-        numTasks = Integer.parseInt(args[6]);
         try {
+            inputPort = Integer.parseInt(args[1]);
+            outputPort = inputPort + 1;
+            startIndex = Integer.parseInt(args[2]);
+            taskSubset = Integer.parseInt(args[3]);
+            workerID = Integer.parseInt(args[4]);
+            numWorkers = Integer.parseInt(args[5]);
+            numTasks = Integer.parseInt(args[6]);
+
             worker.startConnections();
             worker.setup();
             worker.run();
