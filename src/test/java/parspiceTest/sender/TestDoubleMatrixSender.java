@@ -35,10 +35,9 @@ public class TestDoubleMatrixSender extends OWorker<double[][]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestDoubleMatrixSender(),
-                    numIterations,
+                    (new TestDoubleMatrixSender()).job().numTasks(numIterations),
                     2
-            );
+            ).getOutputs();
         });
 
     }

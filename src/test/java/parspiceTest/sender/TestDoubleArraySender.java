@@ -35,10 +35,9 @@ public class TestDoubleArraySender extends OWorker<double[]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestDoubleArraySender(),
-                    numIterations,
+                    (new TestDoubleArraySender()).job().numTasks(numIterations),
                     2
-            );
+            ).getOutputs();
         });
 
     }

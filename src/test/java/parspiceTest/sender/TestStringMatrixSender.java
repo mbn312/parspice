@@ -35,10 +35,9 @@ public class TestStringMatrixSender extends OWorker<String[][]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestStringMatrixSender(),
-                    numIterations,
+                    (new TestStringMatrixSender()).job().numTasks(numIterations),
                     2
-            );
+            ).getOutputs();
         });
 
     }

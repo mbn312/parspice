@@ -11,9 +11,9 @@ import java.util.ArrayList;
  * @param <I> the input type argument for the task, or Void if none
  * @param <O> the output type returned by the task, or Void if none
  */
-public class IOManager<I, O> {
+public class IOManager<S, I, O> {
 
-    private final IServer<I> iServer;
+    private final IServer<S, I> iServer;
     private final OServer<O> oServer;
 
     private Thread iThread;
@@ -28,7 +28,7 @@ public class IOManager<I, O> {
      * @param oServer an output port for receiving outputs, or null if none
      * @param workerIndex the index of the worker, for error reporting
      */
-    public IOManager(IServer<I> iServer, OServer<O> oServer, int workerIndex) {
+    public IOManager(IServer<S, I> iServer, OServer<O> oServer, int workerIndex) {
         this.iServer = iServer;
         this.oServer = oServer;
         this.workerIndex = workerIndex;
@@ -72,6 +72,10 @@ public class IOManager<I, O> {
      * @return the outputs from the worker.
      */
     public ArrayList<O> getOutputs() {
-        return oServer.getOutputs();
+        if (oServer != null) {
+            return oServer.getOutputs();
+        } else {
+            return null;
+        }
     }
 }

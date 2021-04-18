@@ -1,5 +1,6 @@
 package parspiceBench
 
+import parspice.Job
 import parspice.ParSPICE
 import parspiceBench.workers.*
 import java.io.File
@@ -47,7 +48,7 @@ fun <T> run(worker: BenchWorker<T>): MutableList<Run> {
     for ((numWorkers, numTasksList) in worker.numParallelTasks) {
         for (numTasks in numTasksList) {
             tick()
-            par.run(worker, numTasks, numWorkers)
+            par.run(Job(worker).numTasks(numTasks), numWorkers)
             val time = tock()
             runs.add(
                 Run (

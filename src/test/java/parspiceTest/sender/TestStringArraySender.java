@@ -1,6 +1,7 @@
 package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
+import parspice.Job;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.StringArraySender;
 import parspice.worker.OWorker;
@@ -35,10 +36,9 @@ public class TestStringArraySender extends OWorker<String[]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestStringArraySender(),
-                    numIterations,
+                    (new TestStringArraySender()).job().numTasks(numIterations),
                     2
-            );
+            ).getOutputs();
         });
 
     }

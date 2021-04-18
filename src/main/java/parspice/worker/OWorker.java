@@ -1,5 +1,9 @@
 package parspice.worker;
 
+import parspice.Job;
+import parspice.ParSPICE;
+import parspice.io.IOManager;
+import parspice.io.OServer;
 import parspice.sender.Sender;
 
 import java.io.FileWriter;
@@ -7,6 +11,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * Superclass of all Worker tasks that don't take input arguments sent from
@@ -41,7 +46,7 @@ import java.net.Socket;
  *
  * @param <O> The type returned by the worker to the main process.
  */
-public abstract class OWorker<O> extends Worker {
+public abstract class OWorker<O> extends Worker<Void, Void, O> {
 
     private final Sender<O> outputSender;
 
@@ -58,11 +63,16 @@ public abstract class OWorker<O> extends Worker {
         this.outputSender = outputSender;
     }
 
+    @Override
+    public final void setupWrapper() throws Exception {
+        setup();
+    }
+
     /**
      * Prepares the output stream and repeatedly calls task.
      */
     @Override
-    public final void run() throws Exception {
+    public final void taskWrapper() throws Exception {
         for (int i = startIndex; i < startIndex + taskSubset; i++) {
             outputSender.write(task(i), oos);
         }
@@ -85,9 +95,27 @@ public abstract class OWorker<O> extends Worker {
      *
      * @return instance of the output sender.
      */
+    @Override
     public final Sender<O> getOutputSender() {
         return outputSender;
     }
+
+    @Override
+    public final Sender<Void> getSetupInputSender() {
+        return null;
+    }
+
+    @Override
+    public final Sender<Void> getInputSender() {
+        return null;
+    }
+
+    @Override
+    public final Job<Void,Void,O> job() {
+        return new Job<>(this);
+    }
+
+    public void setup() throws Exception {}
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range

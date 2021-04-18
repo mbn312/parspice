@@ -33,10 +33,9 @@ public class TestBooleanSender extends OWorker<Boolean>  {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestBooleanSender(),
-                    numIterations,
+                    (new TestBooleanSender()).job().numTasks(numIterations),
                     2
-            );
+            ).getOutputs();
         });
     }
 

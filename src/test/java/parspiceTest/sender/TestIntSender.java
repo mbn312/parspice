@@ -33,10 +33,9 @@ public class TestIntSender extends OWorker<Integer> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestIntSender(),
-                    numIterations,
+                    (new TestIntSender()).job().numTasks(numIterations),
                     2
-            );
+            ).getOutputs();
         });
     }
 

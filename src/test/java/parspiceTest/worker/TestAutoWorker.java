@@ -19,8 +19,7 @@ public class TestAutoWorker extends AutoWorker {
     @Test
     public void testRun() {
         assertDoesNotThrow(() -> ParSPICEInstance.par.run(
-                new TestAutoWorker(),
-                numIterations,
+                (new TestAutoWorker()).job().numTasks(numIterations),
                 2
         ));
     }

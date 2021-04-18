@@ -1,18 +1,27 @@
 package parspice.worker;
 
+import parspice.Job;
+import parspice.io.IOManager;
+import parspice.sender.Sender;
+
+import java.util.ArrayList;
+
 /**
  * Superclass of all Worker tasks that don't take input arguments sent from
  * the main process, and do return outputs. All subclasses should include a main entry point that
  * calls {@code run(new This(), args) with an instance of themselves.
- *
- * @param <O> The type returned by the worker to the main process.
  */
-public abstract class AutoWorker extends Worker {
+public abstract class AutoWorker extends Worker<Void, Void, Void> {
 
+    @Override
+    public final void setupWrapper() throws Exception {
+        setup();
+    }
     /**
      * Repeatedly calls task.
      */
-    public final void run() throws Exception {
+    @Override
+    public final void taskWrapper() throws Exception {
         for (int i = startIndex; i < startIndex + taskSubset; i++) {
             task(i);
         }
@@ -23,6 +32,29 @@ public abstract class AutoWorker extends Worker {
 
     @Override
     public final void endConnections() {}
+
+    @Override
+    public final Job<Void,Void,Void> job() {
+        return new Job<>(this);
+    }
+
+
+    @Override
+    public final Sender<Void> getOutputSender() {
+        return null;
+    }
+
+    @Override
+    public final Sender<Void> getSetupInputSender() {
+        return null;
+    }
+
+    @Override
+    public final Sender<Void> getInputSender() {
+        return null;
+    }
+
+    public void setup() throws Exception {}
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range

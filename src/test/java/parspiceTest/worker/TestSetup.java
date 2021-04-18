@@ -41,10 +41,9 @@ public class TestSetup extends OWorker<Integer> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestSetup(),
-                    numIterations,
+                    (new TestSetup()).job().numTasks(numIterations),
                     2
-            );
+            ).getOutputs();
         });
     }
 

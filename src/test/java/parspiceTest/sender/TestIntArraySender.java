@@ -35,10 +35,9 @@ public class TestIntArraySender extends OWorker<int[]> {
     public void testRun() {
         assertDoesNotThrow(() -> {
             parResults = ParSPICEInstance.par.run(
-                    new TestIntArraySender(),
-                    numIterations,
+                    (new TestIntArraySender()).job().numTasks(numIterations),
                     2
-            );
+            ).getOutputs();
         });
 
     }

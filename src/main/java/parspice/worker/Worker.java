@@ -1,44 +1,47 @@
 package parspice.worker;
 
+import parspice.Job;
+import parspice.sender.Sender;
+
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
-public abstract class Worker {
+public abstract class Worker<S, I, O> {
 
     /**
      * Unique ID for the worker, in the range [0, numWorkers)
      */
-    static int workerID = 0;
+    int workerID = 0;
 
     /**
      * Total number of workers in this job.
      */
-    static int numWorkers = 1;
+    int numWorkers = 1;
 
     /**
      * Total number of iterations to be run.
      */
-    static int numTasks = 1;
+    int numTasks = 1;
 
     /**
      * Port used to receive inputs.
      */
-    static int inputPort = 0;
+    int inputPort = 0;
 
     /**
      * Port used to send outputs.
      */
-    static int outputPort = 1;
+    int outputPort = 1;
 
     /**
      * Iteration index that this worker starts at.
      */
-    static int startIndex = 0;
+    int startIndex = 0;
 
     /**
      * How many tasks this worker needs to run.
      */
-    static int taskSubset = 1;
+    int taskSubset = 1;
 
     /**
      * Gets an instance of the user's Worker and runs it.
@@ -56,31 +59,31 @@ public abstract class Worker {
     public static void main(String[] args) throws Exception {
         Worker worker = (Worker) Class.forName(args[0]).getConstructor().newInstance();
         try {
-            inputPort = Integer.parseInt(args[1]);
-            outputPort = inputPort + 1;
-            startIndex = Integer.parseInt(args[2]);
-            taskSubset = Integer.parseInt(args[3]);
-            workerID = Integer.parseInt(args[4]);
-            numWorkers = Integer.parseInt(args[5]);
-            numTasks = Integer.parseInt(args[6]);
+            worker.inputPort = Integer.parseInt(args[1]);
+            worker.outputPort = worker.inputPort + 1;
+            worker.startIndex = Integer.parseInt(args[2]);
+            worker.taskSubset = Integer.parseInt(args[3]);
+            worker.workerID = Integer.parseInt(args[4]);
+            worker.numWorkers = Integer.parseInt(args[5]);
+            worker.numTasks = Integer.parseInt(args[6]);
 
             worker.startConnections();
-            worker.setup();
-            worker.run();
+            worker.setupWrapper();
+            worker.taskWrapper();
         } catch (Exception e) {
             System.err.println(e.toString());
             e.printStackTrace();
 
-            FileWriter writer = new FileWriter("ParSPICE_worker_log_" + workerID + ".txt");
+            FileWriter writer = new FileWriter("ParSPICE_worker_log_" + worker.workerID + ".txt");
 
             writer.write("workerName\t" + args[0]);
-            writer.write("\ninputPort\t" + inputPort);
-            writer.write("\noutputPort\t" + (inputPort + 1));
-            writer.write("\nstartIndex\t" + startIndex);
-            writer.write("\ntaskSubset\t" + taskSubset);
-            writer.write("\nworkerID\t" + workerID);
-            writer.write("\nnumWorkers\t" + numWorkers);
-            writer.write("\nnumTasks\t" + numTasks + "\n\n");
+            writer.write("\ninputPort\t" + worker.inputPort);
+            writer.write("\noutputPort\t" + (worker.inputPort + 1));
+            writer.write("\nstartIndex\t" + worker.startIndex);
+            writer.write("\ntaskSubset\t" + worker.taskSubset);
+            writer.write("\nworkerID\t" + worker.workerID);
+            writer.write("\nnumWorkers\t" + worker.numWorkers);
+            writer.write("\nnumTasks\t" + worker.numTasks + "\n\n");
 
             writer.write(e.toString());
             writer.write("\n\n");
@@ -103,7 +106,7 @@ public abstract class Worker {
      * All setup that might throw an error should be done here, not in the main
      * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
      */
-    public void setup() throws Exception {}
+    public abstract void setupWrapper() throws Exception;
 
     /**
      * Contains the task-loop logic specific to each worker type.
@@ -113,36 +116,41 @@ public abstract class Worker {
      *
      * @throws Exception
      */
-    public abstract void run() throws Exception;
+    public abstract void taskWrapper() throws Exception;
 
     public abstract void startConnections() throws Exception;
     public abstract void endConnections() throws Exception;
+    public abstract Job<S,I,O> job();
 
-    public static int getWorkerID() {
+    public abstract Sender<S> getSetupInputSender();
+    public abstract Sender<I> getInputSender();
+    public abstract Sender<O> getOutputSender();
+
+    public int getWorkerID() {
         return workerID;
     }
 
-    public static int getNumWorkers() {
+    public int getNumWorkers() {
         return numWorkers;
     }
 
-    public static int getInputPort() {
+    public int getInputPort() {
         return inputPort;
     }
 
-    public static int getOutputPort() {
+    public int getOutputPort() {
         return outputPort;
     }
 
-    public static int getStartIndex() {
+    public int getStartIndex() {
         return startIndex;
     }
 
-    public static int getTaskSubset() {
+    public int getTaskSubset() {
         return taskSubset;
     }
 
-    public static int getNumTasks() {
+    public int getNumTasks() {
         return numTasks;
     }
 }
