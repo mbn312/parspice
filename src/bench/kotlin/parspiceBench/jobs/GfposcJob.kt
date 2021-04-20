@@ -1,8 +1,9 @@
-package parspiceBench.workers
+package parspiceBench.jobs
 
 import parspice.sender.DoubleArraySender
-import parspiceBench.BenchWorker
+import parspiceBench.BenchJob
 import spice.basic.CSPICE.*
+import parspice.Worker.*
 
 /**
  * A funky boi that runs gfposc on a time window.
@@ -17,7 +18,7 @@ import spice.basic.CSPICE.*
  * of workers. This means the results of each run won't be *exactly* the same,
  * but that's ok because we aren't checking for correctness here.
  */
-class GfposcWorker: BenchWorker<DoubleArray>(DoubleArraySender()) {
+class GfposcJob: BenchJob<DoubleArray>(DoubleArraySender()) {
 
     override val bytes: Int
         // this is an approximation (the size varies with the number of workers

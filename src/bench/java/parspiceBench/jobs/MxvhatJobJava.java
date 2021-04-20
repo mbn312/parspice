@@ -1,8 +1,8 @@
-package parspiceBench.workers;
+package parspiceBench.jobs;
 
 import org.jetbrains.annotations.NotNull;
 import parspice.sender.DoubleArraySender;
-import parspiceBench.BenchWorker;
+import parspiceBench.BenchJob;
 import spice.basic.CSPICE;
 
 /**
@@ -11,7 +11,7 @@ import spice.basic.CSPICE;
  *
  * No performance difference was found.
  */
-public class MxvhatWorkerJava extends BenchWorker<double[]> {
+public class MxvhatJobJava extends BenchJob<double[]> {
 
     @Override
     public int getBytes() {
@@ -30,7 +30,7 @@ public class MxvhatWorkerJava extends BenchWorker<double[]> {
             {1.3, 1.0, 0.5},
     };
 
-    public MxvhatWorkerJava() {
+    public MxvhatJobJava() {
         super(new DoubleArraySender(3));
     }
 

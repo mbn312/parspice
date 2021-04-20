@@ -1,6 +1,5 @@
-package parspice.worker;
+package parspice.job;
 
-import parspice.Job;
 import parspice.ParSPICE;
 import parspice.io.IOManager;
 import parspice.io.IServer;
@@ -12,6 +11,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import static parspice.Worker.*;
+
 /**
  * Superclass of all Worker tasks that don't take input arguments sent from
  * the main process, and do return outputs. All subclasses should include a main entry point that
@@ -20,7 +21,7 @@ import java.util.List;
  * @param <I> The type given by the main process as argument.
  * @param <O> The type returned by the worker to the main process.
  */
-public abstract class IOWorker<I,O> extends Worker<Void, I, O> {
+public abstract class IOJob<I,O> extends Job<Void, I, O> {
 
     private final Sender<I> inputSender;
     private final Sender<O> outputSender;
@@ -30,7 +31,20 @@ public abstract class IOWorker<I,O> extends Worker<Void, I, O> {
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
 
-    public IOWorker(Sender<I> inputSender, Sender<O> outputSender) {
+    private List<I> inputs;
+    private ArrayList<O> outputs;
+
+    public final IOJob<I,O> init(int numWorkers, List<I> inputs) {
+        this.numWorkers = numWorkers;
+        this.inputs = inputs;
+        this.numTasks = inputs.size();
+
+        validate();
+
+        return this;
+    }
+
+    public IOJob(Sender<I> inputSender, Sender<O> outputSender) {
         this.inputSender = inputSender;
         this.outputSender = outputSender;
     }
@@ -44,15 +58,15 @@ public abstract class IOWorker<I,O> extends Worker<Void, I, O> {
      * Prepares the input and output streams and repeatedly calls task.
      */
     public final void taskWrapper() throws Exception {
-        for (int i = startIndex; i < startIndex + taskSubset; i++) {
+        for (int i = getStartIndex(); i < getStartIndex() + getTaskSubset(); i++) {
             outputSender.write(task(inputSender.read(ois)), oos);
         }
     }
 
     @Override
     public final void startConnections() throws Exception {
-        inputSocket = new Socket("localhost", inputPort);
-        outputSocket = new Socket("localhost", inputPort + 1);
+        inputSocket = new Socket("localhost", getInputPort());
+        outputSocket = new Socket("localhost", getOutputPort());
         ois = new ObjectInputStream(inputSocket.getInputStream());
         oos = new ObjectOutputStream(outputSocket.getOutputStream());
     }
@@ -65,34 +79,27 @@ public abstract class IOWorker<I,O> extends Worker<Void, I, O> {
         inputSocket.close();
     }
 
-    @Override
-    public final Job<Void,I,O> job() {
-        return new Job<>(this);
-    }
+    public final ArrayList<O> run(ParSPICE par) throws Exception {
+        if (inputs == null) {
+            throw new IllegalStateException("Inputs must be specified.");
+        }
+        ArrayList<IOManager<Void,I,O>> ioManagers = new ArrayList<>(numWorkers);
 
-    /**
-     * Get an instance of the input sender.
-     *
-     * @return instance of the input sender.
-     */
-    @Override
-    public final Sender<I> getInputSender() {
-        return inputSender;
-    }
+        int task = 0;
+        int minPort = par.getMinPort();
 
-    /**
-     * Get an instance of the output sender.
-     *
-     * @return instance of the output sender.
-     */
-    @Override
-    public final Sender<O> getOutputSender() {
-        return outputSender;
-    }
+        for (int i = 0; i < numWorkers; i++) {
+            int taskSubset = taskSubset(numTasks, numWorkers, i);
+            List<I> inputsSublist = inputs.subList(task, task+taskSubset);
+            IServer<Void,I> iServer = new IServer<>(inputSender, null, inputsSublist, null, minPort + 2*i, i);
+            OServer<O> oServer = new OServer<>(outputSender, taskSubset, minPort + 2*i + 1, i);
+            ioManagers.add(new IOManager<>(iServer, oServer, i));
+            task += taskSubset;
+        }
 
-    @Override
-    public final Sender<Void> getSetupInputSender() {
-        return null;
+        runCommon(par, ioManagers);
+
+        return aggregateOutputs(ioManagers);
     }
 
     public void setup() throws Exception {}

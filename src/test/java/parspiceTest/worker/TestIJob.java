@@ -2,9 +2,9 @@ package parspiceTest.worker;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import parspice.job.IJob;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.IntSender;
-import parspice.worker.IWorker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +12,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestIWorker extends IWorker<Integer> {
-    int numIterations = 10;
+public class TestIJob extends IJob<Integer> {
+    int numTestTasks = 10;
 
-    public TestIWorker() {
+    public TestIJob() {
         super(new IntSender());
     }
 
@@ -27,14 +27,13 @@ public class TestIWorker extends IWorker<Integer> {
     @Test
     public void testRun() {
         assertDoesNotThrow(() -> {
-            List<Integer> inputs = new ArrayList<>(numIterations);
-            for (int i = 0; i < numIterations; i++) {
+            List<Integer> inputs = new ArrayList<>(numTestTasks);
+            for (int i = 0; i < numTestTasks; i++) {
                 inputs.add(i * 2);
             }
-            ParSPICEInstance.par.run(
-                    (new TestIWorker()).job().inputs(inputs),
-                    2
-            );
+            (new TestIJob())
+                    .init(2, inputs)
+                    .run(ParSPICEInstance.par);
         });
     }
 }

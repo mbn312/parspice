@@ -3,7 +3,7 @@ package parspiceTest.sender;
 import org.junit.jupiter.api.TestInstance;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.BooleanSender;
-import parspice.worker.OWorker;
+import parspice.job.OJob;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestBooleanSender extends OWorker<Boolean>  {
+public class TestBooleanSender extends OJob<Boolean> {
     ArrayList<Boolean> parResults;
-    int numIterations = 10;
+    int numTestTasks = 10;
 
     public TestBooleanSender() {
         super(new BooleanSender());
@@ -32,17 +32,16 @@ public class TestBooleanSender extends OWorker<Boolean>  {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            parResults = ParSPICEInstance.par.run(
-                    (new TestBooleanSender()).job().numTasks(numIterations),
-                    2
-            ).getOutputs();
+            parResults = (new TestBooleanSender())
+                    .init(2, numTestTasks)
+                    .run(ParSPICEInstance.par);
         });
     }
 
     @Test
     public void testCorrectness() {
-        List<Boolean> directResults = new ArrayList<>(numIterations);
-        for (int i = 0; i < numIterations; i++) {
+        List<Boolean> directResults = new ArrayList<>(numTestTasks);
+        for (int i = 0; i < numTestTasks; i++) {
             directResults.add(true);
         }
         assertArrayEquals(parResults.toArray(), directResults.toArray());

@@ -1,8 +1,7 @@
 package parspiceBench
 
-import parspice.Job
 import parspice.ParSPICE
-import parspiceBench.workers.*
+import parspiceBench.jobs.*
 import java.io.File
 
 val par = ParSPICE("build/libs/bench.jar", 50050)
@@ -18,22 +17,22 @@ val par = ParSPICE("build/libs/bench.jar", 50050)
  */
 fun main() {
 
-    val workers = arrayOf(
-        LargeOutputWorker(),
-        SquareWorker(),
-        GfposcWorker(),
-        SincptWorker(),
-        MxvhatWorker(),
-        MxvhatWorkerJava()
+    val jobs = arrayOf(
+        LargeOutputJob(),
+        SquareJob(),
+        GfposcJob(),
+        SincptJob(),
+        MxvhatJob(),
+        MxvhatJobJava()
     )
 
-    println("Running ${workers.size} benchmark cases. This can take a few minutes.\n")
+    println("Running ${jobs.size} benchmark jobs. This can take a few minutes.\n")
 
     val runs: MutableList<Run> = mutableListOf()
 
-    for (i in workers.indices) {
-        println("Running case $i [${workers[i].description}]")
-        runs.addAll(run(workers[i]))
+    for (i in jobs.indices) {
+        println("Running case $i [${jobs[i].description}]")
+        runs.addAll(run(jobs[i]))
     }
 
     File("benchmark_log.csv").writeText(
@@ -41,21 +40,21 @@ fun main() {
     )
 }
 
-fun <T> run(worker: BenchWorker<T>): MutableList<Run> {
-    val taskTime = taskTime(worker)
+fun <T> run(job: BenchJob<T>): MutableList<Run> {
+    val taskTime = taskTime(job)
 
     val runs: MutableList<Run> = mutableListOf()
-    for ((numWorkers, numTasksList) in worker.numParallelTasks) {
+    for ((numWorkers, numTasksList) in job.numParallelTasks) {
         for (numTasks in numTasksList) {
             tick()
-            par.run(Job(worker).numTasks(numTasks), numWorkers)
+            job.init(numWorkers, numTasks).run(par)
             val time = tock()
             runs.add(
                 Run (
-                    worker.description,
+                    job.description,
                     numTasks,
                     numWorkers,
-                    worker.bytes,
+                    job.bytes,
                     taskTime,
                     time
                 )
@@ -65,13 +64,13 @@ fun <T> run(worker: BenchWorker<T>): MutableList<Run> {
     return runs
 }
 
-fun <T> taskTime(worker: BenchWorker<T>): Double {
+fun <T> taskTime(job: BenchJob<T>): Double {
     tick()
-    worker.setup()
-    for (i in 0 until worker.numSingleThreadedTasks) {
-        worker.task(i)
+    job.setup()
+    for (i in 0 until job.numSingleThreadedTasks) {
+        job.task(i)
     }
-    return tock().toDouble() / worker.numSingleThreadedTasks
+    return tock().toDouble() / job.numSingleThreadedTasks
 }
 
 var startTime: Long = -1

@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import parspice.sender.DoubleSender;
 import parspice.sender.IntSender;
-import parspice.worker.SIOWorker;
-import parspice.worker.SOWorker;
+import parspice.job.SIOJob;
 import parspiceTest.ParSPICEInstance;
 
 import java.util.ArrayList;
@@ -16,14 +15,14 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestSOWorker extends SOWorker<Double, Double> {
+public class TestSIOJob extends SIOJob<Double, Integer, Double> {
     ArrayList<Double> parResults;
-    int numIterations = 10;
+    int numTestTasks = 10;
 
     double offset = 0;
 
-    public TestSOWorker() {
-        super(new DoubleSender(), new DoubleSender());
+    public TestSIOJob() {
+        super(new DoubleSender(), new IntSender(), new DoubleSender());
     }
 
     @Override
@@ -32,7 +31,7 @@ public class TestSOWorker extends SOWorker<Double, Double> {
     }
 
     @Override
-    public Double task(int i) throws Exception {
+    public Double task(Integer i) throws Exception {
         return i + offset;
     }
 
@@ -40,18 +39,21 @@ public class TestSOWorker extends SOWorker<Double, Double> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            parResults = ParSPICEInstance.par.run(
-                    (new TestSOWorker()).job().setupInput(3.0).numTasks(numIterations),
-                    2
-            ).getOutputs();
+            List<Integer> inputs = new ArrayList<>(numTestTasks);
+            for (int i = 0; i < numTestTasks; i++) {
+                inputs.add(i * 2);
+            }
+            parResults = (new TestSIOJob())
+                    .init(2, 3.0, inputs)
+                    .run(ParSPICEInstance.par);
         });
     }
 
     @Test
     public void testCorrectness() {
-        List<Double> directResults = new ArrayList<>(numIterations);
-        for (int i = 0; i < numIterations; i++) {
-            directResults.add(i + 3.0);
+        List<Double> directResults = new ArrayList<>(numTestTasks);
+        for (int i = 0; i < numTestTasks; i++) {
+            directResults.add(2*i + 3.0);
         }
         assertArrayEquals(directResults.toArray(), parResults.toArray());
     }

@@ -6,7 +6,7 @@ Our solution is to break the job into multiple processes instead of multiple thr
 
 In broad strokes, the general process of using ParSPICE is three steps:
 
-1. Create a Worker class, which will run in parallel on the worker processes.
+1. Create a Worker class, which will run in parallel on the job processes.
 2. Create a fat jar containing your Worker, and all its dependencies.
 3. In the main process, create an instance of the `parspice.ParSPICE` class, and call `parSPICE.run(...)` on it.
 
@@ -18,15 +18,15 @@ If you want to get right to it, you can use a template Java or Kotlin project fr
   * [Clone ParSPICE and build](#cloneps)
   * [Publish to Maven Local](#publish)
 * [Usage](#usage)
-  * [Implementing a worker](#implworker)
+  * [Implementing a job](#implworker)
       * [Worker Types and IO Combinations](#workertypes)
       * [Sending data](#sendingdata)
         * [Built-in senders](#bisenders)
         * [Custom Senders](#csenders)
       * [Creating the fat Worker Jar](#fatjar)
-      * [Running the worker](#runworker)
+      * [Running the job](#runworker)
   * [Examples](#examples)
-      * [Worker](#worker)
+      * [Worker](#job)
       * [Main Process](#main)
   * [Error handling](#error)
 * [Benchmarking](#bench)
@@ -88,11 +88,11 @@ works fine and is even recommended, because it simplifies the boilerplate that P
 No ParSPICE-specific performance difference has been observed between Java and Kotlin.
 
 <a id="implworker"></a>
-### Implementing a worker
+### Implementing a job
 
-Each worker contains two key functions that you have to implement: `void setup()` and `task(...)`.
+Each job contains two key functions that you have to implement: `void setup()` and `task(...)`.
 
-- When the worker is started, `setup()` will be called once. If you have to load the JNISpice native library or furnsh a kernel, do it in setup. Remember that the worker is a separate process entirely; any setup you did on the main process is not available to the workers.
+- When the job is started, `setup()` will be called once. If you have to load the JNISpice native library or furnsh a kernel, do it in setup. Remember that the job is a separate process entirely; any setup you did on the main process is not available to the workers.
 - Then, `task(...)` is called repeatedly. The return type and input argument type are determined by you (in the next section). `task(...)` is the smallest piece of your job's logic that has to run sequentially (i.e. if you ran your job single-threaded in a for loop, `task(...)` is the body of the loop). `task(...)`'s behavior should depend *only* on its inputs.
 
 For example, if you need to perform some orbital calculation 100,000 times over some time-window, you should load the JNISpice library and your kernels in `setup()`, and `task(...)` should perform the calculation *once*.
@@ -100,7 +100,7 @@ For example, if you need to perform some orbital calculation 100,000 times over 
 <a id="workertypes"></a>
 #### Worker Types and IO Combinations
 
-Choose what IO you need for your worker. For performance, less IO is usually better if you can
+Choose what IO you need for your job. For performance, less IO is usually better if you can
 get away with it. Any data type can be sent as input or output, but default networking behavior is only provided
 for basic types and arrays of basic types. (see next section for details.)
 
@@ -220,30 +220,30 @@ At the end of the day, you can do whatever you want to the Input and Output obje
 <a id="fatjar"></a>
 #### Creating the fat Worker Jar
 
-Now that you have a worker implemented, along with custom Senders if needed, you need to package them
+Now that you have a job implemented, along with custom Senders if needed, you need to package them
 and all their dependencies in a fat jar. No main class is needed; so, if you are using the same jar for
 other purposes, the main class can be whatever you want. You can include as many workers as you want
 in a single jar. The following is a simple (but also overkill) solution for gradle, assuming all dependencies
-for your worker is under the `implementation` configuration.
+for your job is under the `implementation` configuration.
 
 ```groovy
 jar {
   from {
     configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
   }
-  archiveBaseName.set("worker")
+  archiveBaseName.set("job")
 }
 ```
 
-If you want to get fancier and only include worker-specific dependencies (not *all* dependencies, as above),
+If you want to get fancier and only include job-specific dependencies (not *all* dependencies, as above),
 we recommend custom source sets. The [templates repo](https://github.com/JoelCourtney/parspice-templates) contains examples of this, along with a custom `gradle workerJar` task, so you can create a different jar for the main process if you want.
 
 <a id="runworker"></a>
-#### Running the worker
+#### Running the job
 
-Running your ParSPICE job in parallel is easy. Create a new instance of the `parspice.ParSPICE` class; arguments are the path to the worker jar, and the minimum port number to use for networking.
+Running your ParSPICE job in parallel is easy. Create a new instance of the `parspice.ParSPICE` class; arguments are the path to the job jar, and the minimum port number to use for networking.
 
-Then call `parSPICE.run` on your instance; arguments are an instance of your worker, either the number of tasks to run (for no-input tasks) or the list of inputs to run on (for tasks with network input), and the number of workers to use.
+Then call `parSPICE.run` on your instance; arguments are an instance of your job, either the number of tasks to run (for no-input tasks) or the list of inputs to run on (for tasks with network input), and the number of workers to use.
 
 <a id="examples"></a>
 #### Examples
@@ -252,12 +252,11 @@ The following is an `OWorker<double[]>` that calls `CSPICE.mxv` and `CSPICE.vhat
 and a vector constructed from the input `int i` (the actual matrix and vector are nonsense values,
 just a proof of concept):
 
-<a id="worker"></a>
+<a id="job"></a>
 **Worker:**
 
 ```java
-import parspice.worker.OWorker;
-import parspice.sender.DoubleArraySender;
+import parspice.job.OJobmport parspice.sender.DoubleArraySender;
 
 public class MxvhatWorker extends OWorker<double[]> {
 
@@ -277,7 +276,7 @@ public class MxvhatWorker extends OWorker<double[]> {
 
     @Override
     public void setup() {
-        // Load the native library once when the worker starts
+        // Load the native library once when the job starts
         System.loadLibrary("JNISpice");
     }
 
@@ -300,7 +299,7 @@ import parspice.ParSPICE;
 public class Main {
     public static void main(String[] args) {
         // create the ParSPICE instance.
-        ParSPICE par = new ParSPICE("build/libs/worker.jar", 50050);
+        ParSPICE par = new ParSPICE("build/libs/job.jar", 50050);
         
         // run 1000 tasks with 5 workers in parallel.
         ArrayList<double[]> results = par.run(new MxvhatWorker(), 1000, 5);
@@ -312,7 +311,7 @@ The `build.gradle` file would be copied from the [templates repo's build.gradle]
 <a id="error"></a>
 ### Error handling
 
-The Worker superclasses allow `setup()` and `task(...)` to throw arbitrary errors. If any error is thrown on the worker process, the stacktrace will be printed to `ParSPICE_worker_log_ID.txt` where `ID` is the ID of the worker, ranging from 0 to one less than the number of workers.
+The Worker superclasses allow `setup()` and `task(...)` to throw arbitrary errors. If any error is thrown on the job process, the stacktrace will be printed to `ParSPICE_worker_log_ID.txt` where `ID` is the ID of the job, ranging from 0 to one less than the number of workers.
 
 <a id="bench"></a>
 ## Benchmarking

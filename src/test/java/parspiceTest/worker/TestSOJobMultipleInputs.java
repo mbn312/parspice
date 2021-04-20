@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import parspice.sender.DoubleSender;
-import parspice.worker.SOWorker;
+import parspice.job.SOJob;
 import parspiceTest.ParSPICEInstance;
 
 import java.util.ArrayList;
@@ -14,13 +14,13 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestSOWorkerMultipleInputs extends SOWorker<Double, Double> {
+public class TestSOJobMultipleInputs extends SOJob<Double, Double> {
     ArrayList<Double> parResults;
-    int numIterations = 10;
+    int numTestTasks = 10;
 
     double offset = 0;
 
-    public TestSOWorkerMultipleInputs() {
+    public TestSOJobMultipleInputs() {
         super(new DoubleSender(), new DoubleSender());
     }
 
@@ -38,22 +38,21 @@ public class TestSOWorkerMultipleInputs extends SOWorker<Double, Double> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            List<Double> setupInputs = new ArrayList<>(numIterations);
+            List<Double> setupInputs = new ArrayList<>(numTestTasks);
             for (int i = 0; i < 2; i++) {
                 setupInputs.add((double) i);
             }
-            parResults = ParSPICEInstance.par.run(
-                    (new TestSOWorkerMultipleInputs()).job().setupInputs(setupInputs).numTasks(numIterations),
-                    2
-            ).getOutputs();
+            parResults = (new TestSOJobMultipleInputs())
+                    .init(numTestTasks, setupInputs)
+                    .run(ParSPICEInstance.par);
         });
     }
 
     @Test
     public void testCorrectness() {
-        List<Double> directResults = new ArrayList<>(numIterations);
-        for (int i = 0; i < numIterations; i++) {
-            if (i < numIterations/2)
+        List<Double> directResults = new ArrayList<>(numTestTasks);
+        for (int i = 0; i < numTestTasks; i++) {
+            if (i < numTestTasks /2)
                 directResults.add((double) i);
             else
                 directResults.add((double) i + 1);

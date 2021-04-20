@@ -3,10 +3,9 @@ package parspiceTest.worker;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import parspice.Job;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.IntSender;
-import parspice.worker.IOWorker;
+import parspice.job.IOJob;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,11 +14,11 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestIOWorker extends IOWorker<Integer, Integer> {
+public class TestIOJob extends IOJob<Integer, Integer> {
     ArrayList<Integer> parResults;
-    int numIterations = 10;
+    int numTestTasks = 10;
 
-    public TestIOWorker() {
+    public TestIOJob() {
         super(new IntSender(), new IntSender());
     }
 
@@ -32,21 +31,20 @@ public class TestIOWorker extends IOWorker<Integer, Integer> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            List<Integer> inputs = new ArrayList<>(numIterations);
-            for (int i = 0; i < numIterations; i++) {
+            List<Integer> inputs = new ArrayList<>(numTestTasks);
+            for (int i = 0; i < numTestTasks; i++) {
                 inputs.add(i * 2);
             }
-            parResults = ParSPICEInstance.par.run(
-                    (new TestIOWorker()).job().inputs(inputs),
-                    2
-            ).getOutputs();
+            parResults = (new TestIOJob())
+                    .init(2, inputs)
+                    .run(ParSPICEInstance.par);
         });
     }
 
     @Test
     public void testCorrectness() {
-        List<Integer> directResults = new ArrayList<>(numIterations);
-        for (int i = 0; i < numIterations; i++) {
+        List<Integer> directResults = new ArrayList<>(numTestTasks);
+        for (int i = 0; i < numTestTasks; i++) {
             directResults.add(i*4);
         }
         assertArrayEquals(directResults.toArray(), parResults.toArray());

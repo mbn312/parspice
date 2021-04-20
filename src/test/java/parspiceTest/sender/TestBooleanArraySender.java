@@ -3,7 +3,7 @@ package parspiceTest.sender;
 import org.junit.jupiter.api.TestInstance;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.BooleanArraySender;
-import parspice.worker.OWorker;
+import parspice.job.OJob;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestBooleanArraySender extends OWorker<boolean[]> {
+public class TestBooleanArraySender extends OJob<boolean[]> {
     ArrayList<boolean[]> parResults;
-    int numIterations = 10;
+    int numTestTasks = 10;
 
     public TestBooleanArraySender() {
         super(new BooleanArraySender());
@@ -34,18 +34,17 @@ public class TestBooleanArraySender extends OWorker<boolean[]> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            parResults = ParSPICEInstance.par.run(
-                    (new TestBooleanArraySender()).job().numTasks(numIterations),
-                    2
-            ).getOutputs();
+            parResults = (new TestBooleanArraySender())
+                    .init(2, numTestTasks)
+                    .run(ParSPICEInstance.par);
         });
 
     }
 
     @Test
     public void testCorrectness() {
-        List<boolean[]> directResults = new ArrayList<boolean[]>(numIterations);
-        for (int i = 0; i < numIterations; i++) {
+        List<boolean[]> directResults = new ArrayList<boolean[]>(numTestTasks);
+        for (int i = 0; i < numTestTasks; i++) {
             boolean[] x = {false,true};
             directResults.add(x);
         }

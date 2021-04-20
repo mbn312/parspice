@@ -3,7 +3,7 @@ package parspiceTest.sender;
 import org.junit.jupiter.api.TestInstance;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.StringMatrixSender;
-import parspice.worker.OWorker;
+import parspice.job.OJob;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestStringMatrixSender extends OWorker<String[][]> {
+public class TestStringMatrixSender extends OJob<String[][]> {
     ArrayList<String[][]> parResults;
-    int numIterations = 10;
+    int numTestTasks = 10;
 
     public TestStringMatrixSender() {
         super(new StringMatrixSender());
@@ -34,18 +34,17 @@ public class TestStringMatrixSender extends OWorker<String[][]> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            parResults = ParSPICEInstance.par.run(
-                    (new TestStringMatrixSender()).job().numTasks(numIterations),
-                    2
-            ).getOutputs();
+            parResults = (new TestStringMatrixSender())
+                    .init(2, numTestTasks)
+                    .run(ParSPICEInstance.par);
         });
 
     }
 
     @Test
     public void testCorrectness() {
-        List<String[][]> directResults = new ArrayList<String[][]>(numIterations);
-        for (int i = 0; i < numIterations; i++) {
+        List<String[][]> directResults = new ArrayList<String[][]>(numTestTasks);
+        for (int i = 0; i < numTestTasks; i++) {
             String[][] x = {{"Test","Correct"},{"Test","Correct"}};
             directResults.add(x);
         }

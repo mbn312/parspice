@@ -1,17 +1,17 @@
-package parspice.worker;
+package parspice.job;
 
-import parspice.Job;
 import parspice.ParSPICE;
 import parspice.io.IOManager;
+import parspice.io.IServer;
 import parspice.io.OServer;
 import parspice.sender.Sender;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
+
+import static parspice.Worker.*;
 
 /**
  * Superclass of all Worker tasks that don't take input arguments sent from
@@ -46,12 +46,21 @@ import java.util.ArrayList;
  *
  * @param <O> The type returned by the worker to the main process.
  */
-public abstract class OWorker<O> extends Worker<Void, Void, O> {
+public abstract class OJob<O> extends Job<Void, Void, O> {
 
     private final Sender<O> outputSender;
 
     private Socket outputSocket;
     private ObjectOutputStream oos;
+
+    public final OJob<O> init(int numWorkers, int numTasks) {
+        this.numWorkers = numWorkers;
+        this.numTasks = numTasks;
+
+        validate();
+
+        return this;
+    }
 
     /**
      * Creates a new OWorker instance
@@ -59,7 +68,7 @@ public abstract class OWorker<O> extends Worker<Void, Void, O> {
      * @param outputSender the sender used to sender output results back to
      *                     the main process
      */
-    public OWorker(Sender<O> outputSender) {
+    public OJob(Sender<O> outputSender) {
         this.outputSender = outputSender;
     }
 
@@ -73,14 +82,14 @@ public abstract class OWorker<O> extends Worker<Void, Void, O> {
      */
     @Override
     public final void taskWrapper() throws Exception {
-        for (int i = startIndex; i < startIndex + taskSubset; i++) {
+        for (int i = getStartIndex(); i < getStartIndex() + getTaskSubset(); i++) {
             outputSender.write(task(i), oos);
         }
     }
 
     @Override
     public final void startConnections() throws Exception {
-        outputSocket = new Socket("localhost", inputPort + 1);
+        outputSocket = new Socket("localhost", getOutputPort());
         oos = new ObjectOutputStream(outputSocket.getOutputStream());
     }
 
@@ -90,29 +99,22 @@ public abstract class OWorker<O> extends Worker<Void, Void, O> {
         outputSocket.close();
     }
 
-    /**
-     * Get an instance of the output sender.
-     *
-     * @return instance of the output sender.
-     */
-    @Override
-    public final Sender<O> getOutputSender() {
-        return outputSender;
-    }
+    public final ArrayList<O> run(ParSPICE par) throws Exception {
+        ArrayList<IOManager<Void,Void,O>> ioManagers = new ArrayList<>(numWorkers);
 
-    @Override
-    public final Sender<Void> getSetupInputSender() {
-        return null;
-    }
+        int task = 0;
+        int minPort = par.getMinPort();
 
-    @Override
-    public final Sender<Void> getInputSender() {
-        return null;
-    }
+        for (int i = 0; i < numWorkers; i++) {
+            int taskSubset = taskSubset(numTasks, numWorkers, i);
+            OServer<O> oServer = new OServer<>(outputSender, taskSubset, minPort + 2*i + 1, i);
+            ioManagers.add(new IOManager<>(null, oServer, i));
+            task += taskSubset;
+        }
 
-    @Override
-    public final Job<Void,Void,O> job() {
-        return new Job<>(this);
+        runCommon(par, ioManagers);
+
+        return aggregateOutputs(ioManagers);
     }
 
     public void setup() throws Exception {}

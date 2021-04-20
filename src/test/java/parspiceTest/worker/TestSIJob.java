@@ -5,23 +5,23 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import parspice.sender.DoubleSender;
 import parspice.sender.IntSender;
-import parspice.worker.SIWorker;
-import parspice.worker.SWorker;
+import parspice.job.SIJob;
 import parspiceTest.ParSPICEInstance;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestSWorker extends SWorker<Double> {
-    int numIterations = 10;
+public class TestSIJob extends SIJob<Double, Integer> {
+    int numTestTasks = 10;
 
     double offset = 0;
 
-    public TestSWorker() {
-        super(new DoubleSender());
+    public TestSIJob() {
+        super(new DoubleSender(), new IntSender());
     }
 
     @Override
@@ -30,7 +30,7 @@ public class TestSWorker extends SWorker<Double> {
     }
 
     @Override
-    public void task(int i) throws Exception {
+    public void task(Integer i) throws Exception {
         double hello = i + offset;
     }
 
@@ -38,10 +38,13 @@ public class TestSWorker extends SWorker<Double> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            ParSPICEInstance.par.run(
-                    (new TestSWorker()).job().setupInput(3.0).numTasks(numIterations),
-                    2
-            );
+            List<Integer> inputs = new ArrayList<>(numTestTasks);
+            for (int i = 0; i < numTestTasks; i++) {
+                inputs.add(i * 2);
+            }
+            (new TestSIJob())
+                    .init(2, 3.0, inputs)
+                    .run(ParSPICEInstance.par);
         });
     }
 }

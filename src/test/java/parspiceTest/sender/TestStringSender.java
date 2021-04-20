@@ -1,9 +1,9 @@
 package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
+import parspice.job.OJob;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.StringSender;
-import parspice.worker.OWorker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestStringSender extends OWorker<String> {
+public class TestStringSender extends OJob<String> {
     ArrayList<String> parResults;
-    int numIterations = 10;
+    int numTestTasks = 10;
 
     public TestStringSender() {
         super(new StringSender());
@@ -32,17 +32,16 @@ public class TestStringSender extends OWorker<String> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            parResults = ParSPICEInstance.par.run(
-                    (new TestStringSender()).job().numTasks(numIterations),
-                    2
-            ).getOutputs();
+            parResults = (new TestStringSender())
+                    .init(2, numTestTasks)
+                    .run(ParSPICEInstance.par);
         });
     }
 
     @Test
     public void testCorrectness() {
-        List<String> directResults = new ArrayList<String>(numIterations);
-        for (int i = 0; i < numIterations; i++) {
+        List<String> directResults = new ArrayList<String>(numTestTasks);
+        for (int i = 0; i < numTestTasks; i++) {
             directResults.add("Test");
         }
         assertArrayEquals(parResults.toArray(), directResults.toArray());
