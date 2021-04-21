@@ -1,7 +1,7 @@
 package parspice.worker;
 
 /**
- * Superclass of all Jobs that don't take input arguments sent from
+ * Superclass of all Workers that don't take input arguments sent from
  * the main process, and do return outputs.
  */
 public abstract class AutoWorker extends Worker<Void> {
@@ -11,7 +11,7 @@ public abstract class AutoWorker extends Worker<Void> {
      *
      * @param numWorkers number of workers to use.
      * @param numTasks number of tasks to run.
-     * @return this (builder pattern)
+     * @return an initialized Job, ready to run
      */
     public final VoidJob<Void, Void> init(int numWorkers, int numTasks) {
         VoidJob<Void,Void> job = new VoidJob<>(this);
@@ -49,13 +49,13 @@ public abstract class AutoWorker extends Worker<Void> {
     }
 
     /**
-     * [worker] Does nothing (AutoJobs have no connections to start).
+     * [worker] Does nothing (AutoWorkers have no connections to start).
      */
     @Override
     final void startConnections() {}
 
     /**
-     * [worker] Does nothing (AutoJobs have no connections to end).
+     * [worker] Does nothing (AutoWorkers have no connections to end).
      */
     @Override
     final void endConnections() {}

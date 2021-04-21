@@ -9,15 +9,30 @@ import parspice.sender.Sender;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Job<S,I,O> {
+/**
+ * A Job is the actual computations the user needs to perform,
+ * i.e. the Worker, combined with all of its inputs and configuration.
+ * The user gets an instance of a Job by calling init on a Worker instance,
+ * and then runs it with .run(par) (defined in subclasses of Job).
+ *
+ * The user can't create instances of jobs directly, as the constructors
+ * are all package-private. Instead, the user can only get an instance
+ * by calling init on a Worker instance.
+ *
+ * @param <S> Type for setup inputs (Void if none)
+ * @param <I> Type for task inputs (Void if none)
+ * @param <O> Type for task outputs (Void if none)
+ */
+public abstract class Job<S,I,O> {
     int numWorkers;
     int numTasks;
+
     /**
-     * [main] setup inputs supplied by the user
+     * setup inputs supplied by the user
      */
     List<S> setupInputs;
     /**
-     * [main] inputs supplied by the user
+     * inputs supplied by the user
      */
     List<I> inputs;
 
@@ -25,13 +40,25 @@ public class Job<S,I,O> {
     Sender<I> inputSender;
     Sender<O> outputSender;
 
-    private Worker<O> worker;
+    private final Worker<O> worker;
+
+    /**
+     * List io managers used in runCommon. It is stored
+     * as a member field so that OJob can access it later.
+     */
     protected ArrayList<IOManager<S, I, O>> ioManagers;
 
     Job(Worker<O> worker) {
         this.worker = worker;
     }
 
+    /**
+     * Common logic for running all jobs. Creates the IOManagers and worker processes,
+     * runs them, and waits for them to finish.
+     *
+     * @param par Instance of ParSPICE to use
+     * @throws Exception
+     */
     protected final void runCommon(ParSPICE par) throws Exception {
         boolean hasIO = setupSender != null || inputSender != null || outputSender != null;
 
@@ -94,12 +121,12 @@ public class Job<S,I,O> {
     }
 
     /**
-     * [main] Calculate how many tasks should be given to a particular worker.
-     * <p>
+     * Calculate how many tasks should be given to a particular worker.
+     *
      * Each worker is given an almost-equal taskSubset. If numTasks is not
      * an even multiple of numWorkers, the remainder is spread across the
      * first numTasks % numWorkers workers.
-     * <p>
+     *
      * This function is intentionally package-private, so that user extensions of Job
      * cannot call this function.
      *
@@ -113,13 +140,9 @@ public class Job<S,I,O> {
     }
 
     /**
-     * [main] Checks that the specified numbers of workers and tasks are valid.
-     * Called at the end of every `init(...)` function.
-     * <p>
-     * This function is intentionally package-private, so that user extensions of Job
-     * cannot call this function.
+     * Checks that the configuration given in the init functions is valid.
      *
-     * @throws IllegalStateException if either numWorkers or numTasks is unspecified or less than 1.
+     * @throws IllegalStateException if the state is not valid
      */
     void validate() throws IllegalStateException {
         if (numWorkers == -1) {
@@ -133,6 +156,21 @@ public class Job<S,I,O> {
         } else if (numTasks < 1) {
             throw new IllegalStateException("Number of tasks cannot be less than 1, was " + numWorkers);
         }
+
+        if (inputs == null ^ inputSender == null) {
+            throw new IllegalStateException("Inputs and input sender must either be both null or both not null.");
+        }
+        if (setupInputs == null ^ setupSender == null) {
+            throw new IllegalStateException("Setup inputs and setup sender must either be both null or both not null");
+        }
+
+        if (inputs != null && inputs.size() != numTasks) {
+            throw new IllegalStateException("Inputs size should match numTasks. This is an internal error, not user error.");
+        }
+        if (setupInputs != null && setupInputs.size() != numWorkers) {
+            throw new IllegalStateException("Setup inputs size should match numWorkers. This is an internal error, not user error.");
+        }
+
 
     }
 }

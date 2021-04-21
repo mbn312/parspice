@@ -1,14 +1,9 @@
 package parspice.worker;
 
-import parspice.ParSPICE;
-import parspice.io.IOManager;
-import parspice.io.OServer;
 import parspice.sender.Sender;
-
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 
 /**
  * Superclass of all Worker tasks that don't take input arguments sent from
@@ -21,10 +16,10 @@ import java.util.ArrayList;
  * import parspice.sender.DoubleArraySender;
  * import spice.basic.CSPICE;
  * import spice.basic.SpiceErrorException;
- * import parspice.job.OJob;
+ * import parspice.worker.OWorker;
  *
- * public class VhatOutputJob extends OJob<double[]> {
- *     public VhatOutputJob() {
+ * public class VhatOutputWorker extends OWorker<double[]> {
+ *     public VhatOutputWorker() {
  *         super(new DoubleArraySender(3));
  *     }
  *
@@ -65,7 +60,7 @@ public abstract class OWorker<O> extends Worker<O> {
      *
      * @param numWorkers number of workers to use.
      * @param numTasks number of tasks to run.
-     * @return this (builder pattern)
+     * @return an initialized Job, ready to run
      */
     public final OJob<Void,Void,O> init(int numWorkers, int numTasks) {
         OJob<Void,Void,O> job = new OJob<>(this);

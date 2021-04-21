@@ -1,18 +1,13 @@
 package parspice.worker;
 
-import parspice.ParSPICE;
-import parspice.io.IOManager;
-import parspice.io.IServer;
-import parspice.io.OServer;
 import parspice.sender.Sender;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Superclass of all Jobs that don't take input arguments sent from
+ * Superclass of all Workers that don't take input arguments sent from
  * the main process, and do return outputs.
  *
  * @param <I> The type given by the main process as argument.
@@ -38,7 +33,7 @@ public abstract class IOWorker<I,O> extends Worker<O> {
      *
      * @param numWorkers number of workers to use.
      * @param inputs inputs to split among the workers
-     * @return this (builder pattern)
+     * @return an initialized Job, ready to run
      */
     public final OJob<Void,I,O> init(int numWorkers, List<I> inputs) {
         OJob<Void, I, O> job = new OJob<>(this);

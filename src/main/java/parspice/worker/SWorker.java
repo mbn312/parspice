@@ -1,8 +1,5 @@
 package parspice.worker;
 
-import parspice.ParSPICE;
-import parspice.io.IOManager;
-import parspice.io.IServer;
 import parspice.sender.Sender;
 
 import java.io.IOException;
@@ -12,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Superclass of all jobs that take inputs to the setup function,
+ * Superclass of all Workers that take inputs to the setup function,
  * but don't take task inputs or return task outputs.
  *
  * @param <S> The type given to the setup function by the main process.
@@ -35,7 +32,7 @@ public abstract class SWorker<S> extends Worker<Void> {
      * @param numWorkers number of workers to use.
      * @param numTasks number of tasks to run.
      * @param setupInput setup input to give to each job's setup function.
-     * @return this (builder pattern)
+     * @return an initialized Job, ready to run
      */
     public final VoidJob<S,Void> init(int numWorkers, int numTasks, S setupInput) {
         VoidJob<S,Void> job = new VoidJob<>(this);
@@ -59,7 +56,7 @@ public abstract class SWorker<S> extends Worker<Void> {
      *
      * @param numTasks number of tasks to run.
      * @param setupInputs list of setup inputs to give to the jobs.
-     * @return this (builder pattern)
+     * @return an initialized Job, ready to run
      */
     public final VoidJob<S,Void> init(int numTasks, List<S> setupInputs) {
         VoidJob<S,Void> job = new VoidJob<>(this);

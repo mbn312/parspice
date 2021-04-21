@@ -1,9 +1,5 @@
 package parspice.worker;
 
-import parspice.ParSPICE;
-import parspice.io.IOManager;
-import parspice.io.IServer;
-import parspice.io.OServer;
 import parspice.sender.Sender;
 
 import java.io.IOException;
@@ -14,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Superclass of all Jobs that take inputs to the setup function but not the
+ * Superclass of all Workers that take inputs to the setup function but not the
  * task function, and return output from the task function.
  *
  * @param <S> The type given to the setup function by the main process.
@@ -42,7 +38,7 @@ public abstract class SOWorker<S,O> extends Worker<O> {
      * @param numWorkers number of workers to use.
      * @param numTasks number of tasks to run.
      * @param setupInput setup input to give to each job's setup function.
-     * @return this (builder pattern)
+     * @return an initialized Job, ready to run
      */
     public final OJob<S,Void,O> init(int numWorkers, int numTasks, S setupInput) {
         OJob<S,Void,O> job = new OJob<>(this);
@@ -67,7 +63,7 @@ public abstract class SOWorker<S,O> extends Worker<O> {
      *
      * @param numTasks number of tasks to run.
      * @param setupInputs list of setup inputs to give to the jobs.
-     * @return this (builder pattern)
+     * @return an initialized Job, ready to run
      */
     public final OJob<S,Void,O> init(int numTasks, List<S> setupInputs) {
         OJob<S,Void,O> job = new OJob<>(this);

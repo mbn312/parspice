@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.util.List;
 
 /**
- * Superclass of all Jobs that don't take input arguments sent from
+ * Superclass of all Workers that don't take input arguments sent from
  * the main process, and do return outputs.
  *
  * @param <I> The type given to the job by the main process.
@@ -27,8 +27,8 @@ public abstract class IWorker<I> extends Worker<Void> {
      * [main process] Initialize the job with the inputs it needs to run.
      *
      * @param numWorkers number of workers to use.
-     * @param inputs inputs to split among the workers
-     * @return this (builder pattern)
+     * @param inputs inputs to split among the worker
+     * @return an initialized Job, ready to run
      */
     public final VoidJob<Void,I> init(int numWorkers, List<I> inputs) {
         VoidJob<Void,I> job = new VoidJob<>(this);

@@ -1,11 +1,6 @@
 package parspice.worker;
 
-import parspice.ParSPICE;
-import parspice.io.IOManager;
-import parspice.io.IServer;
-import parspice.io.OServer;
 import parspice.sender.Sender;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -14,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Superclass of all Jobs that take inputs to both the setup and task functions,
+ * Superclass of all Workers that take inputs to both the setup and task functions,
  * and return output back to the main process.
  *
  * @param <S> The type given to the setup function by the main process.
@@ -40,12 +35,12 @@ public abstract class SIOWorker<S,I,O> extends Worker<O> {
 
     /**
      * [main process] Initialize the job with the inputs it needs to run, including a
-     * single input to be copied to the argument of each job's setup function.
+     * single input to be copied to the argument of each worker's setup function.
      *
      * @param numWorkers number of workers to use.
      * @param setupInput setup input to give to each job's setup function.
      * @param inputs inputs to split among the workers
-     * @return this (builder pattern)
+     * @return an initialized Job, ready to run
      */
     public final OJob<S,I,O> init(int numWorkers, S setupInput, List<I> inputs) {
         OJob<S,I,O> job = new OJob<>(this);
@@ -68,11 +63,11 @@ public abstract class SIOWorker<S,I,O> extends Worker<O> {
 
     /**
      * [main process] initialize the job with the inputs it needs to run, including a list
-     * of setup inputs, where one will be given to each job's setup function.
+     * of setup inputs, where one will be given to each worker's setup function.
      *
      * @param setupInputs list of setup inputs to give to the jobs.
      * @param inputs list of inputs to split among the workers
-     * @return this (builder pattern)
+     * @return an initialized Job, ready to run
      */
     public final OJob<S,I,O> init(List<S> setupInputs, List<I> inputs) {
         OJob<S,I,O> job = new OJob<>(this);

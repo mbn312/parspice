@@ -1,61 +1,52 @@
 package parspice.worker;
 
-import parspice.ParSPICE;
-import parspice.io.IOManager;
-
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.io.IOException;
 
 /**
- * The superclass of all Jobs.
- *
- * Some functions here are meant to be run on the Main process (marked as [main] in docs), and some
- * are meant to run on the Worker processes (marked as [worker] in docs). Its a little ugly,
- * but the alternative is separating the subclasses' code into another 8 highly entangled
- * files, which would be poor encapsulation.
+ * The superclass of all Workers.
  *
  * The user is technically able to call the `main(String[] args)` function. Realistically,
  * there is no way to prevent them from doing so. Don't.
  *
  * @param <O> The type of output returned from the job. If the job does not produce output,
- *            Job will be extended as `extends Job<Void>`
+ *            Worker will be extended as `extends Worker<Void>`
  */
 public abstract class Worker<O> {
 
     /**
-     * [worker] Unique ID for the worker, in the range [0, numWorkers)
+     * Unique ID for the worker, in the range [0, numWorkers)
      */
     int workerID = 0;
 
     /**
-     * [main and worker] Total number of workers in this job.
+     * Total number of workers in this job.
      */
     int numWorkers = 1;
 
     /**
-     * [main and worker] Total number of iterations to be run.
+     * Total number of iterations to be run.
      */
     int numTasks = 1;
 
     /**
-     * [worker] Port used to receive inputs.
+     * Port used to receive inputs.
      */
     int inputPort = 0;
 
     /**
-     * [worker] Port used to send outputs.
+     * Port used to send outputs.
      */
     int outputPort = 1;
 
     /**
-     * [worker] Iteration index that this worker starts at.
+     * Iteration index that this worker starts at.
      */
     int startIndex = 0;
 
     /**
-     * [worker] How many tasks this worker needs to run.
+     * How many tasks this worker needs to run.
      */
     int taskSubset = 1;
 
@@ -88,7 +79,7 @@ public abstract class Worker<O> {
     }
 
     /**
-     * [worker] Gets an instance of the user's Job and runs it.
+     * Gets an instance of the user's Worker and runs it.
      *
      * @param args Command line args:
      *             0. Full classname of user's Worker (including package)
@@ -145,21 +136,21 @@ public abstract class Worker<O> {
     }
 
     /**
-     * [worker] Contains the setup logic specific to each worker type.
+     * Contains the setup logic specific to each worker type.
      *
-     * This function is final in the Job subclasses, so the user cannot
+     * This function is final in the Worker subclasses, so the user cannot
      * override it.
-     * This function is intentionally package-private, so that user extensions of Job
+     * This function is intentionally package-private, so that user extensions of Worker
      * cannot call this function.
      */
     abstract void setupWrapper() throws Exception;
 
     /**
-     * [worker] Contains the task-loop logic specific to each worker type.
+     * Contains the task-loop logic specific to each worker type.
      *
-     * This function is final in the Job subclasses, so the user
+     * This function is final in the Worker subclasses, so the user
      * cannot override it.
-     * This function is intentionally package-private, so that user extensions of Job
+     * This function is intentionally package-private, so that user extensions of Worker
      * cannot call this function.
      *
      * @throws Exception
@@ -167,11 +158,11 @@ public abstract class Worker<O> {
     abstract void taskWrapper() throws Exception;
 
     /**
-     * [worker] Start any input/output connections needed for the job.
+     * Start any input/output connections needed for the worker.
      *
-     * This function is final in the Job subclasses, so the user
+     * This function is final in the Worker subclasses, so the user
      * cannot override it.
-     * This function is intentionally package-private, so that user extensions of Job
+     * This function is intentionally package-private, so that user extensions of Worker
      * cannot call this function.
      *
      * @throws IOException if the connections cannot be started
@@ -179,11 +170,11 @@ public abstract class Worker<O> {
     abstract void startConnections() throws IOException;
 
     /**
-     * [worker] End any input/output connections needed by the job.
+     * End any input/output connections needed by the worker.
      *
-     * This function is final in the Job subclasses, so the user
+     * This function is final in the Worker subclasses, so the user
      * cannot override it.
-     * This function is intentionally package-private, so that user extensions of Job
+     * This function is intentionally package-private, so that user extensions of Worker
      * cannot call this function.
      *
      * @throws IOException if the connections cannot be ended.

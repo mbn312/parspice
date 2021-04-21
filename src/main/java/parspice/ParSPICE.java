@@ -8,12 +8,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
- * The interface for running parallel multi-process tasks with ParSPICE.
- *
- * Tasks can be run either with input arguments given to the worker processes, or without.
- * For short tasks, the network overhead is significant, so input arguments should be
- * avoided if at all possible. If inputs are not used, the task will receive an integer
- * indicating which run of the task it is, as if it was inside a for loop on a single process.
+ * Holds the configuration info for ParSPICE, such as the path
+ * to the worker jar and the minimum port to use for networking.
  */
 public class ParSPICE {
 
@@ -41,7 +37,7 @@ public class ParSPICE {
     }
 
     /**
-     * Checks that the given file exists, and that it is a .jar file. Throws an exception if not.
+     * Checks that the given jar file exists, and that it is a .jar file. Throws an exception if not.
      *
      * @throws IOException
      */
@@ -80,9 +76,4 @@ public class ParSPICE {
         }
         throw new ClassNotFoundException(cls);
     }
-
-
-
-
-
 }
