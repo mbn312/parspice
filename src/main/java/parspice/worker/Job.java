@@ -40,7 +40,7 @@ public abstract class Job<S,I,O> {
     Sender<I> inputSender;
     Sender<O> outputSender;
 
-    private final Worker<O> worker;
+    private final Worker worker;
 
     /**
      * List io managers used in runCommon. It is stored
@@ -48,7 +48,7 @@ public abstract class Job<S,I,O> {
      */
     protected ArrayList<IOManager<S, I, O>> ioManagers;
 
-    Job(Worker<O> worker) {
+    Job(Worker worker) {
         this.worker = worker;
     }
 

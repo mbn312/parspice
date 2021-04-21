@@ -14,7 +14,7 @@ import java.util.List;
  * @param <S> The type given to the setup function by the main process.
  * @param <I> The type given to the task function by the main process.
  */
-public abstract class SIWorker<S,I> extends Worker<Void> {
+public abstract class SIWorker<S,I> extends Worker {
 
     private final Sender<S> setupSender;
     private final Sender<I> inputSender;

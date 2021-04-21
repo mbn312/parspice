@@ -16,7 +16,7 @@ import java.util.List;
  * @param <I> The type given to the task function by the main process.
  * @param <O> The type returned by the worker to the main process.
  */
-public abstract class SIOWorker<S,I,O> extends Worker<O> {
+public abstract class SIOWorker<S,I,O> extends Worker {
 
     private final Sender<S> setupSender;
     private final Sender<I> inputSender;

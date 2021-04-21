@@ -38,7 +38,7 @@ import java.net.Socket;
  *
  * @param <O> The type returned by the worker to the main process.
  */
-public abstract class OWorker<O> extends Worker<O> {
+public abstract class OWorker<O> extends Worker {
 
     private final Sender<O> outputSender;
 

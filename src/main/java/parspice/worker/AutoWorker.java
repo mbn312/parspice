@@ -4,7 +4,7 @@ package parspice.worker;
  * Superclass of all Workers that don't take input arguments sent from
  * the main process, and do return outputs.
  */
-public abstract class AutoWorker extends Worker<Void> {
+public abstract class AutoWorker extends Worker {
 
     /**
      * [main process] Initialize the job with the inputs it needs to run.

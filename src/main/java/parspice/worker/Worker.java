@@ -9,11 +9,8 @@ import java.io.IOException;
  *
  * The user is technically able to call the `main(String[] args)` function. Realistically,
  * there is no way to prevent them from doing so. Don't.
- *
- * @param <O> The type of output returned from the job. If the job does not produce output,
- *            Worker will be extended as `extends Worker<Void>`
  */
-public abstract class Worker<O> {
+public abstract class Worker {
 
     /**
      * Unique ID for the worker, in the range [0, numWorkers)
@@ -92,9 +89,9 @@ public abstract class Worker<O> {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        Worker<?> worker = null;
+        Worker worker = null;
         try {
-            worker = (Worker<?>) Class.forName(args[0]).getConstructor().newInstance();
+            worker = (Worker) Class.forName(args[0]).getConstructor().newInstance();
 
             worker.inputPort = Integer.parseInt(args[1]);
             worker.outputPort = worker.inputPort + 1;
@@ -142,6 +139,7 @@ public abstract class Worker<O> {
      * override it.
      * This function is intentionally package-private, so that user extensions of Worker
      * cannot call this function.
+     * @throws Exception any exception the user code needs to throw
      */
     abstract void setupWrapper() throws Exception;
 
@@ -153,7 +151,7 @@ public abstract class Worker<O> {
      * This function is intentionally package-private, so that user extensions of Worker
      * cannot call this function.
      *
-     * @throws Exception
+     * @throws Exception any exception the user code needs to throw
      */
     abstract void taskWrapper() throws Exception;
 

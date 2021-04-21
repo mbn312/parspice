@@ -13,7 +13,7 @@ import java.util.List;
  * @param <I> The type given by the main process as argument.
  * @param <O> The type returned by the job to the main process.
  */
-public abstract class IOWorker<I,O> extends Worker<O> {
+public abstract class IOWorker<I,O> extends Worker {
 
     private final Sender<I> inputSender;
     private final Sender<O> outputSender;

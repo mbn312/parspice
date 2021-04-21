@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @param <S> The type given to the setup function by the main process.
  */
-public abstract class SWorker<S> extends Worker<Void> {
+public abstract class SWorker<S> extends Worker {
 
     private final Sender<S> setupSender;
 

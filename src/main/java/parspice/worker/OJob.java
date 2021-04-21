@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * @param <O> Type for task outputs (Void if none)
  */
 public class OJob<S,I,O> extends Job<S,I,O> {
-    OJob(Worker<O> worker) {
+    OJob(Worker worker) {
         super(worker);
     }
 

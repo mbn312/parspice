@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @param <I> The type given to the job by the main process.
  */
-public abstract class IWorker<I> extends Worker<Void> {
+public abstract class IWorker<I> extends Worker {
 
     private final Sender<I> inputSender;
 

@@ -10,7 +10,7 @@ import parspice.ParSPICE;
  * @param <I> Type for task inputs (Void if none)
  */
 public class VoidJob<S,I> extends Job<S,I,Void> {
-    VoidJob(Worker<Void> worker) {
+    VoidJob(Worker worker) {
         super(worker);
     }
 
