@@ -1,7 +1,7 @@
 package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
-import parspice.job.OJob;
+import parspice.worker.OWorker;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.BooleanMatrixSender;
 
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestBooleanMatrixSender extends OJob<boolean[][]> {
+public class TestBooleanMatrixSender extends OWorker<boolean[][]> {
     ArrayList<boolean[][]> parResults;
     int numTestTasks = 10;
 

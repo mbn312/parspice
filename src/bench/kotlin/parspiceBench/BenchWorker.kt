@@ -1,7 +1,7 @@
 package parspiceBench
 
 import parspice.sender.Sender
-import parspice.job.OJob
+import parspice.worker.OWorker
 
 /**
  * Simple wrapper class for OWorkers, that provides additional information
@@ -13,7 +13,7 @@ import parspice.job.OJob
  * @property numParallelTasks a map from the number of workers, to a list of task counts
  *                            to run with that many workers.
  */
-abstract class BenchJob<O>(sender: Sender<O>): OJob<O>(sender) {
+abstract class BenchWorker<O>(sender: Sender<O>): OWorker<O>(sender) {
     abstract val bytes: Int
     open val numSingleThreadedTasks
         get() = 1000000

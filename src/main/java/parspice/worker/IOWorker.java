@@ -1,4 +1,4 @@
-package parspice.job;
+package parspice.worker;
 
 import parspice.ParSPICE;
 import parspice.io.IOManager;
@@ -18,7 +18,7 @@ import java.util.List;
  * @param <I> The type given by the main process as argument.
  * @param <O> The type returned by the job to the main process.
  */
-public abstract class IOJob<I,O> extends Job<O> {
+public abstract class IOWorker<I,O> extends Worker<O> {
 
     private final Sender<I> inputSender;
     private final Sender<O> outputSender;
@@ -28,12 +28,7 @@ public abstract class IOJob<I,O> extends Job<O> {
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
 
-    /**
-     * [main] inputs supplied by user
-     */
-    private List<I> inputs;
-
-    public IOJob(Sender<I> inputSender, Sender<O> outputSender) {
+    public IOWorker(Sender<I> inputSender, Sender<O> outputSender) {
         this.inputSender = inputSender;
         this.outputSender = outputSender;
     }
@@ -45,44 +40,18 @@ public abstract class IOJob<I,O> extends Job<O> {
      * @param inputs inputs to split among the workers
      * @return this (builder pattern)
      */
-    public final IOJob<I,O> init(int numWorkers, List<I> inputs) {
-        this.numWorkers = numWorkers;
-        this.inputs = inputs;
-        this.numTasks = inputs.size();
+    public final OJob<Void,I,O> init(int numWorkers, List<I> inputs) {
+        OJob<Void, I, O> job = new OJob<>(this);
 
-        validate();
+        job.numWorkers = numWorkers;
+        job.inputs = inputs;
+        job.numTasks = inputs.size();
+        job.inputSender = inputSender;
+        job.outputSender = outputSender;
 
-        return this;
-    }
+        job.validate();
 
-    /**
-     * [main process] Runs the job in parallel.
-     *
-     * @param par a ParSPICE instance with worker jar and minimum port number.
-     * @return An ArrayList of outputs, collected from the job's return values.
-     * @throws Exception
-     */
-    public final ArrayList<O> run(ParSPICE par) throws Exception {
-        if (inputs == null) {
-            throw new IllegalStateException("Inputs must be specified.");
-        }
-        ArrayList<IOManager<?,?,O>> ioManagers = new ArrayList<>(numWorkers);
-
-        int task = 0;
-        int minPort = par.getMinPort();
-
-        for (int i = 0; i < numWorkers; i++) {
-            int taskSubset = taskSubset(numTasks, numWorkers, i);
-            List<I> inputsSublist = inputs.subList(task, task+taskSubset);
-            IServer<Void,I> iServer = new IServer<>(inputSender, null, inputsSublist, null, minPort + 2*i, i);
-            OServer<O> oServer = new OServer<>(outputSender, taskSubset, minPort + 2*i + 1, i);
-            ioManagers.add(new IOManager<>(iServer, oServer, i));
-            task += taskSubset;
-        }
-
-        runCommon(par, ioManagers);
-
-        return collectOutputs(ioManagers);
+        return job;
     }
 
     /**

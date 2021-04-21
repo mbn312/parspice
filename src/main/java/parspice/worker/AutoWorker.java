@@ -1,12 +1,10 @@
-package parspice.job;
-
-import parspice.ParSPICE;
+package parspice.worker;
 
 /**
  * Superclass of all Jobs that don't take input arguments sent from
  * the main process, and do return outputs.
  */
-public abstract class AutoJob extends Job<Void> {
+public abstract class AutoWorker extends Worker<Void> {
 
     /**
      * [main process] Initialize the job with the inputs it needs to run.
@@ -15,23 +13,15 @@ public abstract class AutoJob extends Job<Void> {
      * @param numTasks number of tasks to run.
      * @return this (builder pattern)
      */
-    public final AutoJob init(int numWorkers, int numTasks) {
-        this.numWorkers = numWorkers;
-        this.numTasks = numTasks;
+    public final VoidJob<Void, Void> init(int numWorkers, int numTasks) {
+        VoidJob<Void,Void> job = new VoidJob<>(this);
 
-        validate();
+        job.numWorkers = numWorkers;
+        job.numTasks = numTasks;
 
-        return this;
-    }
+        job.validate();
 
-    /**
-     * [main process] Runs the job in parallel.
-     *
-     * @param par a ParSPICE instance with worker jar and minimum port number.
-     * @throws Exception
-     */
-    public final void run(ParSPICE par) throws Exception {
-        runCommon(par, null);
+        return job;
     }
 
     /**

@@ -7,7 +7,7 @@ import parspice.sender.IntSender;
 
 
 import org.junit.jupiter.api.Test;
-import parspice.job.OJob;
+import parspice.worker.OWorker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestSetup extends OJob<Integer> {
+public class TestSetup extends OWorker<Integer> {
     ArrayList<Integer> parResults;
     int numTestTasks = 10;
 

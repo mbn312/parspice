@@ -3,12 +3,12 @@ package parspiceTest.worker;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import parspiceTest.ParSPICEInstance;
-import parspice.job.AutoJob;
+import parspice.worker.AutoWorker;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestAutoJob extends AutoJob {
+public class TestAutoWorker extends AutoWorker {
     int numTestTasks = 10;
 
     @Override
@@ -18,7 +18,7 @@ public class TestAutoJob extends AutoJob {
 
     @Test
     public void testRun() {
-        assertDoesNotThrow(() -> (new TestAutoJob())
+        assertDoesNotThrow(() -> (new TestAutoWorker())
                 .init(2, numTestTasks)
                 .run(ParSPICEInstance.par));
     }

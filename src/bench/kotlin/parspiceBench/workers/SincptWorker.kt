@@ -1,13 +1,13 @@
-package parspiceBench.jobs
+package parspiceBench.workers
 
 import parspice.sender.DoubleArraySender
-import parspiceBench.BenchJob
+import parspiceBench.BenchWorker
 import spice.basic.CSPICE.*
 
 /**
  * A more expensive CSPICE task, with several calls including sincpt.
  */
-class SincptJob: BenchJob<DoubleArray>(DoubleArraySender(3)) {
+class SincptWorker: BenchWorker<DoubleArray>(DoubleArraySender(3)) {
     override val bytes
         get() = 3 * Double.SIZE_BYTES
     override val numParallelTasks

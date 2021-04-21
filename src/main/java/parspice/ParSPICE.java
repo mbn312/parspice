@@ -1,13 +1,9 @@
 package parspice;
 
-import parspice.io.IOManager;
-import parspice.job.*;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.ArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -58,7 +54,7 @@ public class ParSPICE {
         if (!file.exists()) {
             throw new FileNotFoundException(workerJar);
         }
-        checkClass("parspice.job.Job");
+        checkClass("parspice.worker.Worker");
     }
 
     /**

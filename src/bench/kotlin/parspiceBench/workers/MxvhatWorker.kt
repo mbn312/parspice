@@ -1,13 +1,13 @@
-package parspiceBench.jobs
+package parspiceBench.workers
 
 import parspice.sender.DoubleArraySender
-import parspiceBench.BenchJob
+import parspiceBench.BenchWorker
 import spice.basic.CSPICE.*
 
 /**
  * A simple CSPICE task.
  */
-class MxvhatJob : BenchJob<DoubleArray>(DoubleArraySender(3)) {
+class MxvhatWorker : BenchWorker<DoubleArray>(DoubleArraySender(3)) {
 
     override val bytes: Int
         get() = 3*Double.SIZE_BYTES

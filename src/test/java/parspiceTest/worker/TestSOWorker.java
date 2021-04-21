@@ -4,8 +4,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import parspice.sender.DoubleSender;
-import parspice.sender.IntSender;
-import parspice.job.SIJob;
+import parspice.worker.SOWorker;
 import parspiceTest.ParSPICEInstance;
 
 import java.util.ArrayList;
@@ -15,13 +14,14 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestSIJob extends SIJob<Double, Integer> {
+public class TestSOWorker extends SOWorker<Double, Double> {
+    ArrayList<Double> parResults;
     int numTestTasks = 10;
 
     double offset = 0;
 
-    public TestSIJob() {
-        super(new DoubleSender(), new IntSender());
+    public TestSOWorker() {
+        super(new DoubleSender(), new DoubleSender());
     }
 
     @Override
@@ -30,21 +30,26 @@ public class TestSIJob extends SIJob<Double, Integer> {
     }
 
     @Override
-    public void task(Integer i) throws Exception {
-        double hello = i + offset;
+    public Double task(int i) throws Exception {
+        return i + offset;
     }
 
     @Test
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            List<Integer> inputs = new ArrayList<>(numTestTasks);
-            for (int i = 0; i < numTestTasks; i++) {
-                inputs.add(i * 2);
-            }
-            (new TestSIJob())
-                    .init(2, 3.0, inputs)
+            parResults = (new TestSOWorker())
+                    .init(2, numTestTasks, 3.0)
                     .run(ParSPICEInstance.par);
         });
+    }
+
+    @Test
+    public void testCorrectness() {
+        List<Double> directResults = new ArrayList<>(numTestTasks);
+        for (int i = 0; i < numTestTasks; i++) {
+            directResults.add(i + 3.0);
+        }
+        assertArrayEquals(directResults.toArray(), parResults.toArray());
     }
 }

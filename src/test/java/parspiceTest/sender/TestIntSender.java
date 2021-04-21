@@ -1,7 +1,7 @@
 package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
-import parspice.job.OJob;
+import parspice.worker.OWorker;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.IntSender;
 
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestIntSender extends OJob<Integer> {
+public class TestIntSender extends OWorker<Integer> {
     ArrayList<Integer> parResults;
     int numTestTasks = 10;
 

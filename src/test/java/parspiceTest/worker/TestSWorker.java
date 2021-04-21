@@ -4,18 +4,18 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import parspice.sender.DoubleSender;
-import parspice.job.SJob;
+import parspice.worker.SWorker;
 import parspiceTest.ParSPICEInstance;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestSJob extends SJob<Double> {
+public class TestSWorker extends SWorker<Double> {
     int numTestTasks = 10;
 
     double offset = 0;
 
-    public TestSJob() {
+    public TestSWorker() {
         super(new DoubleSender());
     }
 
@@ -33,7 +33,7 @@ public class TestSJob extends SJob<Double> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            (new TestSJob())
+            (new TestSWorker())
                     .init(2, numTestTasks, 3.0)
                     .run(ParSPICEInstance.par);
         });

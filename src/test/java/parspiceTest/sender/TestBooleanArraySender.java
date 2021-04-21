@@ -3,7 +3,7 @@ package parspiceTest.sender;
 import org.junit.jupiter.api.TestInstance;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.BooleanArraySender;
-import parspice.job.OJob;
+import parspice.worker.OWorker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestBooleanArraySender extends OJob<boolean[]> {
+public class TestBooleanArraySender extends OWorker<boolean[]> {
     ArrayList<boolean[]> parResults;
     int numTestTasks = 10;
 

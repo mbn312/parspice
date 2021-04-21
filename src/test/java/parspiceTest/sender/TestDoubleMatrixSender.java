@@ -1,9 +1,9 @@
 package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
+import parspice.worker.OWorker;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.DoubleMatrixSender;
-import parspice.job.OJob;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestDoubleMatrixSender extends OJob<double[][]> {
+public class TestDoubleMatrixSender extends OWorker<double[][]> {
     ArrayList<double[][]> parResults;
     int numTestTasks = 10;
 

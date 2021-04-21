@@ -1,7 +1,7 @@
 package parspiceTest.sender;
 
 import org.junit.jupiter.api.TestInstance;
-import parspice.job.OJob;
+import parspice.worker.OWorker;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.DoubleArraySender;
 
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestDoubleArraySender extends OJob<double[]> {
+public class TestDoubleArraySender extends OWorker<double[]> {
     ArrayList<double[]> parResults;
     int numTestTasks = 10;
 
@@ -25,9 +25,7 @@ public class TestDoubleArraySender extends OJob<double[]> {
 
     @Override
     public double[] task(int i) throws Exception {
-        System.out.println(i);
-        double[] results = {1.1,2.2};
-        return results;
+        return new double[]{1.1,2.2};
     }
 
     @Test

@@ -4,7 +4,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import parspice.sender.DoubleSender;
-import parspice.job.SOJob;
+import parspice.sender.IntSender;
+import parspice.worker.SIOWorker;
 import parspiceTest.ParSPICEInstance;
 
 import java.util.ArrayList;
@@ -14,14 +15,14 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestSOJobMultipleInputs extends SOJob<Double, Double> {
+public class TestSIOWorker extends SIOWorker<Double, Integer, Double> {
     ArrayList<Double> parResults;
     int numTestTasks = 10;
 
     double offset = 0;
 
-    public TestSOJobMultipleInputs() {
-        super(new DoubleSender(), new DoubleSender());
+    public TestSIOWorker() {
+        super(new DoubleSender(), new IntSender(), new DoubleSender());
     }
 
     @Override
@@ -30,7 +31,7 @@ public class TestSOJobMultipleInputs extends SOJob<Double, Double> {
     }
 
     @Override
-    public Double task(int i) throws Exception {
+    public Double task(Integer i) throws Exception {
         return i + offset;
     }
 
@@ -38,12 +39,12 @@ public class TestSOJobMultipleInputs extends SOJob<Double, Double> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            List<Double> setupInputs = new ArrayList<>(numTestTasks);
-            for (int i = 0; i < 2; i++) {
-                setupInputs.add((double) i);
+            List<Integer> inputs = new ArrayList<>(numTestTasks);
+            for (int i = 0; i < numTestTasks; i++) {
+                inputs.add(i * 2);
             }
-            parResults = (new TestSOJobMultipleInputs())
-                    .init(numTestTasks, setupInputs)
+            parResults = (new TestSIOWorker())
+                    .init(2, 3.0, inputs)
                     .run(ParSPICEInstance.par);
         });
     }
@@ -52,10 +53,7 @@ public class TestSOJobMultipleInputs extends SOJob<Double, Double> {
     public void testCorrectness() {
         List<Double> directResults = new ArrayList<>(numTestTasks);
         for (int i = 0; i < numTestTasks; i++) {
-            if (i < numTestTasks /2)
-                directResults.add((double) i);
-            else
-                directResults.add((double) i + 1);
+            directResults.add(2*i + 3.0);
         }
         assertArrayEquals(directResults.toArray(), parResults.toArray());
     }

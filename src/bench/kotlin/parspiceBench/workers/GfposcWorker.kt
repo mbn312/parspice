@@ -1,7 +1,7 @@
-package parspiceBench.jobs
+package parspiceBench.workers
 
 import parspice.sender.DoubleArraySender
-import parspiceBench.BenchJob
+import parspiceBench.BenchWorker
 import spice.basic.CSPICE.*
 
 /**
@@ -17,7 +17,7 @@ import spice.basic.CSPICE.*
  * of workers. This means the results of each run won't be *exactly* the same,
  * but that's ok because we aren't checking for correctness here.
  */
-class GfposcJob: BenchJob<DoubleArray>(DoubleArraySender()) {
+class GfposcWorker: BenchWorker<DoubleArray>(DoubleArraySender()) {
 
     override val bytes: Int
         // this is an approximation (the size varies with the number of workers

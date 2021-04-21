@@ -1,13 +1,13 @@
-package parspiceBench.jobs
+package parspiceBench.workers
 
 import parspice.sender.DoubleSender
-import parspiceBench.BenchJob
+import parspiceBench.BenchWorker
 import kotlin.math.pow
 
 /**
  * The most basic, cheapest case.
  */
-class SquareJob : BenchJob<Double>(DoubleSender()) {
+class SquareWorker : BenchWorker<Double>(DoubleSender()) {
     override val bytes
         get() = Double.SIZE_BYTES
     override val numParallelTasks

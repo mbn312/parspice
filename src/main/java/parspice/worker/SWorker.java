@@ -1,9 +1,8 @@
-package parspice.job;
+package parspice.worker;
 
 import parspice.ParSPICE;
 import parspice.io.IOManager;
 import parspice.io.IServer;
-import parspice.io.OServer;
 import parspice.sender.Sender;
 
 import java.io.IOException;
@@ -18,19 +17,14 @@ import java.util.List;
  *
  * @param <S> The type given to the setup function by the main process.
  */
-public abstract class SJob<S> extends Job<Void> {
+public abstract class SWorker<S> extends Worker<Void> {
 
     private final Sender<S> setupSender;
 
     private Socket inputSocket;
     private ObjectInputStream ois;
 
-    /**
-     * [main] setup inputs supplied by the user
-     */
-    private List<S> setupInputs;
-
-    public SJob(Sender<S> setupSender) {
+    public SWorker(Sender<S> setupSender) {
         this.setupSender = setupSender;
     }
 
@@ -43,17 +37,20 @@ public abstract class SJob<S> extends Job<Void> {
      * @param setupInput setup input to give to each job's setup function.
      * @return this (builder pattern)
      */
-    public final SJob<S> init(int numWorkers, int numTasks, S setupInput) {
-        this.numWorkers = numWorkers;
-        this.numTasks = numTasks;
-        this.setupInputs = new ArrayList<S>(numWorkers);
+    public final VoidJob<S,Void> init(int numWorkers, int numTasks, S setupInput) {
+        VoidJob<S,Void> job = new VoidJob<>(this);
+
+        job.numWorkers = numWorkers;
+        job.numTasks = numTasks;
+        job.setupInputs = new ArrayList<S>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
-            this.setupInputs.add(setupInput);
+            job.setupInputs.add(setupInput);
         }
+        job.setupSender = setupSender;
 
-        validate();
+        job.validate();
 
-        return this;
+        return job;
     }
 
     /**
@@ -64,43 +61,17 @@ public abstract class SJob<S> extends Job<Void> {
      * @param setupInputs list of setup inputs to give to the jobs.
      * @return this (builder pattern)
      */
-    public final SJob<S> init(int numTasks, List<S> setupInputs) {
-        this.numWorkers = setupInputs.size();
-        this.numTasks = numTasks;
-        this.setupInputs = setupInputs;
+    public final VoidJob<S,Void> init(int numTasks, List<S> setupInputs) {
+        VoidJob<S,Void> job = new VoidJob<>(this);
 
-        validate();
+        job.numWorkers = setupInputs.size();
+        job.numTasks = numTasks;
+        job.setupInputs = setupInputs;
+        job.setupSender = setupSender;
 
-        return this;
-    }
+        job.validate();
 
-    /**
-     * [main process] Runs the job in parallel.
-     *
-     * @param par a ParSPICE instance with worker jar and minimum port number.
-     * @throws Exception
-     */
-    public final void run(ParSPICE par) throws Exception {
-        if (setupInputs == null) {
-            throw new IllegalStateException("Setup input(s) must be specified");
-        }
-        if (setupInputs.size() != numWorkers) {
-            throw new IllegalStateException("Don't specify numWorkers when job.setupInputs() is used. The number of workers will be inferred.");
-        }
-
-        ArrayList<IOManager<?, ?, Void>> ioManagers = new ArrayList<>(numWorkers);
-
-        int task = 0;
-        int minPort = par.getMinPort();
-
-        for (int i = 0; i < numWorkers; i++) {
-            int taskSubset = taskSubset(numTasks, numWorkers, i);
-            IServer<S, Void> iServer = new IServer<>(null, setupSender, null, setupInputs.get(i), minPort + 2 * i, i);
-            ioManagers.add(new IOManager<>(iServer, null, i));
-            task += taskSubset;
-        }
-
-        runCommon(par, ioManagers);
+        return job;
     }
 
     /**

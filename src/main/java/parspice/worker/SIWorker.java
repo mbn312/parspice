@@ -1,9 +1,5 @@
-package parspice.job;
+package parspice.worker;
 
-import parspice.ParSPICE;
-import parspice.io.IOManager;
-import parspice.io.IServer;
-import parspice.io.OServer;
 import parspice.sender.Sender;
 
 import java.io.IOException;
@@ -19,7 +15,7 @@ import java.util.List;
  * @param <S> The type given to the setup function by the main process.
  * @param <I> The type given to the task function by the main process.
  */
-public abstract class SIJob<S,I> extends Job<Void> {
+public abstract class SIWorker<S,I> extends Worker<Void> {
 
     private final Sender<S> setupSender;
     private final Sender<I> inputSender;
@@ -27,16 +23,7 @@ public abstract class SIJob<S,I> extends Job<Void> {
     private Socket inputSocket;
     private ObjectInputStream ois;
 
-    /**
-     * [main] setup inputs supplied by the user
-     */
-    private List<S> setupInputs;
-    /**
-     * [main] inputs supplied by the user
-     */
-    private List<I> inputs;
-
-    public SIJob(Sender<S> setupSender, Sender<I> inputSender) {
+    public SIWorker(Sender<S> setupSender, Sender<I> inputSender) {
         this.setupSender = setupSender;
         this.inputSender = inputSender;
     }
@@ -50,18 +37,22 @@ public abstract class SIJob<S,I> extends Job<Void> {
      * @param inputs inputs to split among the workers
      * @return this (builder pattern)
      */
-    public final SIJob<S,I> init(int numWorkers, S setupInput, List<I> inputs) {
-        this.numWorkers = numWorkers;
-        this.setupInputs = new ArrayList<S>(numWorkers);
+    public final VoidJob<S,I> init(int numWorkers, S setupInput, List<I> inputs) {
+        VoidJob<S,I> job = new VoidJob<>(this);
+
+        job.numWorkers = numWorkers;
+        job.setupInputs = new ArrayList<S>(numWorkers);
         for (int i = 0; i < numWorkers; i++) {
-            this.setupInputs.add(setupInput);
+            job.setupInputs.add(setupInput);
         }
-        this.inputs = inputs;
-        this.numTasks = inputs.size();
+        job.inputs = inputs;
+        job.numTasks = inputs.size();
+        job.setupSender = setupSender;
+        job.inputSender = inputSender;
 
-        validate();
+        job.validate();
 
-        return this;
+        return job;
     }
 
     /**
@@ -72,48 +63,19 @@ public abstract class SIJob<S,I> extends Job<Void> {
      * @param inputs list of inputs to split among the workers
      * @return this (builder pattern)
      */
-    public final SIJob<S,I> init(List<S> setupInputs, List<I> inputs) {
-        this.numWorkers = setupInputs.size();
-        this.setupInputs = setupInputs;
-        this.inputs = inputs;
-        this.numTasks = inputs.size();
+    public final VoidJob<S,I> init(List<S> setupInputs, List<I> inputs) {
+        VoidJob<S,I> job = new VoidJob<>(this);
 
-        validate();
+        job.numWorkers = setupInputs.size();
+        job.setupInputs = setupInputs;
+        job.inputs = inputs;
+        job.numTasks = inputs.size();
+        job.setupSender = setupSender;
+        job.inputSender = inputSender;
 
-        return this;
-    }
+        job.validate();
 
-    /**
-     * [main process] Runs the job in parallel.
-     *
-     * @param par a ParSPICE instance with worker jar and minimum port number.
-     * @throws Exception
-     */
-    public final void run(ParSPICE par) throws Exception {
-        if (inputs == null) {
-            throw new IllegalStateException("Inputs must be specified.");
-        }
-        if (setupInputs == null) {
-            throw new IllegalStateException("Setup input(s) must be specified");
-        }
-        if (setupInputs.size() != numWorkers) {
-            throw new IllegalStateException("Don't specify numWorkers when job.setupInputs() is used. The number of workers will be inferred.");
-        }
-
-        ArrayList<IOManager<?,?,Void>> ioManagers = new ArrayList<>(numWorkers);
-
-        int task = 0;
-        int minPort = par.getMinPort();
-
-        for (int i = 0; i < numWorkers; i++) {
-            int taskSubset = taskSubset(numTasks, numWorkers, i);
-            List<I> inputsSublist = inputs.subList(task, task+taskSubset);
-            IServer<S,I> iServer = new IServer<>(inputSender, setupSender, inputsSublist, setupInputs.get(i), minPort + 2*i, i);
-            ioManagers.add(new IOManager<>(iServer, null, i));
-            task += taskSubset;
-        }
-
-        runCommon(par, ioManagers);
+        return job;
     }
 
     /**

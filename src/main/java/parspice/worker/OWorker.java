@@ -1,8 +1,7 @@
-package parspice.job;
+package parspice.worker;
 
 import parspice.ParSPICE;
 import parspice.io.IOManager;
-import parspice.io.IServer;
 import parspice.io.OServer;
 import parspice.sender.Sender;
 
@@ -44,7 +43,7 @@ import java.util.ArrayList;
  *
  * @param <O> The type returned by the worker to the main process.
  */
-public abstract class OJob<O> extends Job<O> {
+public abstract class OWorker<O> extends Worker<O> {
 
     private final Sender<O> outputSender;
 
@@ -57,7 +56,7 @@ public abstract class OJob<O> extends Job<O> {
      * @param outputSender the sender used to sender output results back to
      *                     the main process
      */
-    public OJob(Sender<O> outputSender) {
+    public OWorker(Sender<O> outputSender) {
         this.outputSender = outputSender;
     }
 
@@ -68,38 +67,16 @@ public abstract class OJob<O> extends Job<O> {
      * @param numTasks number of tasks to run.
      * @return this (builder pattern)
      */
-    public final OJob<O> init(int numWorkers, int numTasks) {
-        this.numWorkers = numWorkers;
-        this.numTasks = numTasks;
+    public final OJob<Void,Void,O> init(int numWorkers, int numTasks) {
+        OJob<Void,Void,O> job = new OJob<>(this);
 
-        validate();
+        job.numWorkers = numWorkers;
+        job.numTasks = numTasks;
+        job.outputSender = outputSender;
 
-        return this;
-    }
+        job.validate();
 
-    /**
-     * [main process] Runs the job in parallel.
-     *
-     * @param par a ParSPICE instance with worker jar and minimum port number.
-     * @return An ArrayList of outputs, collected from the job's return values.
-     * @throws Exception
-     */
-    public final ArrayList<O> run(ParSPICE par) throws Exception {
-        ArrayList<IOManager<?,?,O>> ioManagers = new ArrayList<>(numWorkers);
-
-        int task = 0;
-        int minPort = par.getMinPort();
-
-        for (int i = 0; i < numWorkers; i++) {
-            int taskSubset = taskSubset(numTasks, numWorkers, i);
-            OServer<O> oServer = new OServer<>(outputSender, taskSubset, minPort + 2*i + 1, i);
-            ioManagers.add(new IOManager<>(null, oServer, i));
-            task += taskSubset;
-        }
-
-        runCommon(par, ioManagers);
-
-        return collectOutputs(ioManagers);
+        return job;
     }
 
     /**

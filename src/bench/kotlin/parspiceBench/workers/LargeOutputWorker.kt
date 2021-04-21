@@ -1,7 +1,7 @@
-package parspiceBench.jobs
+package parspiceBench.workers
 
 import parspice.sender.IntArraySender
-import parspiceBench.BenchJob
+import parspiceBench.BenchWorker
 
 const val LENGTH = 1000
 
@@ -9,7 +9,7 @@ const val LENGTH = 1000
  * This case is to get high-leverage observations on the data size,
  * by running a cheap task that returns many integers.
  */
-class LargeOutputJob: BenchJob<IntArray>(IntArraySender(LENGTH)) {
+class LargeOutputWorker: BenchWorker<IntArray>(IntArraySender(LENGTH)) {
     override val bytes: Int
         get() = LENGTH*Int.SIZE_BYTES
     override val numParallelTasks

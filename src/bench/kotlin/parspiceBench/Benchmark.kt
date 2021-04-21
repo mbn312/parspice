@@ -1,7 +1,7 @@
 package parspiceBench
 
 import parspice.ParSPICE
-import parspiceBench.jobs.*
+import parspiceBench.workers.*
 import java.io.File
 
 val par = ParSPICE("build/libs/bench.jar", 50050)
@@ -18,12 +18,12 @@ val par = ParSPICE("build/libs/bench.jar", 50050)
 fun main() {
 
     val jobs = arrayOf(
-        LargeOutputJob(),
-        SquareJob(),
-        GfposcJob(),
-        SincptJob(),
-        MxvhatJob(),
-        MxvhatJobJava()
+        LargeOutputWorker(),
+        SquareWorker(),
+        GfposcWorker(),
+        SincptWorker(),
+        MxvhatWorker(),
+        MxvhatWorkerJava()
     )
 
     println("Running ${jobs.size} benchmark jobs. This can take a few minutes.\n")
@@ -40,7 +40,7 @@ fun main() {
     )
 }
 
-fun <T> run(job: BenchJob<T>): MutableList<Run> {
+fun <T> run(job: BenchWorker<T>): MutableList<Run> {
     val taskTime = taskTime(job)
 
     val runs: MutableList<Run> = mutableListOf()
@@ -64,7 +64,7 @@ fun <T> run(job: BenchJob<T>): MutableList<Run> {
     return runs
 }
 
-fun <T> taskTime(job: BenchJob<T>): Double {
+fun <T> taskTime(job: BenchWorker<T>): Double {
     tick()
     job.setup()
     for (i in 0 until job.numSingleThreadedTasks) {
