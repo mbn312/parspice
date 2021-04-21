@@ -3,9 +3,10 @@ package parspiceTest.worker;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import parspice.worker.IOWorker;
-import parspiceTest.ParSPICEInstance;
+import parspice.sender.DoubleSender;
 import parspice.sender.IntSender;
+import parspice.worker.SIOWorker;
+import parspiceTest.ParSPICEInstance;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,17 +15,24 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestIOWorker extends IOWorker<Integer, Integer> {
-    ArrayList<Integer> parResults;
+public class TestSIOWorker extends SIOWorker<Double, Integer, Double> {
+    ArrayList<Double> parResults;
     int numTestTasks = 10;
 
-    public TestIOWorker() {
-        super(new IntSender(), new IntSender());
+    double offset = 0;
+
+    public TestSIOWorker() {
+        super(new DoubleSender(), new IntSender(), new DoubleSender());
     }
 
     @Override
-    public Integer task(Integer i) throws Exception {
-        return i*2;
+    public void setup(Double d) {
+        offset = d;
+    }
+
+    @Override
+    public Double task(Integer i) throws Exception {
+        return i + offset;
     }
 
     @Test
@@ -35,17 +43,17 @@ public class TestIOWorker extends IOWorker<Integer, Integer> {
             for (int i = 0; i < numTestTasks; i++) {
                 inputs.add(i * 2);
             }
-            parResults = (new TestIOWorker())
-                    .init(2, inputs)
+            parResults = (new TestSIOWorker())
+                    .init(2, 3.0, inputs)
                     .run(ParSPICEInstance.par);
         });
     }
 
     @Test
     public void testCorrectness() {
-        List<Integer> directResults = new ArrayList<>(numTestTasks);
+        List<Double> directResults = new ArrayList<>(numTestTasks);
         for (int i = 0; i < numTestTasks; i++) {
-            directResults.add(i*4);
+            directResults.add(2*i + 3.0);
         }
         assertArrayEquals(directResults.toArray(), parResults.toArray());
     }

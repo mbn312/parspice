@@ -1,13 +1,11 @@
 package parspiceTest.worker;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.TestInstance;
-import parspiceTest.ParSPICEInstance;
-import parspice.sender.IntSender;
-
-
 import org.junit.jupiter.api.Test;
-import parspice.worker.OWorker;
+import org.junit.jupiter.api.TestInstance;
+import parspice.sender.DoubleSender;
+import parspice.worker.SOWorker;
+import parspiceTest.ParSPICEInstance;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,42 +14,42 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class TestSetup extends OWorker<Integer> {
-    ArrayList<Integer> parResults;
+public class TestSOWorker extends SOWorker<Double, Double> {
+    ArrayList<Double> parResults;
     int numTestTasks = 10;
 
-    private static int n = 0;
+    double offset = 0;
 
-    public TestSetup() {
-        super(new IntSender());
+    public TestSOWorker() {
+        super(new DoubleSender(), new DoubleSender());
     }
 
     @Override
-    public void setup() throws Exception {
-        n = 2;
+    public void setup(Double d) {
+        offset = d;
     }
 
     @Override
-    public Integer task(int i) throws Exception {
-        return n + i;
+    public Double task(int i) throws Exception {
+        return i + offset;
     }
 
     @Test
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            parResults = (new TestSetup())
-                    .init(2, numTestTasks)
+            parResults = (new TestSOWorker())
+                    .init(2, numTestTasks, 3.0)
                     .run(ParSPICEInstance.par);
         });
     }
 
     @Test
     public void testCorrectness() {
-        List<Integer> directResults = new ArrayList<>(numTestTasks);
+        List<Double> directResults = new ArrayList<>(numTestTasks);
         for (int i = 0; i < numTestTasks; i++) {
-            directResults.add(i + 2);
+            directResults.add(i + 3.0);
         }
-        assertArrayEquals(parResults.toArray(), directResults.toArray());
+        assertArrayEquals(directResults.toArray(), parResults.toArray());
     }
 }

@@ -1,22 +1,19 @@
 package parspice.worker;
 
 import parspice.sender.Sender;
-
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 
 /**
  * Superclass of all Worker tasks that don't take input arguments sent from
  * the main process, and do return outputs.
  *
- * -- ex: A dumb vhat task --
+ * -- ex: A simple vhat task --
  *
  * <pre>
  *     {@code
- * import parspice.outputSender.DoubleArraySender;
+ * import parspice.sender.DoubleArraySender;
  * import spice.basic.CSPICE;
  * import spice.basic.SpiceErrorException;
  * import parspice.worker.OWorker;
@@ -59,35 +56,80 @@ public abstract class OWorker<O> extends Worker {
     }
 
     /**
-     * Prepares the output stream and repeatedly calls task.
+     * [main process] Initialize the job with the inputs it needs to run.
+     *
+     * @param numWorkers number of workers to use.
+     * @param numTasks number of tasks to run.
+     * @return an initialized Job, ready to run
+     */
+    public final OJob<Void,Void,O> init(int numWorkers, int numTasks) {
+        OJob<Void,Void,O> job = new OJob<>(this);
+
+        job.numWorkers = numWorkers;
+        job.numTasks = numTasks;
+        job.outputSender = outputSender;
+
+        job.validate();
+
+        return job;
+    }
+
+    /**
+     * [worker process] Calls setup.
+     *
+     * The user cannot call or override this function.
+     *
+     * @throws Exception any exception the user code needs to throw
      */
     @Override
-    public final void run() throws Exception {
-        for (int i = startIndex; i < startIndex + taskSubset; i++) {
+    final void setupWrapper() throws Exception {
+        setup();
+    }
+
+    /**
+     * [worker process] Repeatedly calls task and writes the output to stream
+     *
+     * The user cannot call or override this function.
+     *
+     * @throws Exception any exception the user code needs to throw
+     */
+    @Override
+    final void taskWrapper() throws Exception {
+        for (int i = getStartIndex(); i < getStartIndex() + getTaskSubset(); i++) {
             outputSender.write(task(i), oos);
         }
     }
 
+    /**
+     * [worker process] Starts the output socket connection with the main process.
+     *
+     * @throws IOException if the connection cannot be made
+     */
     @Override
-    public final void startConnections() throws Exception {
-        outputSocket = new Socket("localhost", inputPort + 1);
+    final void startConnections() throws IOException {
+        outputSocket = new Socket("localhost", getOutputPort());
         oos = new ObjectOutputStream(outputSocket.getOutputStream());
     }
 
+    /**
+     * [worker process] Ends the output connection with the main process.
+     *
+     * @throws IOException if the connection cannot be ended.
+     */
     @Override
-    public final void endConnections() throws Exception {
+    final void endConnections() throws IOException {
         oos.close();
         outputSocket.close();
     }
 
     /**
-     * Get an instance of the output sender.
+     * [worker] Called once on each worker when the job starts running.
      *
-     * @return instance of the output sender.
+     * The user can optionally override this function; by default it does nothing.
+     *
+     * @throws Exception any exception the user code needs to throw
      */
-    public final Sender<O> getOutputSender() {
-        return outputSender;
-    }
+    public void setup() throws Exception {}
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range
@@ -97,7 +139,7 @@ public abstract class OWorker<O> extends Worker {
      *          the initial state or values needed by the task.
      *          The task receives no other indication of which iteration it is.
      * @return The value to be sent back to the main process.
-     * @throws Exception
+     * @throws Exception any exception the user code needs to throw
      */
     public abstract O task(int i) throws Exception;
 }

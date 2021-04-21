@@ -17,7 +17,7 @@ import org.junit.jupiter.api.BeforeAll;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TestIntMatrixSender extends OWorker<int[][]> {
     ArrayList<int[][]> parResults;
-    int numIterations = 10;
+    int numTestTasks = 10;
 
     public TestIntMatrixSender() {
         super(new IntMatrixSender());
@@ -34,19 +34,17 @@ public class TestIntMatrixSender extends OWorker<int[][]> {
     @BeforeAll
     public void testRun() {
         assertDoesNotThrow(() -> {
-            parResults = ParSPICEInstance.par.run(
-                    new TestIntMatrixSender(),
-                    numIterations,
-                    2
-            );
+            parResults = (new TestIntMatrixSender())
+                    .init(2, numTestTasks)
+                    .run(ParSPICEInstance.par);
         });
 
     }
 
     @Test
     public void testCorrectness() {
-        List<int[][]> directResults = new ArrayList<int[][]>(numIterations);
-        for (int i = 0; i < numIterations; i++) {
+        List<int[][]> directResults = new ArrayList<int[][]>(numTestTasks);
+        for (int i = 0; i < numTestTasks; i++) {
             int[][] x = {{1,2},{1,2}};
             directResults.add(x);
         }

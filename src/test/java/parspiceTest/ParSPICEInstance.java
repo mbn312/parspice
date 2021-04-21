@@ -10,7 +10,7 @@ public class ParSPICEInstance {
     static {
         try {
             par = new ParSPICE("build/libs/testing.jar", 50050);
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }

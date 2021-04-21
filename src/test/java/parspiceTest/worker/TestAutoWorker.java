@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TestAutoWorker extends AutoWorker {
-    int numIterations = 10;
+    int numTestTasks = 10;
 
     @Override
     public void task(int i) throws Exception {
@@ -18,10 +18,8 @@ public class TestAutoWorker extends AutoWorker {
 
     @Test
     public void testRun() {
-        assertDoesNotThrow(() -> ParSPICEInstance.par.run(
-                new TestAutoWorker(),
-                numIterations,
-                2
-        ));
+        assertDoesNotThrow(() -> (new TestAutoWorker())
+                .init(2, numTestTasks)
+                .run(ParSPICEInstance.par));
     }
 }

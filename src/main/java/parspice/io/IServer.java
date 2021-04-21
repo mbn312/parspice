@@ -13,18 +13,22 @@ import java.util.List;
  *
  * @param <I> The type of the arguments sent to the worker
  */
-public class IServer<I> implements Runnable {
+public class IServer<S, I> implements Runnable {
 
     private final ServerSocket serverSocket;
     private final Sender<I> inputSender;
+    private final Sender<S> setupSender;
     private final List<I> inputs;
+    private final S setupInput;
     private final int workerID;
 
-    public IServer(Sender<I> inputSender, List<I> inputs, int port, int workerID) throws IOException {
+    public IServer(Sender<I> inputSender, Sender<S> setupSender, List<I> inputs, S setupInput, int port, int workerID) throws IOException {
         this.serverSocket = new ServerSocket(port);
 
         this.inputSender = inputSender;
+        this.setupSender = setupSender;
         this.inputs = inputs;
+        this.setupInput = setupInput;
         this.workerID = workerID;
     }
 
@@ -36,8 +40,13 @@ public class IServer<I> implements Runnable {
         try {
             Socket socket = serverSocket.accept();
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            for (I input : inputs) {
-                inputSender.write(input, oos);
+            if (setupInput != null) {
+                setupSender.write(setupInput, oos);
+            }
+            if (inputs != null) {
+                for (I input : inputs) {
+                    inputSender.write(input, oos);
+                }
             }
             oos.flush();
             oos.close();
