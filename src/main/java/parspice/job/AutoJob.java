@@ -1,16 +1,20 @@
 package parspice.job;
 
 import parspice.ParSPICE;
-import static parspice.Worker.*;
-
 
 /**
- * Superclass of all Worker tasks that don't take input arguments sent from
- * the main process, and do return outputs. All subclasses should include a main entry point that
- * calls {@code run(new This(), args) with an instance of themselves.
+ * Superclass of all Jobs that don't take input arguments sent from
+ * the main process, and do return outputs.
  */
-public abstract class AutoJob extends Job<Void, Void, Void> {
+public abstract class AutoJob extends Job<Void> {
 
+    /**
+     * [main process] Initialize the job with the inputs it needs to run.
+     *
+     * @param numWorkers number of workers to use.
+     * @param numTasks number of tasks to run.
+     * @return this (builder pattern)
+     */
     public final AutoJob init(int numWorkers, int numTasks) {
         this.numWorkers = numWorkers;
         this.numTasks = numTasks;
@@ -20,41 +24,69 @@ public abstract class AutoJob extends Job<Void, Void, Void> {
         return this;
     }
 
+    /**
+     * [main process] Runs the job in parallel.
+     *
+     * @param par a ParSPICE instance with worker jar and minimum port number.
+     * @throws Exception
+     */
+    public final void run(ParSPICE par) throws Exception {
+        runCommon(par, null);
+    }
+
+    /**
+     * [worker process] Calls setup.
+     *
+     * The user cannot call or override this function.
+     *
+     * @throws Exception
+     */
     @Override
-    public final void setupWrapper() throws Exception {
+    final void setupWrapper() throws Exception {
         setup();
     }
 
     /**
-     * Repeatedly calls task.
+     * [worker process] Repeatedly calls task.
+     *
+     * The user cannot call or override this function.
      */
     @Override
-    public final void taskWrapper() throws Exception {
+    final void taskWrapper() throws Exception {
         for (int i = getStartIndex(); i < getStartIndex() + getTaskSubset(); i++) {
             task(i);
         }
     }
 
+    /**
+     * [worker] Does nothing (AutoJobs have no connections to start).
+     */
     @Override
-    public final void startConnections() {}
+    final void startConnections() {}
 
+    /**
+     * [worker] Does nothing (AutoJobs have no connections to end).
+     */
     @Override
-    public final void endConnections() {}
+    final void endConnections() {}
 
-    public final void run(ParSPICE par) throws Exception {
-        runCommon(par, null);
-    }
-
+    /**
+     * [worker] Called once on each worker when the job starts running.
+     *
+     * The user can optionally override this function; by default it does nothing.
+     *
+     * @throws Exception any exception the user code needs to throw
+     */
     public void setup() throws Exception {}
 
     /**
      * Called repeatedly, once for each integer {@code i} in the index range
-     * given by the command line arguments.
+     * given by the command line arguments. The user must implement this function.
      *
      * @param i The integer index of the task. It should be used to calculate
      *          the initial state or values needed by the task.
      *          The task receives no other indication of which iteration it is.
-     * @throws Exception
+     * @throws Exception any exception the user code needs to throw
      */
     public abstract void task(int i) throws Exception;
 }

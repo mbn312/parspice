@@ -3,7 +3,6 @@ package parspiceBench.jobs
 import parspice.sender.DoubleArraySender
 import parspiceBench.BenchJob
 import spice.basic.CSPICE.*
-import parspice.Worker.*
 
 /**
  * A funky boi that runs gfposc on a time window.

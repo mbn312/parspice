@@ -1,20 +1,94 @@
 package parspice.job;
 
-import com.sun.jdi.request.InvalidRequestStateException;
 import parspice.ParSPICE;
 import parspice.io.IOManager;
-import parspice.sender.Sender;
 
-import java.io.IOException;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.io.IOException;
 
-public abstract class Job<S, I, O> {
-
-    int numWorkers = -1;
-    int numTasks = -1;
+/**
+ * The superclass of all Jobs.
+ *
+ * Some functions here are meant to be run on the Main process (marked as [main] in docs), and some
+ * are meant to run on the Worker processes (marked as [worker] in docs). Its a little ugly,
+ * but the alternative is separating the subclasses' code into another 8 highly entangled
+ * files, which would be poor encapsulation.
+ *
+ * The user is technically able to call the `main(String[] args)` function. Realistically,
+ * there is no way to prevent them from doing so. Don't.
+ *
+ * @param <O> The type of output returned from the job. If the job does not produce output,
+ *            Job will be extended as `extends Job<Void>`
+ */
+public abstract class Job<O> {
 
     /**
-     * Gets an instance of the user's Worker and runs it.
+     * [worker] Unique ID for the worker, in the range [0, numWorkers)
+     */
+    int workerID = 0;
+
+    /**
+     * [main and worker] Total number of workers in this job.
+     */
+    int numWorkers = 1;
+
+    /**
+     * [main and worker] Total number of iterations to be run.
+     */
+    int numTasks = 1;
+
+    /**
+     * [worker] Port used to receive inputs.
+     */
+    int inputPort = 0;
+
+    /**
+     * [worker] Port used to send outputs.
+     */
+    int outputPort = 1;
+
+    /**
+     * [worker] Iteration index that this worker starts at.
+     */
+    int startIndex = 0;
+
+    /**
+     * [worker] How many tasks this worker needs to run.
+     */
+    int taskSubset = 1;
+
+    public int getWorkerID() {
+        return workerID;
+    }
+
+    public int getNumWorkers() {
+        return numWorkers;
+    }
+
+    public int getInputPort() {
+        return inputPort;
+    }
+
+    public int getNumTasks() {
+        return numTasks;
+    }
+
+    public int getOutputPort() {
+        return outputPort;
+    }
+
+    public int getStartIndex() {
+        return startIndex;
+    }
+
+    public int getTaskSubset() {
+        return taskSubset;
+    }
+
+    /**
+     * [worker] Gets an instance of the user's Job and runs it.
      *
      * @param args Command line args:
      *             0. Full classname of user's Worker (including package)
@@ -26,33 +100,107 @@ public abstract class Job<S, I, O> {
      *             6. Total number of tasks
      * @throws Exception
      */
+    public static void main(String[] args) throws Exception {
+        Job<?> job = (Job<?>) Class.forName(args[0]).getConstructor().newInstance();
+        try {
+            job.inputPort = Integer.parseInt(args[1]);
+            job.outputPort = job.inputPort + 1;
+            job.startIndex = Integer.parseInt(args[2]);
+            job.taskSubset = Integer.parseInt(args[3]);
+            job.workerID = Integer.parseInt(args[4]);
+            job.numWorkers = Integer.parseInt(args[5]);
+            job.numTasks = Integer.parseInt(args[6]);
 
+            job.startConnections();
+            job.setupWrapper();
+            job.taskWrapper();
+        } catch (Exception e) {
+            System.err.println(e.toString());
+            e.printStackTrace();
+
+            FileWriter writer = new FileWriter("ParSPICE_worker_log_" + job.workerID + ".txt");
+
+            writer.write("workerName\t" + args[0]);
+            writer.write("\ninputPort\t" + job.inputPort);
+            writer.write("\noutputPort\t" + job.outputPort);
+            writer.write("\nstartIndex\t" + job.startIndex);
+            writer.write("\ntaskSubset\t" + job.taskSubset);
+            writer.write("\nworkerID\t" + job.workerID);
+            writer.write("\nnumWorkers\t" + job.numWorkers);
+            writer.write("\nnumTasks\t" + job.numTasks + "\n\n");
+
+            writer.write(e.toString());
+            writer.write("\n\n");
+            PrintWriter printer = new PrintWriter(writer);
+            e.printStackTrace(printer);
+            printer.close();
+            writer.flush();
+            writer.close();
+        } finally {
+            job.endConnections();
+        }
+    }
 
     /**
-     * Called only once, before repeatedly calling {@code task(i)}.
+     * [worker] Contains the setup logic specific to each worker type.
      *
-     * If you need to load a native library or perform any one-time preparation,
-     * it should be done in this function. If not, you don't need to override it.
-     *
-     * All setup that might throw an error should be done here, not in the main
-     * entry point of the worker; the call to setup is wrapped in a try/catch for error reporting.
+     * This function is final in the Job subclasses, so the user cannot
+     * override it.
+     * This function is intentionally package-private, so that user extensions of Job
+     * cannot call this function.
      */
-    public abstract void setupWrapper() throws Exception;
+    abstract void setupWrapper() throws Exception;
 
     /**
-     * Contains the task-loop logic specific to each worker type.
+     * [worker] Contains the task-loop logic specific to each worker type.
      *
-     * This function is final in the Worker subclasses, so the user
+     * This function is final in the Job subclasses, so the user
      * cannot override it.
+     * This function is intentionally package-private, so that user extensions of Job
+     * cannot call this function.
      *
      * @throws Exception
      */
-    public abstract void taskWrapper() throws Exception;
+    abstract void taskWrapper() throws Exception;
 
-    public abstract void startConnections() throws Exception;
-    public abstract void endConnections() throws Exception;
+    /**
+     * [worker] Start any input/output connections needed for the job.
+     *
+     * This function is final in the Job subclasses, so the user
+     * cannot override it.
+     * This function is intentionally package-private, so that user extensions of Job
+     * cannot call this function.
+     *
+     * @throws IOException if the connections cannot be started
+     */
+    abstract void startConnections() throws IOException;
 
-    final void runCommon(ParSPICE par, ArrayList<IOManager<S,I,O>> ioManagers) throws Exception {
+    /**
+     * [worker] End any input/output connections needed by the job.
+     *
+     * This function is final in the Job subclasses, so the user
+     * cannot override it.
+     * This function is intentionally package-private, so that user extensions of Job
+     * cannot call this function.
+     *
+     * @throws IOException if the connections cannot be ended.
+     */
+    abstract void endConnections() throws IOException;
+
+    /**
+     * [main] Common logic needed by all Job.run functions.
+     *
+     * Starts the IOManagers (if they exist), starts the worker processes, then waits for all
+     * processes and threads to join.
+     *
+     * This function is intentionally package-private, so that user extensions of Job
+     * cannot call this function.
+     *
+     * @param par a ParSPICE instance for starting the worker processes.
+     * @param ioManagers the IOManagers for all jobs except AutoJobs (null if AutoJob).
+     * @throws Exception
+     */
+    final void runCommon(ParSPICE par, ArrayList<IOManager<?,?,O>> ioManagers) throws Exception {
         String workerClass = getClass().getName();
         par.checkClass(workerClass);
 
@@ -60,7 +208,7 @@ public abstract class Job<S, I, O> {
         int minPort = par.getMinPort();
 
         if (ioManagers != null) {
-            for (IOManager<S,I,O> manager : ioManagers) {
+            for (IOManager<?,?,O> manager : ioManagers) {
                 manager.start();
             }
         }
@@ -70,7 +218,7 @@ public abstract class Job<S, I, O> {
             int taskSubset = taskSubset(numTasks, numWorkers, i);
             String args = "-Dname=parspice_worker_" + i +
                     " -cp " + workerJar +
-                    " parspice.Worker" +
+                    " parspice.job.Job" +
                     " " + workerClass +
                     " " + (minPort + 2*i) +
                     " " + task +
@@ -82,7 +230,7 @@ public abstract class Job<S, I, O> {
             task += taskSubset;
         }
         if (ioManagers != null) {
-            for (IOManager<S,I,O> manager : ioManagers) {
+            for (IOManager<?,?,O> manager : ioManagers) {
                 manager.join();
             }
         }
@@ -91,22 +239,55 @@ public abstract class Job<S, I, O> {
         }
     }
 
-    ArrayList<O> aggregateOutputs(ArrayList<IOManager<S,I,O>> ioManagers) {
+    /**
+     * [main] Collects the outputs from the OServers inside the given list of IOManagers.
+     *
+     * This function is intentionally package-private, so that user extensions of Job
+     * cannot call this function.
+     *
+     * @param ioManagers the list of ioManagers to collect the outputs from.
+     * @return The arraylist of outputs.
+     */
+    ArrayList<O> collectOutputs(ArrayList<IOManager<?,?,O>> ioManagers) {
         ArrayList<O> results = ioManagers.get(0).getOutputs();
         if (results == null) {
             return null;
         }
         results.ensureCapacity(numTasks);
-        for (IOManager<S, I, O> ioManager : ioManagers.subList(1, ioManagers.size())) {
+        for (IOManager<?, ?, O> ioManager : ioManagers.subList(1, ioManagers.size())) {
             results.addAll(ioManager.getOutputs());
         }
         return results;
     }
 
+    /**
+     * [main] Calculate how many tasks should be given to a particular worker.
+     *
+     * Each worker is given an almost-equal taskSubset. If numTasks is not
+     * an even multiple of numWorkers, the remainder is spread across the
+     * first numTasks % numWorkers workers.
+     *
+     * This function is intentionally package-private, so that user extensions of Job
+     * cannot call this function.
+     *
+     * @param numTasks total number of tasks
+     * @param numWorkers number of workers
+     * @param i the index of a particular worker
+     * @return the number of tasks that worker should run
+     */
     static int taskSubset(int numTasks, int numWorkers, int i) {
         return numTasks/numWorkers + ((i < numTasks%numWorkers)?1:0);
     }
 
+    /**
+     * [main] Checks that the specified numbers of workers and tasks are valid.
+     * Called at the end of every `init(...)` function.
+     *
+     * This function is intentionally package-private, so that user extensions of Job
+     * cannot call this function.
+     *
+     * @throws IllegalStateException if either numWorkers or numTasks is unspecified or less than 1.
+     */
     void validate() throws IllegalStateException {
         if (numWorkers == -1) {
             throw new IllegalStateException("Number of workers must be specified");

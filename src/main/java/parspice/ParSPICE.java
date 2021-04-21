@@ -58,7 +58,7 @@ public class ParSPICE {
         if (!file.exists()) {
             throw new FileNotFoundException(workerJar);
         }
-        checkClass("parspice.Worker");
+        checkClass("parspice.job.Job");
     }
 
     /**
@@ -85,18 +85,7 @@ public class ParSPICE {
         throw new ClassNotFoundException(cls);
     }
 
-    /**
-     * Calculate how many tasks should be given to a particular worker.
-     *
-     * Each worker is given an almost-equal taskSubset. If numTasks is not
-     * an even multiple of numWorkers, the remainder is spread across the
-     * first numTasks % numWorkers workers.
-     *
-     * @param numTasks total number of tasks
-     * @param numWorkers number of workers
-     * @param i the index of a particular worker
-     * @return the number of tasks that worker should run
-     */
+
 
 
 
