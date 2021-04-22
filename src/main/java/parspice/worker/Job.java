@@ -135,7 +135,7 @@ public abstract class Job<S,I,O> {
      * @param i          the index of a particular worker
      * @return the number of tasks that worker should run
      */
-    static int taskSubset(int numTasks, int numWorkers, int i) {
+    protected static int taskSubset(int numTasks, int numWorkers, int i) {
         return numTasks / numWorkers + ((i < numTasks % numWorkers) ? 1 : 0);
     }
 
@@ -144,7 +144,7 @@ public abstract class Job<S,I,O> {
      *
      * @throws IllegalStateException if the state is not valid
      */
-    void validate() throws IllegalStateException {
+    protected void validate() throws IllegalStateException {
         if (numWorkers == -1) {
             throw new IllegalStateException("Number of workers must be specified");
         } else if (numWorkers < 1) {
@@ -170,7 +170,5 @@ public abstract class Job<S,I,O> {
         if (setupInputs != null && setupInputs.size() != numWorkers) {
             throw new IllegalStateException("Setup inputs size should match numWorkers. This is an internal error, not user error.");
         }
-
-
     }
 }

@@ -15,37 +15,37 @@ public abstract class Worker {
     /**
      * Unique ID for the worker, in the range [0, numWorkers)
      */
-    int workerID = 0;
+    private int workerID = 0;
 
     /**
      * Total number of workers in this job.
      */
-    int numWorkers = 1;
+    private int numWorkers = 1;
 
     /**
      * Total number of iterations to be run.
      */
-    int numTasks = 1;
+    private int numTasks = 1;
 
     /**
      * Port used to receive inputs.
      */
-    int inputPort = 0;
+    private int inputPort = 0;
 
     /**
      * Port used to send outputs.
      */
-    int outputPort = 1;
+    private int outputPort = 1;
 
     /**
      * Iteration index that this worker starts at.
      */
-    int startIndex = 0;
+    private int startIndex = 0;
 
     /**
      * How many tasks this worker needs to run.
      */
-    int taskSubset = 1;
+    private int taskSubset = 1;
 
     public int getWorkerID() {
         return workerID;
