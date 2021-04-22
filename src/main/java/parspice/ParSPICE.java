@@ -28,6 +28,8 @@ public class ParSPICE {
      *
      * @param workerJar the jar for all tasks on this instance to be
      *                  run from.
+     * @param minPort the lowest port number that ParSPICE can use, counting
+     *                up sequentially from minPort for each port.
      */
     public ParSPICE(String workerJar, int minPort) throws IOException, ClassNotFoundException {
         this.workerJar = workerJar;

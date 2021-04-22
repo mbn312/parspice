@@ -26,4 +26,7 @@ abstract class BenchWorker<O>(sender: Sender<O>): OWorker<O>(sender) {
         )
 
     abstract val description: String
+
+    open val java: Boolean
+        get() = false
 }

@@ -56,7 +56,8 @@ fun <T> run(job: BenchWorker<T>): MutableList<Run> {
                     numWorkers,
                     job.bytes,
                     taskTime,
-                    time
+                    time,
+                    job.java
                 )
             )
         }
@@ -75,9 +76,17 @@ fun <T> taskTime(job: BenchWorker<T>): Double {
 
 var startTime: Long = -1
 
+/**
+ * Start the timer
+ */
 fun tick() {
     startTime = System.currentTimeMillis()
 }
+
+/**
+ * End the timer
+ * @return timer result in milliseconds
+ */
 fun tock(): Long {
     return System.currentTimeMillis() - startTime
 }
