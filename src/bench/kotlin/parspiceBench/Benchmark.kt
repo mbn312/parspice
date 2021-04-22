@@ -56,7 +56,8 @@ fun <T> run(job: BenchWorker<T>): MutableList<Run> {
                     numWorkers,
                     job.bytes,
                     taskTime,
-                    time
+                    time,
+                    job.java
                 )
             )
         }

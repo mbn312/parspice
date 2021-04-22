@@ -17,14 +17,15 @@ data class Run(
     val numWorkers: Int,
     val messageSize: Int,
     val taskTime: Double,
-    val totalTime: Long
+    val totalTime: Long,
+    val java: Boolean
 ) {
     override fun toString(): String {
-        return "$caseDescription,$numTasks,$numWorkers,$messageSize,$taskTime,$totalTime"
+        return "$caseDescription,$numTasks,$numWorkers,$messageSize,$taskTime,$totalTime,$java"
     }
 
     fun headerString(): String {
-        return "caseDescription,numTasks,numWorkers,messageSize,taskTime,totalTime"
+        return "caseDescription,numTasks,numWorkers,messageSize,taskTime,totalTime,java"
     }
 
     companion object {
@@ -36,7 +37,8 @@ data class Run(
                 parts[2].toInt(),
                 parts[3].toInt(),
                 parts[4].toDouble(),
-                parts[5].toLong()
+                parts[5].toLong(),
+                parts[6].toBoolean()
             )
         }
     }

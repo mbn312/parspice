@@ -24,6 +24,11 @@ public class MxvhatWorkerJava extends BenchWorker<double[]> {
         return "vhat(mxm( ... )) but in Java";
     }
 
+    @Override
+    public boolean getJava() {
+        return true;
+    }
+
     static final double[][] mat = new double[][]{
             {1.0, 2.0, 3.0},
             {10.0, -2.0, 0.0},
