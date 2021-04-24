@@ -14,11 +14,14 @@ class LargeOutputWorker: BenchWorker<IntArray>(IntArraySender(LENGTH)) {
         get() = LENGTH*Int.SIZE_BYTES
     override val numParallelTasks
         get() = mapOf(
-        2 to intArrayOf(1000, 100000),
-        4 to intArrayOf(1000, 10000, 100000, 1000000),
-        6 to intArrayOf(100, 1000, 100000, 1000000),
-        8 to intArrayOf(100, 1000, 100000, 1000000)
-    )
+            1 to intArrayOf(1000000),
+            2 to intArrayOf(1000, 100000, 1000000),
+            4 to intArrayOf(1000, 10000, 100000, 1000000),
+            6 to intArrayOf(100, 1000, 100000, 1000000),
+            8 to intArrayOf(100, 1000, 100000, 1000000)
+        )
+    override val numSingleThreadedTasks: Int
+        get() = 1000000
 
     override val description: String
         get() = "output $LENGTH integers"

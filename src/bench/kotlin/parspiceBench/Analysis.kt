@@ -28,21 +28,22 @@ fun main() {
         runs.map {
             doubleArrayOf(
                 it.numTasks.toDouble() * it.taskTime / it.numWorkers,
+                it.numTasks.toDouble() * it.taskTime,
                 it.messageSize.toDouble() * it.numTasks / 1000000.0
             )
         }.toTypedArray()
     )
     val beta = regression.estimateRegressionParameters()
     val betaString = regression.estimateRegressionParameters().map {
-        String.format("%.2f", it)
+        String.format("%.3f", it)
     }
     val betaSE = regression.estimateRegressionParametersStandardErrors().map {
         String.format("%.3f", it)
     }
 
     val breakEven = arrayOf(
-        String.format("%.3f", 1/beta[1]),
-        String.format("%.3f", beta[0]/beta[1])
+        String.format("%.3f", (1-beta[1])/beta[2]),
+        String.format("%.3f", beta[0]/beta[2])
     )
 
     println("""
@@ -54,10 +55,9 @@ fun main() {
         
         
         [Model]
-        
-             ${" ".repeat(betaString[0].length)}T_0
-        T = ${betaString[0]} --- + ${betaString[1]}[ms/MB] D
-              ${" ".repeat(betaString[0].length)}w
+             / ${betaString[0]}        \
+        T = |  ----- + ${betaString[1]} | T0 + ${betaString[2]}[ms/MB] D
+             \   W          /
         
         where:  T   = Multithreaded ParSPICE runtime, in ms
                 T_0 = Single threaded runtime, in ms
@@ -68,7 +68,7 @@ fun main() {
         
         Adjusted R^2:         ${String.format("%.4f", regression.calculateAdjustedRSquared())}
         Regression Std. Err.: ${String.format("%.4f", regression.estimateRegressionStandardError())} ms
-        Beta Std. Errs.:      ${betaSE[0]}, ${betaSE[1]}[ms/MB]
+        Predictor Std. Errs.: ${betaSE[0]}, ${betaSE[1]}, ${betaSE[2]}[ms/MB]
         
         [Break-Even Point]
         
@@ -84,17 +84,7 @@ fun main() {
 }
 
 /*
-         T_0
-T = 1.37 --- + 3.2 D
-          W
-
-T = I(B1 t/w + B2 d)
-
-T - T0 = I(B1 t/w + B2 d) - I t
-       = I ( B1 t (1/w - 1) + B2 d)
-
-0 = (B1/w - 1) t + B2 d
-
--> d = (1/B2) (1-B1/w) t
-     = (1/B2 - B1/B2/w) t
+     / B_1      \
+T = |  --- + B_3 | T_0 + B_2[ms/MB] D
+     \  W       /
  */

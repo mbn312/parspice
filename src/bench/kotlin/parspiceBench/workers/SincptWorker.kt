@@ -12,6 +12,7 @@ class SincptWorker: BenchWorker<DoubleArray>(DoubleArraySender(3)) {
         get() = 3 * Double.SIZE_BYTES
     override val numParallelTasks
         get() = mapOf(
+            1 to intArrayOf(1000000),
             2 to intArrayOf(1000, 1000000),
             4 to intArrayOf(1000, 10000, 1000000),
             6 to intArrayOf(1000, 100000, 1000000),
