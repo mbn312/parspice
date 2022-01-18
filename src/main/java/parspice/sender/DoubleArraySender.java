@@ -43,12 +43,15 @@ public class DoubleArraySender implements Sender<double[]> {
         if (length == -1) {
             localLength = ois.readInt();
         }
+
         double[] in = new double[localLength];
         for (int i = 0; i < localLength; i++) {
             in[i] = ois.readDouble();
         }
+
         return in;
     }
+
 
     @Override
     public void write(double[] out, ObjectOutputStream oos) throws IOException {

@@ -129,6 +129,7 @@ public abstract class Worker {
         } finally {
             if (worker != null)
                 worker.endConnections();
+            System.exit(0);
         }
     }
 

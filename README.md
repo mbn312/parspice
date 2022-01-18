@@ -56,7 +56,8 @@ if you don't intend to use JNISpice.
    > export JNISPICE_ROOT=/path/to/JNISpice
    ```
 
-   To permanently set this variable add this command to your `.bashrc`, `.zshrc`, or similar shell config file on Linux or MacOS; or follow [these instructions](https://www.howtogeek.com/51807/how-to-create-and-use-global-system-environment-variables/) for windows.
+   To permanently set this variable add this command to your `.bashrc`(Linux), `.zshrc` (MacOS) 
+   or follow [these instructions](https://www.howtogeek.com/51807/how-to-create-and-use-global-system-environment-variables/) for windows
 
 <a id="cloneps"></a>
 ### Clone ParSPICE and build
@@ -358,7 +359,7 @@ where	T   = total time to run the job through ParSPICE
 
 B_1 is typically between 1 and 2 on modern consumer machines, which means that if you have a job big enough to make you consider ParSPICE, it will almost certainly run faster in ParSPICE (unless you have to transfer hundreds of bytes per task). B_1 being less than 1 is mathematically impossible (that would mean ParSPICE has negative overhead), so if that happens something's gone horribly wrong.
 
-B_2 is typically between 1 and 10, which means that if you only need to send a small, fixed number of integers or doubles each task, you shouldn't need to worry about the network overhead making ParSPICE slower than single-threaded. For example, one of the benchmark cases calls `CSPICE.mxv` and `CSPICE.vhat` and outputs 3 doubles each task; according to the benchmark it would have to output nearer to 40 or 50 doubles per task before the performance improvements of ParSPICE disappear.
+B_2 it typically between 1 and 10, which means that if you only need to send a small, fixed number of integers or doubles each task, you shouldn't need to worry about the network overhead making ParSPICE slower than single-threaded. For example, one of the benchmark cases calls `CSPICE.mxv` and `CSPICE.vhat` and outputs 3 doubles each task; according to the benchmark it would have to output nearer to 40 or 50 doubles per task before the performance improvements of ParSPICE disappear.
 
 <a id="breakeven"></a>
 ### Break-Even Point Estimation

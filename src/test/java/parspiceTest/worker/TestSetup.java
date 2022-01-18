@@ -5,7 +5,6 @@ import org.junit.jupiter.api.TestInstance;
 import parspiceTest.ParSPICEInstance;
 import parspice.sender.IntSender;
 
-
 import org.junit.jupiter.api.Test;
 import parspice.worker.OWorker;
 
@@ -29,6 +28,7 @@ public class TestSetup extends OWorker<Integer> {
     @Override
     public void setup() throws Exception {
         n = 2;
+
     }
 
     @Override

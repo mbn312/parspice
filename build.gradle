@@ -1,3 +1,7 @@
+import static org.apache.tools.ant.taskdefs.condition.Os.FAMILY_MAC
+import static org.apache.tools.ant.taskdefs.condition.Os.FAMILY_WINDOWS
+import static org.apache.tools.ant.taskdefs.condition.Os.isFamily
+
 plugins {
     id 'java'
     id 'java-library'
@@ -5,11 +9,19 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.4.31"
 }
 
+ext {
+    root = rootProject.projectDir
+    def kv = ['windows': FAMILY_WINDOWS, 'osx': FAMILY_MAC].find { isFamily(it.value) }
+    os = (kv ? kv.key : 'linux')+'_x86-64'
+}
+
 group 'parspice'
 version '1.0'
 
 repositories {
     mavenCentral()
+    maven { url 'https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-libs-release-local' }
+    maven { url 'https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local' }
 }
 
 sourceSets {
@@ -22,8 +34,7 @@ sourceSets {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
-
-    benchImplementation files("${System.getenv("JNISPICE_ROOT")}/src/JNISpice/")
+    benchImplementation group: 'gov.nasa.jpl.blackbird', name: 'JNISpice', version: 'v2018-04'
     benchImplementation group: 'org.apache.commons', name: 'commons-math3', version: '3.0'
 }
 
@@ -63,9 +74,13 @@ compileBenchKotlin {
         jvmTarget = "1.8"
     }
     doFirst {
-        if (System.getenv("JNISPICE_ROOT") == null) {
-            println "Please set JNISPICE_ROOT environment variable"
-            throw new IOException("JNISPICE_ROOT was null")
+        if (System.getenv("JNISPICE_LIB") == null) {
+            println "Please set JNISPICE_LIB environment variable"
+            throw new IOException("JNISPICE_LIB was null")
+        }
+        if (System.getenv("JSPICE_LIB") == null) {
+            println "Please set JSPICE_LIB environment variable"
+            throw new IOException("JSPICE_LIB was null")
         }
     }
 }
@@ -87,10 +102,15 @@ task benchJar(type: Jar, dependsOn: classes) {
 }
 
 task runBenchmark(type: JavaExec, dependsOn: benchJar) {
+    def libPath = [System.getenv('JNISPICE_LIB'),System.getenv('JSPICE_LIB')].join(File.pathSeparator)
+    jvmArgs = [
+            "-Djava.library.path=$libPath",
+            // TODO vis: remove this once Java3D is removed, see: https://jogamp.org/bugzilla/show_bug.cgi?id=1317#c7
+            '--illegal-access=warn'
+    ]
     description = "Run the benchmarking jar"
     classpath = files(tasks.benchJar)
     main = "parspiceBench.BenchmarkKt"
-
     onlyIf {
         tasks.benchJar.didWork || !file("benchmark_log.csv").exists()
     }

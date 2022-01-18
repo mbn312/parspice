@@ -15,6 +15,7 @@ public class ParSPICE {
 
     private final String workerJar;
     private final int minPort;
+    private final String libPath;
 
     public int getMinPort() {
         return minPort;
@@ -22,6 +23,7 @@ public class ParSPICE {
     public String getWorkerJar() {
         return workerJar;
     }
+    public String getLibPath() { return "-Djava.library.path=" + libPath + " "; }
 
     /**
      * Creates a new ParSPICE object for a given jar file.
@@ -31,10 +33,10 @@ public class ParSPICE {
      * @param minPort the lowest port number that ParSPICE can use, counting
      *                up sequentially from minPort for each port.
      */
-    public ParSPICE(String workerJar, int minPort) throws IOException, ClassNotFoundException {
+    public ParSPICE(String workerJar, int minPort, String libPath) throws IOException, ClassNotFoundException {
         this.workerJar = workerJar;
         this.minPort = minPort;
-
+        this.libPath = libPath;
         checkJar();
     }
 

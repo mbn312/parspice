@@ -6,6 +6,7 @@ import parspice.io.IServer;
 import parspice.io.OServer;
 import parspice.sender.Sender;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,6 +67,7 @@ public abstract class Job<S,I,O> {
         par.checkClass(workerClass);
 
         String workerJar = par.getWorkerJar();
+        String libPath = par.getLibPath();
 
         Process[] processes = new Process[numWorkers];
         if (hasIO)
@@ -96,8 +98,7 @@ public abstract class Job<S,I,O> {
                 ioManagers.add(ioManager);
                 ioManager.start();
             }
-
-            String args = "-Dname=parspice_worker_" + i +
+            String args = libPath + "-Dname=parspice_worker_" + i +
                     " -cp " + workerJar +
                     " parspice.worker.Worker" +
                     " " + workerClass +
@@ -107,6 +108,7 @@ public abstract class Job<S,I,O> {
                     " " + i +
                     " " + numWorkers +
                     " " + numTasks;
+
             processes[i] = Runtime.getRuntime().exec("java " + args);
             task += taskSubset;
         }

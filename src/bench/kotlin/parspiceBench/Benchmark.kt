@@ -4,7 +4,7 @@ import parspice.ParSPICE
 import parspiceBench.workers.*
 import java.io.File
 
-val par = ParSPICE("build/libs/bench.jar", 50050)
+val par = ParSPICE("build/libs/bench.jar", 50050, (System.getenv("JNISPICE_LIB") + File.pathSeparator + System.getenv("JSPICE_LIB")))
 
 /**
  * Main function of the `gradle runBenchmark` task.
