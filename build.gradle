@@ -78,10 +78,6 @@ compileBenchKotlin {
             println "Please set JNISPICE_LIB environment variable"
             throw new IOException("JNISPICE_LIB was null")
         }
-        if (System.getenv("JSPICE_LIB") == null) {
-            println "Please set JSPICE_LIB environment variable"
-            throw new IOException("JSPICE_LIB was null")
-        }
     }
 }
 
@@ -102,7 +98,7 @@ task benchJar(type: Jar, dependsOn: classes) {
 }
 
 task runBenchmark(type: JavaExec, dependsOn: benchJar) {
-    def libPath = [System.getenv('JNISPICE_LIB'),System.getenv('JSPICE_LIB')].join(File.pathSeparator)
+    def libPath = "${System.getenv('JNISPICE_LIB')}"
     jvmArgs = [
             "-Djava.library.path=$libPath",
             // TODO vis: remove this once Java3D is removed, see: https://jogamp.org/bugzilla/show_bug.cgi?id=1317#c7

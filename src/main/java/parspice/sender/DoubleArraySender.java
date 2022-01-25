@@ -52,7 +52,6 @@ public class DoubleArraySender implements Sender<double[]> {
         return in;
     }
 
-
     @Override
     public void write(double[] out, ObjectOutputStream oos) throws IOException {
         if (length == -1) {

@@ -6,7 +6,6 @@ import parspice.io.IServer;
 import parspice.io.OServer;
 import parspice.sender.Sender;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 

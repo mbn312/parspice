@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import parspice.sender.DoubleArraySender;
 import parspiceBench.BenchWorker;
 import spice.basic.CSPICE;
-import java.io.FileWriter;
 
 /**
  * A java copy of the MxvhatWorker kotlin class,
