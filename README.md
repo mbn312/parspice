@@ -49,11 +49,11 @@ used for any job that meets its design restrictions (not just spice things), so 
 if you don't intend to use JNISpice.
 
 <a id="setenv"></a>
-### Set environment variable JNISPICE_ROOT (optional)
-  If you intend to run the ParSPICE benchmark, you need the JNISpice source installed, and you need to set the `JNISPICE_ROOT` environment variable.
+### Set environment variable JNISPICE_LIB (optional)
+  If you intend to run the ParSPICE benchmark, you need the JNISpice source installed, and you need to set the `JNISPICE_LIB` environment variable.
 
    ```bash
-   > export JNISPICE_ROOT=/path/to/JNISpice
+   > export JNISPICE_LIB=/path/to/JNISpice/Lib?File
    ```
 
    To permanently set this variable add this command to your `.bashrc`(Linux), `.zshrc` (MacOS) 
