@@ -53,7 +53,7 @@ if you don't intend to use JNISpice.
   If you intend to run the ParSPICE benchmark, you need the JNISpice source installed, and you need to set the `JNISPICE_LIB` environment variable.
 
    ```bash
-   > export JNISPICE_LIB=/path/to/JNISpice/Lib?File
+   > export JNISPICE_LIB=/path/to/JNISpice/Lib/File
    ```
 
    To permanently set this variable add this command to your `.bashrc`(Linux), `.zshrc` (MacOS) 
